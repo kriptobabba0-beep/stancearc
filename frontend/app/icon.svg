@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Limen mark" shape-rendering="geometricPrecision">
+  <rect width="1024" height="1024" fill="#D9363E"/>
+  <path fill="#F2F0EE" d="M0 1024V263C44.435 175.434 133.771 148.251 223 147c162.254-2.519 319.73 133.984 322 314v563H0Z"/>
+  <rect width="44" height="158" x="-22" y="-79" rx="22" fill="#D9363E" transform="translate(151.755 519.221) rotate(10.008)"/>
+  <rect width="44" height="158" x="-22" y="-79" rx="22" fill="#D9363E" transform="translate(372.255 519.221) rotate(10.008)"/>
+</svg>

@@ -1,0 +1,94 @@
+name: deploy-frontend
+
+# ALTERNATIVE to Vercel's native Git integration.
+# Vercel's Git integration (connecting the repo in the Vercel dashboard) is the
+# RECOMMENDED approach - it gives automatic preview deploys per PR and production
+# deploys on main with no secrets required here.
+#
+# Use THIS workflow if you prefer CI-driven deploys (e.g. you need deploy gates,
+# custom env injection, or deploy-on-tag rather than deploy-on-push).
+#
+# REQUIRED repo secrets (Settings → Secrets → Actions):
+#   VERCEL_TOKEN       - from vercel.com/account/tokens
+#   VERCEL_ORG_ID      - from .vercel/project.json after `vercel link`
+#   VERCEL_PROJECT_ID  - from .vercel/project.json after `vercel link`
+#
+# When any of these secrets is absent the deploy job is SKIPPED (not failed),
+# so CI remains green for contributors who have not set up Vercel.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+
+jobs:
+  # The `secrets` context is NOT available in a job-level `if:` - so a prerequisite job
+  # maps the secret into an output that the deploy job gates on via `needs`. This is the
+  # only correct way to skip-cleanly-without-secrets yet run when they're configured.
+  gate:
+    name: Check Vercel config
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+    steps:
+      - id: check
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Vercel secrets not configured - skipping deploy (CI stays green)."
+          fi
+
+  deploy:
+    name: Deploy to Vercel
+    needs: gate
+    if: needs.gate.outputs.enabled == 'true'
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check required secrets
+        # TOKEN is present (the gate passed); fail helpfully if ORG/PROJECT are missing.
+        run: |
+          missing=()
+          [ -z "$VERCEL_ORG_ID" ]     && missing+=("VERCEL_ORG_ID")
+          [ -z "$VERCEL_PROJECT_ID" ] && missing+=("VERCEL_PROJECT_ID")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing required secrets: ${missing[*]}"
+            echo "See the workflow file header for setup instructions."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel environment
+        working-directory: frontend
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+      - name: Build for Vercel
+        working-directory: frontend
+        run: vercel build --prod --token=$VERCEL_TOKEN
+
+      - name: Deploy pre-built output
+        working-directory: frontend
+        run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN

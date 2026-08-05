@@ -1,0 +1,31 @@
+{
+  // Cloudflare Workers deploy config for the Limen Finance frontend (Next.js via @opennextjs/cloudflare).
+  // `opennextjs-cloudflare build` emits .open-next/worker.js + .open-next/assets, which this serves.
+  // Minimal config: no R2 incremental-cache bucket and no self-reference binding - the app is
+  // request-dynamic (RPC reads, no ISR), so neither is needed, and omitting them keeps the first deploy
+  // clean. Add them later if ISR/caching is introduced (see opennext.js.org/cloudflare/caching).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "limen-finance",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-25",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Holds one ready-to-serve leaderboard payload per market, written only by the keeper's indexer
+  // via /api/leaderboard/ingest. KV rather than the Cache API because KV is GLOBAL: the standings
+  // must read the same in every colo. The Cache API is per-location, so the previous design gave
+  // each colo its own index at its own block height and a refresh could swing between a current
+  // and a week-old leaderboard.
+  //
+  // Created with `wrangler kv namespace create LEADERBOARD_KV`. The app treats a missing binding
+  // as "no data yet" rather than an error, so a deploy without it degrades to an empty leaderboard
+  // instead of a 500.
+  "kv_namespaces": [
+    {
+      "binding": "LEADERBOARD_KV",
+      "id": "c58ee6f5202f4302b4cdd86c6b694b9a"
+    }
+  ]
+}

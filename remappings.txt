@@ -1,0 +1,7 @@
+forge-std/=lib/forge-std/src/
+@openzeppelin/=lib/openzeppelin-contracts/
+@oz3/=lib/openzeppelin-contracts-3.4/
+@uniswap/v3-core/=lib/v3-core/
+@uniswap/v3-periphery/=lib/v3-periphery/
+@pythnetwork/pyth-sdk-solidity/=lib/pyth-sdk-solidity/
+src/=src/

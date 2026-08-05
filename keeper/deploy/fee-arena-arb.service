@@ -1,0 +1,57 @@
+# Fee Arena ARB bot - systemd unit template (non-Docker alternative to Docker Compose / pm2).
+#
+# The price-keeper ARB bot is a SEPARATE process from the lifecycle keeper (separate key,
+# separate nonces). It trades the pool toward the live Pyth price; the AMM's real 0.3% fee
+# on each swap funds every pot - so it gets the SAME always-restart supervision as the
+# keeper. Install it ALONGSIDE fee-arena-keeper.service (both read the same .env).
+#
+# Installation (adjust paths as needed):
+#   sudo cp fee-arena-arb.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now fee-arena-arb
+#   sudo journalctl -fu fee-arena-arb    # tail logs
+#
+# Assumptions (mirror fee-arena-keeper.service):
+#   - The keeper source is installed at /srv/fee-arena-keeper/keeper/
+#   - pnpm is available as /usr/local/bin/pnpm (or adjust ExecStart below)
+#   - A non-root system user `keeper` exists: useradd --system --no-create-home keeper
+#   - The environment file lives at /srv/fee-arena-keeper/keeper/.env (from .env.example).
+#     The arb bot uses the KEEPER_ARB_* vars in that file (separate KEEPER_ARB_PRIVATE_KEY).
+
+[Unit]
+Description=Fee Arena ARB bot - price-keeper that funds the pots
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=keeper
+Group=keeper
+WorkingDirectory=/srv/fee-arena-keeper/keeper
+
+# Load all config from the SAME .env file as the keeper (the arb bot reads KEEPER_ARB_*).
+EnvironmentFile=/srv/fee-arena-keeper/keeper/.env
+
+# Start the ARB bot via pnpm so tsx + the lockfile-exact deps are used.
+ExecStart=/usr/local/bin/pnpm arb
+
+# Restart policy: always restart on any exit (crash or clean exit).
+Restart=always
+RestartSec=5
+
+# Give the bot up to 30 s to flush logs and close connections on SIGTERM.
+TimeoutStopSec=30
+
+# Harden the process: read-only filesystem except the working dir + tmp.
+ReadOnlyPaths=/
+ReadWritePaths=/srv/fee-arena-keeper/keeper
+PrivateTmp=true
+NoNewPrivileges=true
+
+# Log goes to the journal (use journalctl -u fee-arena-arb).
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=fee-arena-arb
+
+[Install]
+WantedBy=multi-user.target

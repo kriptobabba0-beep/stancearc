@@ -1,0 +1,21 @@
+{
+  "//": "Slither config for Fee Arena. This is a dual-solc workspace: the vendored Uniswap V3 fork (lib/v3-core, lib/v3-periphery) and test/fork/imports are pinned to solc =0.7.6, while ALL first-party code in src/** is ^0.8.20. Slither analyzes a SINGLE solc target, so we point it at src/ with solc 0.8.20 and the ^0.8.20 remapping set ONLY. The 0.7.6 fork is never compiled by Slither - it is reachable from src/** only through narrow LOCAL re-declared interfaces (src/interfaces/IUniswapV3*.sol), not by importing the fork sources, so nothing in scope needs the 0.7.6 tree.",
+
+  "solc_remaps": [
+    "@openzeppelin/=lib/openzeppelin-contracts/",
+    "@pythnetwork/pyth-sdk-solidity/=lib/pyth-sdk-solidity/",
+    "src/=src/"
+  ],
+  "solc_args": "--base-path . --include-path lib",
+
+  "//filter": "filter_paths is a regex of source paths whose findings are DROPPED. Keep results limited to in-scope ^0.8.20 first-party contracts: drop everything under lib/** (OZ + Pyth SDK + the V3 fork), all tests, the 0.7.6 fork-import shims, and src/mocks/** (test-only doubles, never deployed). This stops the report being drowned by third-party / out-of-scope noise.",
+  "filter_paths": "lib/|test/|src/mocks/|test/fork/|node_modules/",
+
+  "exclude_dependencies": true,
+  "exclude_optimization": false,
+  "exclude_informational": false,
+  "exclude_low": false,
+
+  "//gate": "We do NOT use Slither's own --fail-* flag here. The CI workflow (.github/workflows/slither.yml) exports --json, then a gate step subtracts the triaged allowlist (docs/audit/slither-triage.json) and fails ONLY on remaining HIGH/MEDIUM findings. This keeps accepted findings reviewable in version control instead of buried in a binary triage DB.",
+  "disable_color": true
+}

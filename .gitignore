@@ -1,0 +1,29 @@
+# Foundry build artifacts
+out/
+cache/
+broadcast/
+
+# Secrets / env
+.env
+.env.local
+
+# Node (frontend, separate package - keep contracts dir clean)
+node_modules/
+
+# OS / editor
+.DS_Store
+*.swp
+
+# Test coverage output (vitest --coverage writes here; not source)
+coverage/
+**/coverage/
+
+# Local editor settings
+
+# local env backups (mechanical cutover snapshots)
+*.bak-autounstake
+
+# cutover env backups + one-off e2e helpers + mcp screenshots
+*.bak-v3
+keeper/v3stake.mjs
+.playwright-mcp/

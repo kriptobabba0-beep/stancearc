@@ -1,0 +1,78 @@
+# Dependabot config for Fee Arena.
+#
+# Covered ecosystems:
+#   - github-actions  : keeps action pins in .github/workflows/** current.
+#   - npm (x2)        : the Next.js frontend and the TS keeper (both pnpm; the
+#                       "npm" ecosystem reads pnpm-lock.yaml).
+#   - gitsubmodule    : the Foundry submodules under lib/** (forge-std,
+#                       openzeppelin-contracts[-3.4], v3-core, pyth-sdk). NOTE:
+#                       lib/v3-periphery is VENDORED in-tree (a patched fork, not a
+#                       submodule) so Dependabot cannot see it - it is intentionally
+#                       out of scope. See the IMPORTANT note on that block below.
+#
+# The Slither/solc-select tooling is installed unpinned by the static-analysis
+# workflow (no requirements.txt), so there is no pip manifest for Dependabot to
+# track; pin it into a requirements file first if pip updates are wanted.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: "/frontend"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(frontend)"
+    groups:
+      frontend-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: "/keeper"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps(keeper)"
+    groups:
+      keeper-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Vendored Foundry libs (lib/**) tracked as git submodules.
+  #
+  # IMPORTANT: these are not free auto-merges. A submodule bump only moves the
+  # gitlink; `foundry.lock` (which pins the exact rev forge resolves) is NOT
+  # updated by Dependabot, and this is a dual-solc workspace whose fork test
+  # asserts the Uniswap V3 pool init-code-hash against the vendored periphery.
+  # So every Dependabot submodule PR MUST be reconciled by hand before merge:
+  # re-run `forge update <lib>` to refresh foundry.lock, then `forge build` +
+  # `forge test` (especially the init-code-hash fork test) - see CONTRIBUTING.md.
+  # The value here is VISIBILITY: Dependabot surfaces upstream movement as a
+  # reviewable weekly PR instead of letting lib/** silently drift. The low PR
+  # limit keeps that signal from becoming noise.
+  - package-ecosystem: gitsubmodule
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "deps(submodules)"
+    groups:
+      foundry-libs:
+        patterns:
+          - "*"

@@ -1,0 +1,837 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Theme tokens - RGB channel triplets consumed by tailwind.config.ts via
+ * `rgb(var(--c-*) / <alpha-value>)`. The SAME utility classes resolve to the
+ * active theme; `.dark` on <html> (set by ThemeProvider) flips the values.
+ * Contrast verified AA for all text tokens against their surfaces.
+ */
+:root {
+  color-scheme: light;
+
+  /* Uniswap light: pure-white surfaces on a faintly off-white canvas, hairline grey lines. */
+  --c-canvas: 255 255 255;
+  --c-surface: 255 255 255;
+  --c-surface-muted: 249 249 249;
+  --c-surface-inset: 242 242 242;
+  --c-line: 237 237 237;
+  --c-line-strong: 222 222 222;
+  --c-ink: 11 11 11;
+  --c-ink-soft: 61 61 61;
+  --c-ink-muted: 125 125 125;
+  --c-ink-faint: 162 162 162;
+  /* Arena crimson - the single accent (was Uniswap magenta/pink). */
+  --c-brand: 220 38 38;
+  --c-brand-hover: 185 28 28;
+  --c-brand-soft: 254 235 234;
+  --c-brand-ring: 248 201 199;
+  --c-side-up: 33 201 94;
+  --c-side-down: 255 95 82;
+  --c-side-range: 2 132 199;
+  --c-side-up-soft: 230 250 238;
+  --c-side-down-soft: 255 237 235;
+  --c-side-range-soft: 226 241 251;
+
+  /* Decorative (theme-aware) - selection wash, dot-grid ink, top brand glow. */
+  --fa-selection: 220 38 38; /* brand */
+  --fa-grid-dot: 11 11 11; /* near-black ink */
+  --fa-grid-alpha: 0.04;
+  --fa-glow: 220 38 38; /* brand */
+  --fa-glow-alpha: 0.05;
+  /* Soft ring accents for Badge / subtle button (theme-aware). */
+  --c-up-ring: 188 236 205;
+  --c-down-ring: 255 205 199;
+  --c-range-ring: 191 224 244;
+  --c-subtle-hover: 252 226 226;
+
+  /* Wine / oxblood accent for the star CTA buttons - deliberately deeper than the brand crimson. Defined
+     once (no .dark override): the button keeps its own identity in both themes. */
+  --c-wine: 124 29 43;
+  --c-wine-bright: 201 58 78;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Arena dark: deep near-black canvas, lifted HUD surfaces, crimson accent tuned for dark. */
+  --c-canvas: 10 10 12;
+  --c-surface: 20 20 23;
+  --c-surface-muted: 26 26 30;
+  --c-surface-inset: 32 32 37;
+  --c-line: 40 40 46;
+  --c-line-strong: 56 56 63;
+  --c-ink: 245 245 245;
+  --c-ink-soft: 200 200 200;
+  --c-ink-muted: 155 155 155;
+  --c-ink-faint: 110 110 110;
+  --c-brand: 229 72 77;
+  --c-brand-hover: 240 99 104;
+  --c-brand-soft: 46 20 22;
+  --c-brand-ring: 92 36 39;
+  --c-side-up: 64 209 120;
+  --c-side-down: 255 113 102;
+  --c-side-range: 56 189 248;
+  --c-side-up-soft: 16 44 28;
+  --c-side-down-soft: 50 22 18;
+  --c-side-range-soft: 12 36 51;
+
+  --fa-selection: 229 72 77;
+  --fa-grid-dot: 245 245 245;
+  --fa-grid-alpha: 0.05;
+  --fa-glow: 229 72 77;
+  --fa-glow-alpha: 0.1;
+  --c-up-ring: 30 78 46;
+  --c-down-ring: 84 36 30;
+  --c-range-ring: 24 64 92;
+  --c-subtle-hover: 64 30 31;
+}
+
+@layer base {
+  html {
+    /* Reserve the scrollbar gutter permanently: when navigation (or a market switch on the
+       leaderboard) crosses the "content taller than viewport" threshold, the classic Windows
+       scrollbar would otherwise appear/disappear and shove the whole centered layout
+       sideways. `overflow-y: scroll` is the reservation that actually holds in Chromium -
+       `scrollbar-gutter: stable` alone is ignored on the root there (verified in-browser);
+       overlay-scrollbar platforms take no space either way, so this is a no-op for them. */
+    overflow-y: scroll;
+    scrollbar-gutter: stable;
+  }
+  html,
+  body {
+    background-color: rgb(var(--c-canvas));
+    color: rgb(var(--c-ink));
+  }
+  body {
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    /* Uniswap uses one grotesk everywhere; Inter is the display face too. */
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+  /* All monospaced runs (money, prices, addresses, hashes) use tabular figures. */
+  .font-mono,
+  code,
+  kbd {
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection {
+    background: rgb(var(--fa-selection) / 0.16);
+  }
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@layer components {
+  /* Subtle institutional dot-grid, masked to fade out below the fold. */
+  .bg-grid {
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      rgb(var(--fa-grid-dot) / var(--fa-grid-alpha)) 1px,
+      transparent 0
+    );
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 0%, #000 35%, transparent 100%);
+    mask-image: radial-gradient(ellipse 70% 50% at 50% 0%, #000 35%, transparent 100%);
+  }
+
+  /* Top-of-page brand glow (theme-aware via --fa-glow). */
+  .bg-glow {
+    background: radial-gradient(
+      60% 60% at 50% -20%,
+      rgb(var(--fa-glow) / var(--fa-glow-alpha)),
+      transparent 70%
+    );
+  }
+
+  /* The base surface used across cards - Uniswap: white, large radius, hairline border, flat. */
+  .card-base {
+    @apply rounded-3xl border border-line bg-surface;
+  }
+
+  /*
+   * Arena "HUD" panel - the reference frame, measured from 1.jpg:
+   *   • An OCTAGON: all four corners chamfered at 45° (~5.2% of panel width).
+   *   • INTERLOCKING JOINT TABS: at a fixed height, the edge facing a neighbouring column physically
+   *     STEPS OUT ~9px into the 24px gutter (45° lead-ins, ~110px tall) and back - both neighbours
+   *     protrude toward each other, narrowing the gutter to a ~6px channel where a glowing crimson
+   *     bar sits. The tab is part of the panel OUTLINE itself (border + fill follow it), NOT an overlay.
+   *
+   * Implementation: ::before (border colour) and ::after (fill, inset 1.5px) are EXPANDED horizontally
+   * by --hud-ext beyond the element box so the tab can paint into the gutter; the shared clip-path is
+   * built in that expanded coordinate space (plain edges sit at x = ext / 100% − ext). Joint variants
+   * (.hud-joint-l / -r / -lr) swap in a polygon with the tab on the matching edge, ONLY at the 3-column
+   * breakpoint (below lg the panels stack, so they keep the plain octagon).
+   */
+  .hud-col {
+    /* Query container so the chamfer scales with PANEL width (stays ~5.2% at any viewport). */
+    container-type: inline-size;
+  }
+  .hud-panel {
+    --hud-cut: clamp(16px, 5.2cqw, 34px);
+    --hud-ext: 12px; /* horizontal paint expansion into the gutter */
+    --hud-jt: 190px; /* joint top (fixed px from panel top - columns are top-aligned) */
+    --hud-jh: 110px; /* joint height */
+    --hud-jl: 11px; /* 45° lead-in */
+    --hud-jd: 9px; /* tab depth into the gutter */
+    --hud-border: linear-gradient(180deg, rgb(78 82 92), rgb(50 52 61));
+    --hud-fill: var(--c-surface);
+    --hud-inset: 1.5px;
+    --hud-clip: polygon(
+      calc(var(--hud-ext) + var(--hud-cut)) 0,
+      calc(100% - var(--hud-ext) - var(--hud-cut)) 0,
+      calc(100% - var(--hud-ext)) var(--hud-cut),
+      calc(100% - var(--hud-ext)) calc(100% - var(--hud-cut)),
+      calc(100% - var(--hud-ext) - var(--hud-cut)) 100%,
+      calc(var(--hud-ext) + var(--hud-cut)) 100%,
+      var(--hud-ext) calc(100% - var(--hud-cut)),
+      var(--hud-ext) var(--hud-cut)
+    );
+    position: relative;
+    isolation: isolate;
+    background: transparent;
+  }
+  .hud-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0 calc(-1 * var(--hud-ext));
+    background: var(--hud-border);
+    clip-path: var(--hud-clip);
+    z-index: -1;
+  }
+  .hud-panel::after {
+    content: '';
+    position: absolute;
+    inset: var(--hud-inset) calc(var(--hud-inset) - var(--hud-ext));
+    background: rgb(var(--hud-fill));
+    clip-path: var(--hud-clip);
+    z-index: -1;
+  }
+  /* The glowing crimson bar centered in a joint channel (rendered by the CENTER panel, one per gap). */
+  .hud-joint-bar {
+    position: absolute;
+    z-index: 1;
+    top: calc(var(--hud-jt) + 21px);
+    width: 3px;
+    height: 68px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, rgb(248 113 113), rgb(220 38 38) 50%, rgb(248 113 113));
+    box-shadow:
+      0 0 3px rgb(229 72 77 / 0.8),
+      0 0 7px 1px rgb(229 72 77 / 0.35);
+    pointer-events: none;
+  }
+  /* Joint tabs exist only in the 3-column layout (panels stack below lg → plain octagon). */
+  @media (min-width: 1024px) {
+    /* Tab on the RIGHT edge (left column, facing the center). */
+    .hud-joint-r {
+      --hud-clip: polygon(
+        calc(var(--hud-ext) + var(--hud-cut)) 0,
+        calc(100% - var(--hud-ext) - var(--hud-cut)) 0,
+        calc(100% - var(--hud-ext)) var(--hud-cut),
+        calc(100% - var(--hud-ext)) var(--hud-jt),
+        calc(100% - var(--hud-ext) + var(--hud-jd)) calc(var(--hud-jt) + var(--hud-jl)),
+        calc(100% - var(--hud-ext) + var(--hud-jd)) calc(var(--hud-jt) + var(--hud-jh) - var(--hud-jl)),
+        calc(100% - var(--hud-ext)) calc(var(--hud-jt) + var(--hud-jh)),
+        calc(100% - var(--hud-ext)) calc(100% - var(--hud-cut)),
+        calc(100% - var(--hud-ext) - var(--hud-cut)) 100%,
+        calc(var(--hud-ext) + var(--hud-cut)) 100%,
+        var(--hud-ext) calc(100% - var(--hud-cut)),
+        var(--hud-ext) var(--hud-cut)
+      );
+    }
+    /* Tab on the LEFT edge (right column, facing the center). */
+    .hud-joint-l {
+      --hud-clip: polygon(
+        calc(var(--hud-ext) + var(--hud-cut)) 0,
+        calc(100% - var(--hud-ext) - var(--hud-cut)) 0,
+        calc(100% - var(--hud-ext)) var(--hud-cut),
+        calc(100% - var(--hud-ext)) calc(100% - var(--hud-cut)),
+        calc(100% - var(--hud-ext) - var(--hud-cut)) 100%,
+        calc(var(--hud-ext) + var(--hud-cut)) 100%,
+        var(--hud-ext) calc(100% - var(--hud-cut)),
+        var(--hud-ext) calc(var(--hud-jt) + var(--hud-jh)),
+        calc(var(--hud-ext) - var(--hud-jd)) calc(var(--hud-jt) + var(--hud-jh) - var(--hud-jl)),
+        calc(var(--hud-ext) - var(--hud-jd)) calc(var(--hud-jt) + var(--hud-jl)),
+        var(--hud-ext) var(--hud-jt),
+        var(--hud-ext) var(--hud-cut)
+      );
+    }
+    /* Tabs on BOTH edges (the center column). */
+    .hud-joint-lr {
+      --hud-clip: polygon(
+        calc(var(--hud-ext) + var(--hud-cut)) 0,
+        calc(100% - var(--hud-ext) - var(--hud-cut)) 0,
+        calc(100% - var(--hud-ext)) var(--hud-cut),
+        calc(100% - var(--hud-ext)) var(--hud-jt),
+        calc(100% - var(--hud-ext) + var(--hud-jd)) calc(var(--hud-jt) + var(--hud-jl)),
+        calc(100% - var(--hud-ext) + var(--hud-jd)) calc(var(--hud-jt) + var(--hud-jh) - var(--hud-jl)),
+        calc(100% - var(--hud-ext)) calc(var(--hud-jt) + var(--hud-jh)),
+        calc(100% - var(--hud-ext)) calc(100% - var(--hud-cut)),
+        calc(100% - var(--hud-ext) - var(--hud-cut)) 100%,
+        calc(var(--hud-ext) + var(--hud-cut)) 100%,
+        var(--hud-ext) calc(100% - var(--hud-cut)),
+        var(--hud-ext) calc(var(--hud-jt) + var(--hud-jh)),
+        calc(var(--hud-ext) - var(--hud-jd)) calc(var(--hud-jt) + var(--hud-jh) - var(--hud-jl)),
+        calc(var(--hud-ext) - var(--hud-jd)) calc(var(--hud-jt) + var(--hud-jl)),
+        var(--hud-ext) var(--hud-jt),
+        var(--hud-ext) var(--hud-cut)
+      );
+    }
+  }
+  /* Accent border (active step / selected) - crimson edge. */
+  .hud-panel-accent {
+    --hud-border: linear-gradient(180deg, rgb(226 84 88), rgb(150 36 40));
+  }
+  /* Muted fill (nested rows inside a panel). */
+  .hud-panel-muted {
+    --hud-fill: var(--c-surface-muted);
+  }
+  /* Smaller chamfer - compact tiles. */
+  .hud-panel-sm {
+    --hud-cut: 9px;
+    --hud-inset: 1.25px;
+  }
+
+  /* Small uppercase metadata label (the dt/kicker pattern) - MONO app-wide (the Arena language). */
+  .kicker {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.07em] text-ink-muted;
+  }
+
+  /* Hairline horizontal rule. */
+  .hairline {
+    @apply border-t border-line;
+  }
+
+  /* ── Wine shooting-star CTA ──────────────────────────────────────────────────────────────────
+     The Uiverse shooting-star button: a deep wine/oxblood fill with a white label; on hover the fill
+     flips to a brighter-wine outline + glow and the six <Stars/> child sparkles fly outward from behind
+     the button. Colours are the dedicated --c-wine / --c-wine-bright accents. The stars deliberately
+     overflow the button (top:-80%, left:115%, ...); add `star-btn--contain` to a very WIDE button to
+     rein the fly-out back in (the offsets are a % of button size, so a wide button otherwise flings the
+     outermost stars far across the screen). buttonClass / arenaButtonClass add .star-btn to primary +
+     secondary (identical - the one button); ghost/danger/subtle don't. */
+  .star-btn {
+    position: relative;
+    cursor: pointer;
+    background: rgb(var(--c-wine));
+    color: #fff;
+    border: 3px solid rgb(var(--c-wine));
+    border-radius: 8px;
+    box-shadow: 0 0 0 rgb(var(--c-wine-bright) / 0.5);
+    transition: all 0.3s ease-in-out;
+  }
+  .star-btn:hover:not(:disabled) {
+    background: transparent;
+    color: rgb(var(--c-wine-bright));
+    border-color: rgb(var(--c-wine-bright));
+    box-shadow: 0 0 25px rgb(var(--c-wine-bright) / 0.5);
+  }
+  .star-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  /* Hide the sparkles on a disabled button: opacity:0.5 forms a stacking context that would otherwise
+     reveal the z-index:-5 stars frozen behind the fill (the "frozen glow" on inactive buttons). */
+  .star-btn:disabled .star {
+    display: none;
+  }
+  .star-btn:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgb(var(--c-canvas)),
+      0 0 0 4px rgb(var(--c-wine-bright));
+  }
+  /* The six sparkles - exact positions, sizes and easings from the source. Hidden at REST via
+     visibility:hidden (NOT just z-index behind the fill - that trick fails during entrance / route
+     fades, where an ancestor's opacity makes the button see-through and the stars behind it flash into
+     view for ~1s). On hover they become visible, switch in front (z-index 2) and fly outward. */
+  .star-btn .star {
+    position: absolute;
+    height: auto;
+    z-index: -5;
+    visibility: hidden;
+    filter: drop-shadow(0 0 0 #fffdef);
+    pointer-events: none;
+  }
+  .star-btn .star svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .star-btn .star-1 { top: 20%; left: 20%; width: 25px; transition: all 1s cubic-bezier(0.05, 0.83, 0.43, 0.96); }
+  .star-btn .star-2 { top: 45%; left: 45%; width: 15px; transition: all 1s cubic-bezier(0, 0.4, 0, 1.01); }
+  .star-btn .star-3 { top: 40%; left: 40%; width: 5px;  transition: all 1s cubic-bezier(0, 0.4, 0, 1.01); }
+  .star-btn .star-4 { top: 20%; left: 40%; width: 8px;  transition: all 0.8s cubic-bezier(0, 0.4, 0, 1.01); }
+  .star-btn .star-5 { top: 25%; left: 45%; width: 15px; transition: all 0.6s cubic-bezier(0, 0.4, 0, 1.01); }
+  .star-btn .star-6 { top: 5%;  left: 50%; width: 5px;  transition: all 0.8s ease; }
+  .star-btn:hover:not(:disabled) .star { visibility: visible; }
+  .star-btn:hover:not(:disabled) .star-1 { top: -80%; left: -30%; z-index: 2; filter: drop-shadow(0 0 10px #fffdef); }
+  .star-btn:hover:not(:disabled) .star-2 { top: -25%; left: 10%;  z-index: 2; filter: drop-shadow(0 0 10px #fffdef); }
+  .star-btn:hover:not(:disabled) .star-3 { top: 55%;  left: 25%;  z-index: 2; filter: drop-shadow(0 0 10px #fffdef); }
+  .star-btn:hover:not(:disabled) .star-4 { top: 30%;  left: 80%;  z-index: 2; filter: drop-shadow(0 0 10px #fffdef); }
+  .star-btn:hover:not(:disabled) .star-5 { top: 25%;  left: 115%; z-index: 2; filter: drop-shadow(0 0 10px #fffdef); }
+  .star-btn:hover:not(:disabled) .star-6 { top: 5%;   left: 60%;  z-index: 2; filter: drop-shadow(0 0 10px #fffdef); }
+  /* Contained fly-out for very wide buttons (full-width arena rail / swap CTAs): pull the outermost
+     stars back to just past the button edges so a wide button doesn't fling them across the screen. */
+  .star-btn--contain:hover:not(:disabled) .star-1 { top: -55%; left: -8%; }
+  .star-btn--contain:hover:not(:disabled) .star-2 { top: -20%; left: 14%; }
+  .star-btn--contain:hover:not(:disabled) .star-3 { top: 56%;  left: 26%; }
+  .star-btn--contain:hover:not(:disabled) .star-4 { top: 32%;  left: 74%; }
+  .star-btn--contain:hover:not(:disabled) .star-5 { top: 22%;  left: 95%; }
+  .star-btn--contain:hover:not(:disabled) .star-6 { top: 2%;   left: 56%; }
+  .star-btn .star-fill { fill: #fffdef; }
+  @media (prefers-reduced-motion: reduce) {
+    .star-btn .star { display: none; }
+  }
+
+  /* Top-nav "selector" - an octagonal crimson HUD module (the same cut-corner geometry as .hud-panel)
+     that locks onto the active route and slides between them. Its box is measured in NavBar.tsx
+     (top/width/height arrive via inline style). The fill is the angular module; drop-shadow gives the
+     glow that follows the clip (box-shadow would be cut by it); ::after is the bright bottom accent. */
+  .nav-sel {
+    position: absolute;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+    clip-path: polygon(
+      6px 0,
+      calc(100% - 6px) 0,
+      100% 6px,
+      100% calc(100% - 6px),
+      calc(100% - 6px) 100%,
+      6px 100%,
+      0 calc(100% - 6px),
+      0 6px
+    );
+    background: linear-gradient(180deg, rgb(var(--c-brand) / 0.06), rgb(var(--c-brand) / 0.2));
+    filter: drop-shadow(0 1px 5px rgb(var(--c-brand) / 0.5));
+    transition:
+      transform 0.34s cubic-bezier(0.45, 0, 0.15, 1),
+      width 0.34s cubic-bezier(0.45, 0, 0.15, 1);
+  }
+  .nav-sel::after {
+    content: '';
+    position: absolute;
+    left: 7px;
+    right: 7px;
+    bottom: 0;
+    height: 2px;
+    background: rgb(var(--c-brand));
+    box-shadow: 0 0 7px rgb(var(--c-brand)), 0 0 2px rgb(var(--c-brand));
+  }
+  /* The live system pulse next to the wordmark. */
+  .nav-live-dot {
+    box-shadow: 0 0 6px rgb(var(--c-brand) / 0.8);
+    animation: nav-pulse 2.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nav-sel {
+      transition: none;
+    }
+    .nav-live-dot {
+      animation: none;
+    }
+  }
+
+  /* Dropdown menus (the account popover + the "···" overflow) as HUD panels: a glass surface with a
+     crimson top-accent hairline (echoing the nav seam), and rows that light a crimson left-tick + a faint
+     crimson wash on hover. `.hud-row--danger` swaps the accent to the down/destructive red (Sign out). */
+  .hud-menu {
+    position: relative;
+    background: rgb(var(--c-surface) / 0.97);
+    backdrop-filter: blur(18px);
+    /* The same octagon cut-corner geometry as the HUD panels + nav selector - angular, not a rounded
+       rect. clip-path removes the border, so the hairline edge + the pop are drop-shadows (they follow
+       the clip). */
+    clip-path: polygon(
+      9px 0,
+      calc(100% - 9px) 0,
+      100% 9px,
+      100% calc(100% - 9px),
+      calc(100% - 9px) 100%,
+      9px 100%,
+      0 calc(100% - 9px),
+      0 9px
+    );
+    filter:
+      drop-shadow(0 0 0.6px rgb(var(--c-line-strong)))
+      drop-shadow(0 16px 34px rgb(0 0 0 / 0.5));
+  }
+  .hud-menu::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent 12%, rgb(var(--c-brand) / 0.85) 50%, transparent 88%);
+  }
+
+  /* Chamfered HUD trigger - the account chip + the icon buttons that open the menus. A REAL clickable
+     button: an octagon cut-corner shape with a visible 1.25px edge and a raised, lighter-than-the-bar
+     fill, drawn as two stacked clipped layers (::before = the edge colour, ::after = the inset fill) so
+     the border follows the chamfer cleanly (a plain border/clip leaves gaps at the cuts). The edge flares
+     crimson on hover/focus; a drop-shadow lifts it off the bar. */
+  .hud-trigger {
+    --trigger-clip: polygon(
+      7px 0,
+      calc(100% - 7px) 0,
+      100% 7px,
+      100% calc(100% - 7px),
+      calc(100% - 7px) 100%,
+      7px 100%,
+      0 calc(100% - 7px),
+      0 7px
+    );
+    position: relative;
+    isolation: isolate;
+    background: transparent;
+    filter: drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.55));
+    transition: filter 0.18s ease;
+  }
+  .hud-trigger::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background: rgb(var(--c-line-strong));
+    clip-path: var(--trigger-clip);
+  }
+  .hud-trigger::after {
+    content: '';
+    position: absolute;
+    inset: 1.25px;
+    z-index: -1;
+    background: linear-gradient(180deg, rgb(var(--c-surface-inset)), rgb(var(--c-surface-muted)));
+    clip-path: var(--trigger-clip);
+  }
+  .hud-trigger:hover {
+    filter:
+      drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.55))
+      drop-shadow(0 0 6px rgb(var(--c-brand) / 0.35));
+  }
+  .hud-trigger:hover::after {
+    background: linear-gradient(180deg, rgb(var(--c-surface-muted)), rgb(var(--c-surface-inset)));
+  }
+  .hud-trigger:hover::before,
+  .hud-trigger:focus-visible::before {
+    background: rgb(var(--c-brand));
+  }
+  .hud-trigger:focus-visible {
+    outline: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hud-trigger {
+      transition: none;
+    }
+  }
+  .hud-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgb(var(--c-ink-soft));
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+  }
+  .hud-row::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    width: 2px;
+    height: 0;
+    border-radius: 2px;
+    background: rgb(var(--c-brand));
+    transform: translateY(-50%);
+    transition: height 0.15s ease;
+  }
+  .hud-row:hover {
+    background: rgb(var(--c-brand) / 0.09);
+    color: rgb(var(--c-ink));
+  }
+  .hud-row:hover::before {
+    height: 56%;
+  }
+  .hud-row--danger:hover {
+    background: rgb(var(--c-side-down) / 0.1);
+    color: rgb(var(--c-side-down));
+  }
+  .hud-row--danger:hover::before {
+    background: rgb(var(--c-side-down));
+  }
+}
+
+/* Top-nav live system pulse. */
+@keyframes nav-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.6);
+  }
+}
+
+/* ── Landing-page motion (CSS-only; the global prefers-reduced-motion kill-switch below applies) ── */
+@keyframes fa-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes fa-scanline {
+  0% {
+    top: -8%;
+  }
+  100% {
+    top: 108%;
+  }
+}
+@keyframes fa-dash {
+  to {
+    stroke-dashoffset: -64;
+  }
+}
+@keyframes fa-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+@layer components {
+  /* Seamless marquee: the track holds TWO copies of the content and slides -50%. */
+  .landing-marquee {
+    display: flex;
+    width: max-content;
+    animation: fa-marquee 36s linear infinite;
+  }
+  .landing-marquee:hover {
+    animation-play-state: paused;
+  }
+  /* A faint crimson scanline sweeping down a relative/overflow-hidden hero. */
+  .landing-scanline {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 120px;
+    pointer-events: none;
+    background: linear-gradient(180deg, transparent, rgb(var(--c-brand) / 0.06), transparent);
+    animation: fa-scanline 9s linear infinite;
+  }
+  /* Traveling dashes along SVG connector paths (the outcome branches / flywheel ring). */
+  .dash-anim {
+    stroke-dasharray: 4 12;
+    animation: fa-dash 1.6s linear infinite;
+  }
+  .landing-float {
+    animation: fa-float 7s ease-in-out infinite;
+  }
+}
+
+/* Bouncing-dots loader - motion keyframes + scoped classes used by <BouncingLoader>. Three dots bounce
+   while a soft crimson ground-shadow squashes in sync; the crimson reads on the near-black canvas where
+   a literal dark shadow would vanish. Markup order is 3 .lf-circle then 3 .lf-shadow, so the nth-child
+   rules below seat each shadow under its own dot. (Silhouette adapted from a Uiverse loader by mobinkakei.) */
+@keyframes lf-bounce {
+  0% {
+    top: 60px;
+    height: 5px;
+    border-radius: 50px 50px 25px 25px;
+    transform: scaleX(1.7);
+  }
+  40% {
+    height: 20px;
+    border-radius: 50%;
+    transform: scaleX(1);
+  }
+  100% {
+    top: 0%;
+  }
+}
+@keyframes lf-bounce-shadow {
+  0% {
+    transform: scaleX(1.5);
+  }
+  40% {
+    transform: scaleX(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scaleX(0.2);
+    opacity: 0.4;
+  }
+}
+
+@layer components {
+  .lf-loader {
+    width: 200px;
+    height: 60px;
+    position: relative;
+    z-index: 1;
+  }
+  .lf-loader .lf-circle {
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    border-radius: 50%;
+    background-color: #fff;
+    left: 15%;
+    transform-origin: 50%;
+    animation: lf-bounce 0.5s alternate infinite ease;
+  }
+  .lf-loader .lf-circle:nth-child(2) {
+    left: 45%;
+    animation-delay: 0.2s;
+  }
+  .lf-loader .lf-circle:nth-child(3) {
+    left: auto;
+    right: 15%;
+    animation-delay: 0.3s;
+  }
+  .lf-loader .lf-shadow {
+    width: 20px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: rgb(var(--c-brand) / 0.55);
+    position: absolute;
+    top: 62px;
+    transform-origin: 50%;
+    z-index: -1;
+    left: 15%;
+    filter: blur(1px);
+    animation: lf-bounce-shadow 0.5s alternate infinite ease;
+  }
+  .lf-loader .lf-shadow:nth-child(4) {
+    left: 45%;
+    animation-delay: 0.2s;
+  }
+  .lf-loader .lf-shadow:nth-child(5) {
+    left: auto;
+    right: 15%;
+    animation-delay: 0.3s;
+  }
+}
+
+/* Reduced motion: hold a calm static state instead of bouncing. */
+@media (prefers-reduced-motion: reduce) {
+  .lf-loader .lf-circle,
+  .lf-loader .lf-shadow {
+    animation: none;
+  }
+  .lf-loader .lf-circle {
+    top: 20px;
+  }
+}
+
+@layer utilities {
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .motion-safe-anim {
+      animation: none !important;
+    }
+  }
+}
+
+/* Sonner toast - align to the Clean Institutional system. We keep sonner's richColors for the
+   success/error accents but force our surface/ink/line tokens + font-sans so the toast doesn't clash
+   with the dashboard. Targets the `.fa-toast` className passed via the Toaster's toastOptions.
+   Token-driven so the toast follows the active theme. */
+[data-sonner-toaster] {
+  --normal-bg: rgb(var(--c-surface));
+  --normal-text: rgb(var(--c-ink));
+  --normal-border: rgb(var(--c-line));
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+[data-sonner-toaster] .fa-toast {
+  border-radius: 1.25rem; /* matches the rounded-2xl card family */
+  box-shadow: 0 8px 30px rgba(11, 11, 11, 0.08);
+}
+[data-sonner-toaster] .fa-toast [data-description] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A11y (3c): respect the OS "reduce motion" setting globally. Tailwind's `motion-safe:` variants
+   already gate the entrance/fade animations, but several decorative loops (spinner, pulse, shimmer,
+   live-ring) are applied unconditionally - disable all non-essential motion here so the design stays
+   visually identical but holds still for users who ask for it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Pool surface up-scale. The user prefers the page at ~110% browser zoom - bigger, clearer, more
+   composed. `zoom` reproduces that EXACTLY (re-rasterised, so text stays crisp) and scales every
+   element uniformly - typography, the HUD cards, spacing and controls - without per-utility edits.
+   It is GATED to wide viewports (≥1280px): below that the content would be ~10% wider than the
+   viewport and overflow horizontally, so the compact responsive layout is left at 1× and stays intact.
+   The max-w-6xl page body (1152px) becomes ~1267px here, which fits any ≥1280px screen. */
+@media (min-width: 1280px) {
+  .pool-upscale {
+    zoom: 1.1;
+  }
+}
+
+/* ── Gold "AGENT" nav entry: gilded gradient text with a left-to-right shine sweep. The
+      gradient IS the text fill (background-clip), so the glint travels across the letters;
+      a faint drop-shadow lifts it off the dark rail. Motion-sensitive users get static gold. */
+.nav-agent-gold {
+  /* Vivid gold base; the gradient's two ENDS are identical so the tile repeats invisibly. */
+  background: linear-gradient(
+    105deg,
+    #e8ae1f 0%,
+    #f7c934 22%,
+    #ffe066 38%,
+    #fff7c4 50%,
+    #ffe066 62%,
+    #f7c934 78%,
+    #e8ae1f 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgb(255 206 64 / 0.38));
+  animation: nav-agent-shine 2.6s linear infinite;
+}
+/* Seamless loop: the travel is EXACTLY one tile width (a 200% position delta at 200%
+   background-size), so the last frame equals the first - constant left-to-right flow,
+   no restart hitch. */
+@keyframes nav-agent-shine {
+  from { background-position: 200% 0; }
+  to { background-position: 0% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-agent-gold { animation: none; background-position: 50% 0; }
+}

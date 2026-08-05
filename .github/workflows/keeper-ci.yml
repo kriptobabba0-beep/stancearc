@@ -1,0 +1,35 @@
+name: keeper-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: keeper
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      # Foundry + `forge build` so the ABI-parity test can load the compiled artifact
+      # (out/FeeArena.sol/FeeArena.json). Runs from the repo root, not keeper/.
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - name: Build contracts (artifacts for the ABI-drift test)
+        working-directory: .
+        run: forge build
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: keeper/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test

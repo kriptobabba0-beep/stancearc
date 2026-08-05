@@ -1,0 +1,173 @@
+name: static-analysis
+
+# Static analysis (Slither) + coverage for the first-party ^0.8.20 contracts in
+# src/**. This workspace is dual-solc: the vendored Uniswap V3 fork (lib/v3-core,
+# lib/v3-periphery) and its OZ-3.4 deps are pinned to solc =0.7.6, while all
+# first-party code is ^0.8.20. Slither analyzes a single solc target, so we point
+# it ONLY at src/ with solc 0.8.20 (see slither.config.json). The Slither gate
+# fails CI on HIGH/MEDIUM findings that are not in the triaged allowlist
+# (docs/audit/slither-triage.json). Coverage is best-effort (see notes on the step).
+
+permissions: {}
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  slither:
+    name: Slither (src/** only)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Slither pulls in solc-select; pin the first-party solc so Slither never
+      # tries to unify the 0.7.6 fork with the ^0.8.20 src/** graph.
+      - name: Install Slither + solc 0.8.20
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install slither-analyzer
+          solc-select install 0.8.20
+          solc-select use 0.8.20
+          slither --version
+
+      # Run over src/ with the committed config (remaps + filter_paths). We export
+      # JSON and DO NOT use Slither's own --fail-* - the gate step below owns the
+      # pass/fail decision so the triaged allowlist stays the single source of truth.
+      # `|| true` keeps a non-zero Slither exit (it returns 255 when findings exist)
+      # from masking the real gate result; `success` is re-validated from the JSON.
+      - name: Run Slither
+        run: |
+          slither src/ \
+            --config-file slither.config.json \
+            --json slither-report.json \
+            --no-fail-pedantic || true
+
+      # Gate: subtract the triaged allowlist, then fail on any remaining HIGH/MEDIUM.
+      # Keyed on (check, contract, function) so line shifts don't silently un-suppress.
+      - name: Gate on HIGH/MEDIUM (minus triaged allowlist)
+        run: |
+          python - <<'PYEOF'
+          import json, os, sys
+
+          with open("slither-report.json") as f:
+              data = json.load(f)
+
+          if not data.get("success", False):
+              print("::error::Slither did not complete:", data.get("error"))
+              sys.exit(2)
+
+          dets = data.get("results", {}).get("detectors", [])
+
+          allow = set()
+          triage = os.path.join("docs", "audit", "slither-triage.json")
+          if os.path.exists(triage):
+              with open(triage) as f:
+                  for e in json.load(f).get("allow", []):
+                      allow.add((e["check"], e.get("contract", ""), e.get("function", "")))
+
+          def ident(r):
+              check = r.get("check", "")
+              contract = func = ""
+              for el in r.get("elements", []):
+                  t = el.get("type")
+                  if t == "function":
+                      func = el.get("name", "")
+                      contract = el.get("type_specific_fields", {}).get("parent", {}).get("name", contract)
+                      break
+                  if t == "variable" and not func:
+                      parent = el.get("type_specific_fields", {}).get("parent", {})
+                      if parent.get("type") == "function":
+                          func = parent.get("name", "") + "." + el.get("name", "")
+                          contract = parent.get("type_specific_fields", {}).get("parent", {}).get("name", contract)
+                      else:
+                          func = el.get("name", "")
+                          contract = parent.get("name", contract)
+                  if t == "contract" and not contract:
+                      contract = el.get("name", "")
+              return (check, contract, func)
+
+          SEV = {"High", "Medium"}
+          blocking, suppressed = [], []
+          for r in dets:
+              if r.get("impact") not in SEV:
+                  continue
+              cid = ident(r)
+              matched = cid in allow or any(
+                  a[0] == cid[0] and a[1] == cid[1] and (a[2] == cid[2] or cid[2].startswith(a[2] + "."))
+                  for a in allow
+              )
+              (suppressed if matched else blocking).append((r.get("impact"), cid, r.get("description", "").strip().splitlines()[0] if r.get("description") else ""))
+
+          hm = sum(1 for r in dets if r.get("impact") in SEV)
+          print(f"Slither findings: {len(dets)} total | High/Medium: {hm}")
+          print(f"Suppressed by triaged allowlist: {len(suppressed)}")
+          for impact, cid, _ in suppressed:
+              print(f"  - allowed [{impact}] {cid[0]} :: {cid[1]}.{cid[2]}")
+          print(f"Blocking (HIGH/MEDIUM not allowlisted): {len(blocking)}")
+          for impact, cid, desc in blocking:
+              print(f"::error::[{impact}] {cid[0]} in {cid[1]}.{cid[2]} -- {desc[:160]}")
+
+          sys.exit(1 if blocking else 0)
+          PYEOF
+
+      - name: Upload Slither report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: slither-report
+          path: slither-report.json
+          if-no-files-found: warn
+
+  coverage:
+    name: Forge coverage (best-effort)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+
+      # KNOWN LIMITATION (documented in docs/audit/coverage.md): `forge coverage`
+      # instruments bytecode with the optimizer OFF, which makes FeeArena.sol hit
+      # "stack too deep"; the `--ir-minimum` (viaIR) workaround in turn fails to
+      # compile the =0.7.6 OZ-3.4 fork dep (EnumerableMap.sol -> solc Yul
+      # "Unimplemented feature error"). So coverage cannot run cleanly in this
+      # dual-solc workspace yet. This step is therefore NON-FATAL: it attempts the
+      # report and uploads whatever it produces, surfacing the number when the
+      # toolchain allows it WITHOUT blocking the pipeline on a known gap.
+      - name: Forge coverage (lcov, non-fatal)
+        continue-on-error: true
+        run: |
+          forge coverage \
+            --ir-minimum \
+            --no-match-coverage "(test/|script/|lib/|src/mocks/)" \
+            --no-match-path "test/fork/*" \
+            --report lcov \
+            --report-file lcov.info \
+            --report summary | tee coverage-summary.txt || true
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-coverage
+          path: |
+            lcov.info
+            coverage-summary.txt
+          if-no-files-found: warn

@@ -1,0 +1,53 @@
+# Fee Arena Keeper - systemd unit template (non-Docker alternative to Docker Compose / pm2).
+#
+# Installation (adjust paths as needed):
+#   sudo cp fee-arena-keeper.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now fee-arena-keeper
+#   sudo journalctl -fu fee-arena-keeper    # tail logs
+#
+# Assumptions:
+#   - The keeper source is installed at /srv/fee-arena-keeper/keeper/
+#   - pnpm is available as /usr/local/bin/pnpm (or adjust ExecStart below)
+#   - A non-root system user `keeper` exists: useradd --system --no-create-home keeper
+#   - The environment file lives at /srv/fee-arena-keeper/keeper/.env (from .env.example)
+#     For file-based key injection set KEEPER_PRIVATE_KEY_FILE in EnvironmentFile pointing
+#     to a file containing the 0x-prefixed hex key (managed by a secret store or chmod 400).
+
+[Unit]
+Description=Fee Arena Keeper - epoch lifecycle driver
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=keeper
+Group=keeper
+WorkingDirectory=/srv/fee-arena-keeper/keeper
+
+# Load all keeper config from the .env file (same format as .env.example).
+EnvironmentFile=/srv/fee-arena-keeper/keeper/.env
+
+# Start via pnpm so tsx + the lockfile-exact deps are used.
+ExecStart=/usr/local/bin/pnpm start
+
+# Restart policy: always restart on any exit (crash or clean exit).
+Restart=always
+RestartSec=5
+
+# Give the keeper up to 30 s to flush logs and close connections on SIGTERM.
+TimeoutStopSec=30
+
+# Harden the process: read-only filesystem except the working dir + tmp.
+ReadOnlyPaths=/
+ReadWritePaths=/srv/fee-arena-keeper/keeper
+PrivateTmp=true
+NoNewPrivileges=true
+
+# Log goes to the journal (use journalctl -u fee-arena-keeper).
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=fee-arena-keeper
+
+[Install]
+WantedBy=multi-user.target
