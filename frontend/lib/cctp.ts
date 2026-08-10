@@ -1,4 +1,4 @@
-// lib/cctp.ts - Circle CCTP V2 cross-chain USDC onboarding config + off-chain helpers.
+// lib/cctp.ts — Circle CCTP V2 cross-chain USDC onboarding config + off-chain helpers.
 //
 // Flow (source testnet -> Arc testnet): burn on source via TokenMessengerV2.depositForBurn ->
 // extract the MessageSent(bytes) message from the burn receipt -> poll Circle's Iris V2 attestation
@@ -24,7 +24,7 @@
 //    ensure maxFee is never below the minimum:
 //      maxFee = ceil(amount * minimumFeeBps / 10000)
 //    Sending maxFee=0 with FINALITY_FAST silently degrades to Standard (~15-20 min) and
-//    the 5-min attestation poll times out - use quoteMaxFee() before every depositForBurn.
+//    the 5-min attestation poll times out — use quoteMaxFee() before every depositForBurn.
 //  - Iris V2 fee quote endpoint (Fast tier):
 //      GET {IRIS_BASE}/v2/burn/USDC/fees/{srcDomain}/{dstDomain}
 //      -> array of { finalityThreshold: number, minimumFee: number } (minimumFee is BPS)
@@ -45,7 +45,7 @@ import { decodeEventLog, type Log } from 'viem';
 
 // ── ABIs ───────────────────────────────────────────────────────────────────────
 
-/** TokenMessengerV2.depositForBurn - exact V2 arg order/types (uint256,uint32,bytes32,address,bytes32,uint256,uint32). */
+/** TokenMessengerV2.depositForBurn — exact V2 arg order/types (uint256,uint32,bytes32,address,bytes32,uint256,uint32). */
 export const depositForBurnAbi = [
   {
     type: 'function',
@@ -64,7 +64,7 @@ export const depositForBurnAbi = [
   },
 ] as const;
 
-/** MessageTransmitterV2.receiveMessage(message, attestation) - mints on the destination chain. */
+/** MessageTransmitterV2.receiveMessage(message, attestation) — mints on the destination chain. */
 export const receiveMessageAbi = [
   {
     type: 'function',
@@ -78,7 +78,7 @@ export const receiveMessageAbi = [
   },
 ] as const;
 
-/** MessageTransmitter MessageSent(bytes message) - emitted by the burn; `message` is in log data (not indexed). */
+/** MessageTransmitter MessageSent(bytes message) — emitted by the burn; `message` is in log data (not indexed). */
 export const messageSentAbi = [
   {
     type: 'event',
@@ -106,7 +106,7 @@ export interface CctpChain {
 const TOKEN_MESSENGER_V2 = '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA' as const;
 const MESSAGE_TRANSMITTER_V2 = '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275' as const;
 
-/** Arc testnet - the mint destination (domain 26). */
+/** Arc testnet — the mint destination (domain 26). */
 export const ARC: CctpChain = {
   key: 'arc',
   label: 'Arc Testnet',
@@ -154,7 +154,7 @@ export const IRIS_API_URL = 'https://iris-api-sandbox.circle.com';
 export const USDC_DECIMALS = 6;
 
 /**
- * Fast Transfer (soft finality) - attestation issued after the burn is included in a block.
+ * Fast Transfer (soft finality) — attestation issued after the burn is included in a block.
  * Standard Transfer uses >= 2000 (hard finality). We default to fast for onboarding latency.
  */
 export const FINALITY_FAST = 1000;
@@ -226,7 +226,7 @@ export function messageFromReceipt(logs: readonly Log[] | Log[]): `0x${string}` 
         if (message) return message;
       }
     } catch {
-      // Not a MessageSent log - keep scanning.
+      // Not a MessageSent log — keep scanning.
     }
   }
   throw new Error('No MessageSent event found in the burn transaction receipt.');
@@ -323,7 +323,7 @@ export async function quoteMaxFee(
   }
 
   // Iris returns `minimumFee` in BPS and it may be FRACTIONAL (e.g. 1.3 bps on the Base Sepolia → Arc
-  // route) - `BigInt(1.3)` throws "cannot be converted to a BigInt because it is not an integer". Scale
+  // route) — `BigInt(1.3)` throws "cannot be converted to a BigInt because it is not an integer". Scale
   // the bps to an integer micro-bps (bps × 1e4) so the math stays in BigInt:
   //   maxFee = ceil(amount × bps / 10_000) = ceil(amount × microBps / (10_000 × 1e4)).
   const minimumFeeBps = Number(fastEntry.minimumFee);

@@ -1,13 +1,13 @@
-// lib/quant.ts - pure projection math that QUANTIFIES the game for the UI: pot USD value, the
+// lib/quant.ts — pure projection math that QUANTIFIES the game for the UI: pot USD value, the
 // "implied move to win" derived from the band, and the share text/URL for a win card. All money math
 // is BigInt and FLOORS (truncates toward zero) to match the contract; format only at render.
 //
 // HONEST framing rule: nothing here fabricates odds or probabilities. The implied move is a pure
 // restatement of the band (a 20-bps band ⇒ "BTC must move >0.20% this epoch for UP/DOWN; else RANGE"),
-// and pot USD values are pot tokens × the live oracle price - both are facts, not predictions.
+// and pot USD values are pot tokens × the live oracle price — both are facts, not predictions.
 
 /**
- * USD value (scaled to 6dp, i.e. micro-dollars - same scale as USDC) of a base-token amount priced by
+ * USD value (scaled to 6dp, i.e. micro-dollars — same scale as USDC) of a base-token amount priced by
  * the 18dp oracle quote. Floors. Pure ratio:
  *   usd6 = floor( baseRaw * price18 * 1e6 / (10^baseDecimals * 1e18) )
  * baseRaw is the base leg at its own decimals (cirBTC 8dp, WETH 18dp, …); price18 is 1e18 == $1.
@@ -34,10 +34,10 @@ export function potUsd6(args: {
 }
 
 /**
- * Total ~USD value (6dp) distributed to winners across a set of leaderboard rows - i.e. the market's
+ * Total ~USD value (6dp) distributed to winners across a set of leaderboard rows — i.e. the market's
  * lifetime claimed payout. Each row's base leg is valued at the live price (baseUsd6) and added to its
  * USDC leg; price18==0 (oracle unread) ⇒ only the USDC legs contribute. Pure aggregate of on-chain
- * Claimed payouts - no fabricated figure. `rows` is the useLeaderboard projection (claimedBase/USDC).
+ * Claimed payouts — no fabricated figure. `rows` is the useLeaderboard projection (claimedBase/USDC).
  */
 export function totalClaimedUsd6(
   rows: ReadonlyArray<{ claimedBase: bigint; claimedUSDC: bigint }>,
@@ -67,7 +67,7 @@ export function impliedMove(bandBps: number): { pct: number; bps: number } {
 export function impliedMoveText(bandBps: number, symbol: string): string {
   const { pct, bps } = impliedMove(bandBps);
   if (bps === 0) return `Any move decides UP/DOWN; an exactly-flat epoch is a RANGE win`;
-  // |pct| < 1 keeps 2 decimals (0.20%), ≥1 trims (1.5%) - mirrors lib/format.formatBps legibility.
+  // |pct| < 1 keeps 2 decimals (0.20%), ≥1 trims (1.5%) — mirrors lib/format.formatBps legibility.
   const pctStr = pct < 1 ? pct.toFixed(2) : String(pct);
   return `${symbol} must move >${pctStr}% this epoch for UP/DOWN; else RANGE`;
 }
@@ -79,7 +79,7 @@ export function priceSymbol(baseSymbol: string): string {
 
 /**
  * Compact USD label for a 6dp USD value. Sub-$1 keeps 2 decimals ("$0.42"); ≥$1 rounds to whole
- * dollars with thousands separators ("$1,234"). Pure string math on the integer dollars/cents - no
+ * dollars with thousands separators ("$1,234"). Pure string math on the integer dollars/cents — no
  * float drift on the dollar part. Negative inputs are clamped to 0 (USD values here are non-negative).
  */
 export function formatUsd6(usd6: bigint, symbol = '$'): string {
@@ -98,21 +98,21 @@ export function formatUsd6(usd6: bigint, symbol = '$'): string {
 
 /**
  * USD label that DOES NOT vanish for dust amounts. At or above $0.01 it defers to formatUsd6 (cents,
- * then whole dollars with separators). Below a cent - but non-zero - it shows the real micro-dollar
+ * then whole dollars with separators). Below a cent — but non-zero — it shows the real micro-dollar
  * value with up to 6 fractional digits (trailing zeros trimmed), so a tiny-but-real pot reads as e.g.
  * "$0.000526" instead of rounding away to "$0.00". A genuine zero still shows "$0.00".
  */
 export function formatUsd6Precise(usd6: bigint, symbol = '$'): string {
   const v = usd6 < 0n ? 0n : usd6;
   if (v === 0n) return `${symbol}0.00`;
-  if (v >= 10_000n) return formatUsd6(v, symbol); // ≥ $0.01 - cents/dollars read fine
+  if (v >= 10_000n) return formatUsd6(v, symbol); // ≥ $0.01 — cents/dollars read fine
   // Sub-cent: v is micro-dollars (6dp). Pad to 6 fractional digits, trim trailing zeros.
   const frac = v.toString().padStart(6, '0').replace(/0+$/, '');
   return `${symbol}0.${frac}`;
 }
 
 /**
- * Cumulative USD value (6dp) of every settled epoch's fee pool - the total trading fees the arena has
+ * Cumulative USD value (6dp) of every settled epoch's fee pool — the total trading fees the arena has
  * redistributed to date. The entry-anchored (v3) arena only snapshots a pot AT settlement, so the live
  * epoch's pot is always 0; this aggregate over the settled history is the honest non-zero "fee pool"
  * figure to surface. Each row's base leg is valued at the live price and added to its USDC leg.
@@ -139,11 +139,11 @@ export function epochShareUrl(origin: string, epochId: bigint): string {
 }
 
 /**
- * Share copy for a settled win, e.g. 'Epoch #7 - DOWN won. I earned $1,234 on Limen Finance.'
+ * Share copy for a settled win, e.g. 'Epoch #7 — DOWN won. I earned $1,234 on Limen Finance.'
  * `winningLabel` is the SIDE label ("UP"/"DOWN"/"RANGE"); `usd6` is the user's earned payout in 6dp USD.
  */
 export function winShareText(args: { epochId: bigint; winningLabel: string; usd6: bigint }): string {
-  return `Epoch #${args.epochId.toString()} - ${args.winningLabel} won. I earned ${formatUsd6(
+  return `Epoch #${args.epochId.toString()} — ${args.winningLabel} won. I earned ${formatUsd6(
     args.usd6,
   )} on Limen Finance.`;
 }

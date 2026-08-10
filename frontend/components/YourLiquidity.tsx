@@ -1,19 +1,19 @@
 'use client';
 
-// components/YourLiquidity.tsx - "Your positions" (the off-ramp), styled as Uniswap's Pool page.
+// components/YourLiquidity.tsx — "Your positions" (the off-ramp), styled as Uniswap's Pool page.
 //
 // Lists the connected wallet's withdrawable LP positions for the ACTIVE market's pool (via
 // useOwnedPositions, which excludes already-staked positions). Each position renders as a Uniswap-style
 // position card: the overlapping pair glyph + the pair label (e.g. "cirBTC / USDC") + a fee-tier badge
-// (0.3%) + the position's REAL price band ("Full range" or "min - max USDC" from its ticks) + an
-// In range / Out of range status chip (the pool's current tick vs the band - out of range = earning
+// (0.3%) + the position's REAL price band ("Full range" or "min – max USDC" from its ticks) + an
+// In range / Out of range status chip (the pool's current tick vs the band — out of range = earning
 // no fees), the estimated tokens you'd reclaim, and a per-position "Withdraw" action that pulls 100%
 // of that position's liquidity back to the wallet via useRemoveLiquidity. Base-token-agnostic (cirBTC 8dp);
 // the band's human prices resolve the baseIsToken0=false inversion via lib/rangeMath tickToPrice.
 //
 // The empty / disconnected state mirrors Uniswap's Pool page exactly: a centered card with a wallet icon
 // tile, a short message, a "New position" button (which reveals the Create-position form via onNewPosition)
-// and - when disconnected - the wallet <Connect/> control. Pairs with the on-ramp (ProvideLiquidity).
+// and — when disconnected — the wallet <Connect/> control. Pairs with the on-ramp (ProvideLiquidity).
 import { useAccount, useReadContract } from 'wagmi';
 import { useOwnedPositions } from '@/hooks/useOwnedPositions';
 import { useRemoveLiquidity } from '@/hooks/useRemoveLiquidity';
@@ -54,7 +54,7 @@ function EstimatedReturn({ position, pool }: { position: OwnedPosition; pool: Po
     return (
       <span
         className="font-mono text-ink-soft"
-        title="Sent to your wallet on Withdraw - your principal PLUS all unclaimed fees, in one transaction."
+        title="Sent to your wallet on Withdraw — your principal PLUS all unclaimed fees, in one transaction."
       >
         Withdraw returns ≈ {formatBase(base, baseDecimals)} {baseSymbol} + {formatUSDC(usdc)} {pool.quote.symbol}
       </span>
@@ -65,7 +65,7 @@ function EstimatedReturn({ position, pool }: { position: OwnedPosition; pool: Po
     return <span className="font-mono text-ink-muted">estimating return…</span>;
   }
 
-  // Estimate unavailable (reverted / no RPC) - fall back to the raw liquidity magnitude.
+  // Estimate unavailable (reverted / no RPC) — fall back to the raw liquidity magnitude.
   return (
     <span className="font-mono text-ink-muted">liquidity: {position.liquidity.toString()}</span>
   );
@@ -73,12 +73,12 @@ function EstimatedReturn({ position, pool }: { position: OwnedPosition; pool: Po
 
 /**
  * One Uniswap-style position card: the pair glyph + pair label + fee-tier badge + the position's REAL
- * range badge ("Full range" or its "min - max USDC" band) + an In range / Out of range status chip
+ * range badge ("Full range" or its "min – max USDC" band) + an In range / Out of range status chip
  * across the top, the estimated reclaim amounts beneath, and a Withdraw action on the right. The
- * withdraw flow is unchanged - clicking calls useRemoveLiquidity(tokenId).remove which burns 100%.
+ * withdraw flow is unchanged — clicking calls useRemoveLiquidity(tokenId).remove which burns 100%.
  */
 function PositionCard({ position, pool }: { position: OwnedPosition; pool: PoolInfo }) {
-  // Base/quote come from the SELECTED pool (cirBTC/USDC, cirBTC/EURC, EURC/USDC) - never assumed to be
+  // Base/quote come from the SELECTED pool (cirBTC/USDC, cirBTC/EURC, EURC/USDC) — never assumed to be
   // {non-USDC, USDC}, so cirBTC/EURC (no USDC leg) labels + amount mapping are correct.
   const baseSymbol = pool.base.symbol;
   const baseDecimals = pool.base.decimals;
@@ -138,7 +138,7 @@ function PositionCard({ position, pool }: { position: OwnedPosition; pool: PoolI
             <span className="inline-flex items-center gap-1 rounded-full border border-line bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-ink-soft">
               {formatBps(ENV.FEE_TIER / 100)}
             </span>
-            {/* The position's REAL price band: "Full range" or "min - max USDC" from its ticks. */}
+            {/* The position's REAL price band: "Full range" or "min – max USDC" from its ticks. */}
             <span
               data-testid={`range-badge-${id}`}
               className="inline-flex items-center gap-1 rounded-full border border-line bg-surface-muted px-2 py-0.5 font-mono text-[11px] font-medium text-ink-soft"
@@ -156,7 +156,7 @@ function PositionCard({ position, pool }: { position: OwnedPosition; pool: PoolI
                     : 'bg-amber-400/10 text-amber-700 ring-amber-400/30 dark:text-amber-300',
                 )}
               >
-                {inRange ? 'In range' : 'Out of range - earning no fees'}
+                {inRange ? 'In range' : 'Out of range — earning no fees'}
               </span>
             )}
           </div>
@@ -168,7 +168,7 @@ function PositionCard({ position, pool }: { position: OwnedPosition; pool: PoolI
             <EstimatedReturn position={position} pool={pool} />
           </div>
           {/* Unclaimed trading fees this position has earned. Claimable on their own via Collect fees,
-              but ALSO already counted in the "Withdraw returns" amount above - so withdrawing never
+              but ALSO already counted in the "Withdraw returns" amount above — so withdrawing never
               loses them. We say so inline because users assumed Withdraw dropped the fees. */}
           <div data-testid={`fees-${id}`} className="mt-0.5 text-xs">
             <span className="font-mono text-ink-muted">Unclaimed fees: </span>
@@ -188,7 +188,7 @@ function PositionCard({ position, pool }: { position: OwnedPosition; pool: PoolI
 
       <div className="flex shrink-0 flex-col items-end gap-1.5">
         <div className="flex items-center gap-2">
-          {/* Claim accrued trading fees WITHOUT withdrawing - the "claim" for liquidity-only LPs. */}
+          {/* Claim accrued trading fees WITHOUT withdrawing — the "claim" for liquidity-only LPs. */}
           <button
             type="button"
             data-testid={`collect-${id}`}
@@ -197,7 +197,7 @@ function PositionCard({ position, pool }: { position: OwnedPosition; pool: PoolI
             className={buttonClass('primary', 'sm')}
             title={
               hasFees
-                ? 'Take only the earned fees to your wallet - keeps your liquidity in place so it keeps earning. (Withdraw already includes these fees.)'
+                ? 'Take only the earned fees to your wallet — keeps your liquidity in place so it keeps earning. (Withdraw already includes these fees.)'
                 : 'No fees to collect yet'
             }
           >
@@ -245,7 +245,7 @@ function PositionCard({ position, pool }: { position: OwnedPosition; pool: PoolI
 
 /**
  * Uniswap's empty / disconnected Pool state: a centered card with a wallet icon tile, a short headline +
- * message, a grey "New position" button (reveals the Create-position form) and - when disconnected - the
+ * message, a grey "New position" button (reveals the Create-position form) and — when disconnected — the
  * pink "Connect wallet" control. `onNewPosition` is wired by the page to reveal <ProvideLiquidity/>.
  */
 function EmptyState({
@@ -292,7 +292,7 @@ export function YourLiquidity({
   pool,
   onNewPosition,
 }: {
-  /** The selected pool (pair) - the list + per-card labels/orientation are scoped to it. */
+  /** The selected pool (pair) — the list + per-card labels/orientation are scoped to it. */
   pool: PoolInfo;
   onNewPosition?: () => void;
 }) {
@@ -333,7 +333,7 @@ export function YourLiquidity({
               <span>
                 <strong className="font-medium text-ink-soft">Withdraw</strong> sends your liquidity{' '}
                 <strong className="font-medium text-ink-soft">and all unclaimed fees</strong> to your wallet
-                in one transaction - you never have to Collect first, and withdrawing never leaves fees
+                in one transaction — you never have to Collect first, and withdrawing never leaves fees
                 behind. <strong className="font-medium text-ink-soft">Collect fees</strong> is optional: it
                 takes only the earned fees and leaves your liquidity in place so it keeps earning. Staked
                 positions are excluded until you unstake them.

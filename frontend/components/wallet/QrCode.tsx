@@ -1,6 +1,6 @@
 'use client';
 
-// components/wallet/QrCode.tsx - a crisp SVG QR for a wallet address. Rendered on a white card so it
+// components/wallet/QrCode.tsx — a crisp SVG QR for a wallet address. Rendered on a white card so it
 // stays scannable on the dark theme. Generated from our own address string (no remote/user input).
 
 import { useMemo } from 'react';

@@ -1,4 +1,4 @@
-// abis/index.ts - barrel re-export of every typed const ABI.
+// abis/index.ts — barrel re-export of every typed const ABI.
 export { feeArenaAbi } from './feeArena';
 export { feeArenaV2Abi } from './feeArenaV2';
 export { feeArenaV3Abi } from './feeArenaV3';
@@ -11,3 +11,4 @@ export { uniswapV3PoolAbi } from './uniswapV3Pool';
 export { uniswapV3FactoryAbi } from './uniswapV3Factory';
 export { erc20Abi } from './erc20';
 export { erc721Abi } from './erc721';
+export { quoterV2Abi } from './quoterV2';

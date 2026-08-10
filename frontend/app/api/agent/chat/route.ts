@@ -1,4 +1,4 @@
-// app/api/agent/chat/route.ts - the Limen Copilot conversation endpoint.
+// app/api/agent/chat/route.ts — the Limen Copilot conversation endpoint.
 //
 // POST { messages: [{role, content}], address?, marketId } -> Server-Sent Events:
 //   {type:'text',   delta}                    streamed assistant prose
@@ -8,9 +8,9 @@
 //
 // The route runs Claude with tool-use in a bounded server-side loop: read-tools (market
 // state, odds, positions, knowledge) execute HERE between model turns; `propose_action`
-// never executes - it is validated and forwarded to the client, where the user confirms and
+// never executes — it is validated and forwarded to the client, where the user confirms and
 // the app's existing transaction hooks sign. History arrives as plain text turns (the client
-// does not replay tool internals), so the model re-reads live state each turn - always fresh.
+// does not replay tool internals), so the model re-reads live state each turn — always fresh.
 // Without ANTHROPIC_API_KEY the endpoint reports 'not_configured' and the page shows an
 // honest offline card instead of a broken chat.
 import { systemPrompt, COPILOT_TOOLS, runCopilotTool, validateActionProposal } from '@/lib/agent/copilot';
@@ -131,16 +131,16 @@ async function streamModelTurn(
 }
 
 // Cost bound: a per-wallet (or per-IP) daily message quota (lib/agent/quota). In-memory per
-// isolate - a soft cap, deliberately simple until x402 nanopayments become the real billing
+// isolate — a soft cap, deliberately simple until x402 nanopayments become the real billing
 // layer (see docs/AGENT.md "Paying for the copilot").
 const quota = new Map<string, QuotaEntry>();
 
 // Master switch: on by default; set AGENT_ENABLED=false to park the copilot (the page shows
-// its offline card and POST refuses) - a hard stop on model spend without touching the key.
+// its offline card and POST refuses) — a hard stop on model spend without touching the key.
 const agentEnabled = (): boolean => process.env.AGENT_ENABLED !== 'false';
 
 // Models users may pick from. AGENT_MODELS (comma-separated) overrides; the first entry is
-// the default. Requests asking for anything off-list get the default - never a free choice
+// the default. Requests asking for anything off-list get the default — never a free choice
 // of arbitrary (pricier) models.
 function allowedModels(): string[] {
   const csv = (process.env.AGENT_MODELS ?? '').trim();
@@ -149,7 +149,7 @@ function allowedModels(): string[] {
   return [...new Set(list)];
 }
 
-/** GET - the copilot's status card: configured?, which model, today's quota, billing. */
+/** GET — the copilot's status card: configured?, which model, today's quota, billing. */
 export function GET(): Response {
   const configured = agentEnabled() && Boolean(process.env.ANTHROPIC_API_KEY);
   const x402 = loadX402Config();
@@ -169,7 +169,7 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ error: 'not_configured' }, { status: 503 });
   }
 
-  // Bound the request body - a chat turn is a few KB; anything huge is abuse.
+  // Bound the request body — a chat turn is a few KB; anything huge is abuse.
   if (Number(req.headers.get('content-length') ?? 0) > 131_072) {
     return Response.json({ error: 'request too large' }, { status: 413 });
   }
@@ -243,13 +243,13 @@ export async function POST(req: Request): Promise<Response> {
         settleReceipt = encodeBase64Json(s);
         paid = true;
       } catch (err) {
-        // Facilitator outage must not brick the copilot - fall back to the quota bound.
+        // Facilitator outage must not brick the copilot — fall back to the quota bound.
         console.error('x402 facilitator unavailable:', err instanceof Error ? err.message : String(err));
       }
     }
   }
 
-  // With billing ON, a small daily free allowance (20) covers trying the copilot out -
+  // With billing ON, a small daily free allowance (20) covers trying the copilot out —
   // beyond it every message pays. AGENT_DAILY_MSG_LIMIT overrides (0 = pay from the first
   // message). With billing OFF the daily quota is the only cost bound, as before.
   const limit = Number(process.env.AGENT_DAILY_MSG_LIMIT ?? (x402.enabled ? 20 : 40));
@@ -262,8 +262,8 @@ export async function POST(req: Request): Promise<Response> {
       return respond402(
         x402,
         limit > 0
-          ? `free daily quota (${limit} messages) exhausted - pay per message to continue`
-          : 'this copilot is pay-per-message - each message settles in USDC over Circle x402',
+          ? `free daily quota (${limit} messages) exhausted — pay per message to continue`
+          : 'this copilot is pay-per-message — each message settles in USDC over Circle x402',
       );
     }
     return Response.json({ error: 'quota', limit }, { status: 429 });
@@ -300,7 +300,7 @@ export async function POST(req: Request): Promise<Response> {
           }
           if (proposed) break;
 
-          // Drop empty text blocks (a text block may open without deltas) - the API rejects them.
+          // Drop empty text blocks (a text block may open without deltas) — the API rejects them.
           convo.push({ role: 'assistant', content: blocks.filter((b) => b.type !== 'text' || b.text !== '') });
           convo.push({ role: 'user', content: results });
         }

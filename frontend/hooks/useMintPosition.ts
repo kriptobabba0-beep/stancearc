@@ -1,11 +1,11 @@
-// hooks/useMintPosition.ts - mint a Uniswap-V3 position in the ACTIVE market's pool, so a user can
+// hooks/useMintPosition.ts — mint a Uniswap-V3 position in the ACTIVE market's pool, so a user can
 // self-serve from tokens -> stakeable position (the on-ramp). Mirrors DeployMarket._seed:
 //   - token0/token1 = the pool's ADDRESS-SORTED pair (resolved via useActiveBaseToken().baseIsToken0
 //     + the global USDC), so we never assume the base is token0 (USDC can sort first).
 //   - fee          = ENV.FEE_TIER (the pool's fee tier).
 //   - tickLower/tickUpper = CALLER-SELECTED, spacing-aligned ticks (the range picker builds them via
 //     lib/rangeMath presetTicks/customTicks). When omitted we default to the spacing-aligned full
-//     range for the fee tier (−887220/887220 for the 0.3% tier, spacing 60) - always in-range,
+//     range for the fee tier (−887220/887220 for the 0.3% tier, spacing 60) — always in-range,
 //     simplest for a first-timer and back-compatible with the original full-range-only flow.
 //   - amount0Desired/amount1Desired = the user's chosen (base, USDC) amounts mapped to the sorted pair.
 //   - amount0Min/amount1Min = 0 (testnet; slippage-guarded later).
@@ -76,7 +76,7 @@ export interface MintPositionArgs {
 }
 
 /**
- * Pure MintParams builder - testable in isolation. Orders (base, USDC) into the pool's sorted
+ * Pure MintParams builder — testable in isolation. Orders (base, USDC) into the pool's sorted
  * (token0, token1) by `baseIsToken0`, applies the selected ticks (default: full range) + zero mins +
  * far-future deadline. Callers supplying ticks MUST pass spacing-aligned values (rangeMath does).
  */
@@ -121,9 +121,9 @@ export function buildMintParams(opts: {
 
 /**
  * Optional explicit pool target. When supplied (the pool-selectable /pool LP), the mint uses these
- * legs DIRECTLY instead of the active market's pool - so it works for ANY registry pair (incl.
+ * legs DIRECTLY instead of the active market's pool — so it works for ANY registry pair (incl.
  * cirBTC/EURC, which has no USDC leg). When omitted, the hook falls back to the active market via
- * useActiveBaseToken + the global USDC (the Arena AddLiquidityModal path - unchanged).
+ * useActiveBaseToken + the global USDC (the Arena AddLiquidityModal path — unchanged).
  */
 export interface MintPoolOverride {
   baseToken: `0x${string}`;
@@ -143,7 +143,7 @@ export function useMintPosition(override?: MintPoolOverride) {
   const baseIsToken0 = override ? override.baseIsToken0 : active.baseIsToken0;
   const quoteAddress = override?.quoteToken ?? usdc.address;
   const feeTier = override?.feeTier ?? ENV.FEE_TIER;
-  // The explicit override is resolved synchronously from the registry - never "loading".
+  // The explicit override is resolved synchronously from the registry — never "loading".
   const baseLoading = override ? false : active.isLoading;
   const { writeContractAsync, data: hash, isPending: isWriting } = useArcWriteContract();
   const [error, setError] = useState<Error | undefined>();
@@ -165,11 +165,11 @@ export function useMintPosition(override?: MintPoolOverride) {
     isSuccess,
     isError: isReceiptError,
     labels: {
-      success: 'Liquidity added - position minted',
-      reverted: 'Mint reverted - liquidity not added',
-      // The receipt wait timed out / RPC stalled - the mint may well have CONFIRMED (Arc can be slow to
+      success: 'Liquidity added — position minted',
+      reverted: 'Mint reverted — liquidity not added',
+      // The receipt wait timed out / RPC stalled — the mint may well have CONFIRMED (Arc can be slow to
       // return receipts). Reassure rather than claim failure: the position appears via the background poll.
-      error: 'Mint sent - couldn’t confirm yet. If it went through, your position appears shortly (or refresh).',
+      error: 'Mint sent — couldn’t confirm yet. If it went through, your position appears shortly (or refresh).',
     },
   });
 
@@ -180,7 +180,7 @@ export function useMintPosition(override?: MintPoolOverride) {
         if (!address) throw new Error('Connect your wallet first.');
         if (!publicClient) throw new Error('No RPC client available.');
         if (!baseToken || baseIsToken0 === undefined) {
-          throw new Error('Pool is still loading - try again in a moment.');
+          throw new Error('Pool is still loading — try again in a moment.');
         }
         if (baseAmount <= 0n && usdcAmount <= 0n) throw new Error('Enter a base or USDC amount.');
 
@@ -198,7 +198,7 @@ export function useMintPosition(override?: MintPoolOverride) {
         });
 
         setIsSimulating(true);
-        // MANDATORY preflight - catches missing allowance / pool-not-initialized / bad amounts
+        // MANDATORY preflight — catches missing allowance / pool-not-initialized / bad amounts
         // before signing (mirrors useStakeWithSide).
         const { request } = await publicClient.simulateContract({
           account: address,
@@ -239,7 +239,7 @@ export function useMintPosition(override?: MintPoolOverride) {
     isSuccess,
     error,
     hash,
-    /** True while the pool ordering is still resolving - callers should disable the mint button. */
+    /** True while the pool ordering is still resolving — callers should disable the mint button. */
     isPoolLoading: baseLoading || baseIsToken0 === undefined || !baseToken,
   };
 }

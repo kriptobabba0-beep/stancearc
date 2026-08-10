@@ -17,7 +17,7 @@ function widthPct(value: bigint, max: bigint): number {
 
 /** Render a staked-depth bigint as a plain thousands-separated integer (no currency symbol). */
 function formatLiquidity(value: bigint): string {
-  // Manual thousands-separator - avoids locale-dependent output in SSR / test environments.
+  // Manual thousands-separator — avoids locale-dependent output in SSR / test environments.
   return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 

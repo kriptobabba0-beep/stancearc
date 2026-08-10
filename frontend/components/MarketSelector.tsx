@@ -1,6 +1,6 @@
 'use client';
 
-// components/MarketSelector.tsx - segmented control listing MARKETS, each shown with its token-pair coins
+// components/MarketSelector.tsx — segmented control listing MARKETS, each shown with its token-pair coins
 // (so you see cirBTC/USDC vs cirBTC/EURC at a glance) and a crimson "selected" accent. Switching calls
 // the context setter, which re-points every FeeArena/oracle/pool read & write at the selected market.
 // Hidden when only one market is configured (single-market env = no selector, today's UI unchanged).
@@ -38,7 +38,7 @@ export function MarketSelector({ className }: { className?: string }) {
             onClick={() => setMarketId(m.id)}
             className={cn(
               // flex-1 keeps the tabs equal width; NO min-w-0 + a nowrap label below means a tab
-              // never shrinks under its single-line content - so every pair reads on ONE line the
+              // never shrinks under its single-line content — so every pair reads on ONE line the
               // way "cirBTC / EURC" does, instead of the shorter "cirBTC / USDC" wrapping to two.
               'flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg px-2.5 py-2 transition-colors focus-visible:outline-none focus-visible:shadow-focus',
               active ? 'bg-brand/[0.12] ring-1 ring-inset ring-brand/40' : 'hover:bg-surface-muted',

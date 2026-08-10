@@ -1,4 +1,4 @@
-// app/leaderboard/layout.tsx - segment metadata (the page itself is a client component).
+// app/leaderboard/layout.tsx — segment metadata (the page itself is a client component).
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 

@@ -1,6 +1,6 @@
 'use client';
 
-// components/wallet/WalletExperience.tsx - what /wallet renders, by state:
+// components/wallet/WalletExperience.tsx — what /wallet renders, by state:
 //   • embedded (Google/Email/PIN) ready → the full <MyWallet/> experience
 //   • browser wallet connected         → a friendly notice (manage in the extension)
 //   • signed out                       → a premium prompt that opens the Sign In modal
@@ -37,7 +37,7 @@ function SignInPrompt() {
           </span>
           <h1 className="mt-5 font-display text-2xl font-semibold tracking-tight text-ink">Open your wallet</h1>
           <p className="mt-2 max-w-xs text-sm text-ink-soft">
-            Sign in with Google or email - your Limen wallet opens in seconds, with balances, transfers,
+            Sign in with Google or email — your Limen wallet opens in seconds, with balances, transfers,
             and activity in one place. Or connect any EVM browser wallet.
           </p>
           <button type="button" data-testid="prompt-signin" onClick={open} className={buttonClass('primary', 'lg', 'mt-6 w-full')}>

@@ -1,4 +1,4 @@
-// hooks/useEpoch.ts - polled FeeArena.getEpoch(id) -> EpochView; enabled only when id is set.
+// hooks/useEpoch.ts — polled FeeArena.getEpoch(id) -> EpochView; enabled only when id is set.
 //
 // VERSION-AWARE: a v1 market's getEpoch(id) returns the collapsed EpochView (used verbatim). A v2
 // market's getEpoch(id) returns the RAW EpochV2 struct (NO epochId, raw 6-phase, conviction fields),

@@ -18,11 +18,11 @@ export function WrongNetworkBanner() {
   // Never nag when disconnected.
   if (!isConnected) return null;
 
-  // On the /bridge route the wallet intentionally switches to a CCTP source chain for the burn step -
+  // On the /bridge route the wallet intentionally switches to a CCTP source chain for the burn step —
   // suppress the banner for Arc AND all registered source chains there.
   if (pathname === '/bridge' && BRIDGE_CHAIN_IDS.has(chainId)) return null;
 
-  // On all other routes, only Arc is the correct network - warn for anything else.
+  // On all other routes, only Arc is the correct network — warn for anything else.
   if (pathname !== '/bridge' && chainId === ARC_CHAIN_ID) return null;
 
   return (

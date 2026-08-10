@@ -1,6 +1,6 @@
 'use client';
 
-// components/auth/SignInButton.tsx - the SINGLE wallet control in the top nav (replaces the old
+// components/auth/SignInButton.tsx — the SINGLE wallet control in the top nav (replaces the old
 // "Create Wallet" + "Connect Wallet" pair).
 //   • signed out → a crimson "Sign In" button that opens the AuthModal.
 //   • signed in  → an account chip (status dot + short address) with a popover: Open My Wallet ·
@@ -70,7 +70,7 @@ export function SignInButton() {
     );
   }
 
-  // Injected side: name the ACTUAL wallet (MetaMask, Rabby, OKX…) - never assume MetaMask.
+  // Injected side: name the ACTUAL wallet (MetaMask, Rabby, OKX…) — never assume MetaMask.
   const methodLabel = embedded ? (circle.kind ? KIND_LABEL[circle.kind] : 'Wallet') : connector?.name || 'Wallet';
 
   return (

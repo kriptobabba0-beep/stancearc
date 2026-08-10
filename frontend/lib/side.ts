@@ -1,4 +1,4 @@
-// lib/side.ts - Side enum encode/decode (single pinned scheme) + labels/colors.
+// lib/side.ts — Side enum encode/decode (single pinned scheme) + labels/colors.
 // Stake encoding: encodeAbiParameters([{type:'uint8'}],[side]) <-> the contract's
 // onERC721Received: `data.length == 32` + `abi.decode(data,(uint8))`, rejecting NONE
 // (raw < UP || raw > RANGE => BadSide). Verified against src/FeeArena.sol L306-309.
@@ -31,7 +31,7 @@ export function sideLabel(side: Side): string {
   }
 }
 
-/** Tailwind color tokens - UP=green, DOWN=red, RANGE=blue (matches tailwind.config side tokens). */
+/** Tailwind color tokens — UP=green, DOWN=red, RANGE=blue (matches tailwind.config side tokens). */
 export const SIDE_COLOR: Record<Side, string> = {
   [Side.NONE]: 'text-ink-faint',
   [Side.UP]: 'text-side-up',

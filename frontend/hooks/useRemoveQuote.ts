@@ -1,4 +1,4 @@
-// hooks/useRemoveQuote.ts - estimate what a position would return on withdraw, by SIMULATING the exact
+// hooks/useRemoveQuote.ts — estimate what a position would return on withdraw, by SIMULATING the exact
 // remove path useRemoveLiquidity will run:
 //
 //   NPM.multicall([
@@ -9,10 +9,10 @@
 // eth_call'd as the connected owner. The multicall RESULT is bytes[]; element [1] is the collect
 // return = (amount0, amount1) = the TOTAL tokens that would land in the wallet (freed principal + any
 // owed fees). decreaseLiquidity must run FIRST in the same multicall so collect sees the freed
-// principal - simulating both together is what makes the estimate correct.
+// principal — simulating both together is what makes the estimate correct.
 //
 // amount0/amount1 are ADDRESS-SORTED (the pool's token0/token1). We map them to (base, USDC) the same
-// way PositionPicker does - via useActiveBaseToken.baseIsToken0 (the non-USDC leg is the base). Returns
+// way PositionPicker does — via useActiveBaseToken.baseIsToken0 (the non-USDC leg is the base). Returns
 // the raw base/usdc bigints (caller formats with lib/format at baseDecimals / 6dp), plus loading/error
 // flags so the row can fall back to the raw-liquidity display if the estimate is unavailable.
 import { useMemo } from 'react';
@@ -24,7 +24,7 @@ import { useActiveBaseToken } from '@/hooks/useActiveBaseToken';
 import { nonfungiblePositionManagerAbi } from '@/abis/nonfungiblePositionManager';
 
 const MAX_UINT128 = (1n << 128n) - 1n;
-// 20-minute deadline - generous for testnet block times; identical to useRemoveLiquidity so the
+// 20-minute deadline — generous for testnet block times; identical to useRemoveLiquidity so the
 // simulated path matches the path the write will actually take.
 const DEADLINE_BUFFER_SECONDS = 20n * 60n;
 
@@ -39,12 +39,12 @@ export interface RemoveQuote {
   baseSymbol: string;
   /** True while the simulation (or the base-leg classification) is in flight. */
   isLoading: boolean;
-  /** True when the estimate is unavailable (simulation reverted/failed) - caller falls back gracefully. */
+  /** True when the estimate is unavailable (simulation reverted/failed) — caller falls back gracefully. */
   isError: boolean;
 }
 
 /**
- * Estimate the cirBTC + USDC a position would return on withdraw. Pure read (eth_call) - never writes.
+ * Estimate the cirBTC + USDC a position would return on withdraw. Pure read (eth_call) — never writes.
  * Falls back to `{ base: undefined, usdc: undefined, isError: true }` if the simulation is unavailable
  * so the consuming row can render the raw liquidity instead of crashing.
  */
@@ -58,7 +58,7 @@ export function useRemoveQuote({
   /**
    * Optional explicit base-leg classification (the pool-selectable /pool off-ramp). When supplied the
    * (amount0,amount1)→(base,quote) mapping + the display decimals/symbol come from the SELECTED pool
-   * instead of the active market - so it's correct for any pair (incl. cirBTC/EURC). Omitted = active
+   * instead of the active market — so it's correct for any pair (incl. cirBTC/EURC). Omitted = active
    * market via useActiveBaseToken (unchanged).
    */
   base?: { baseIsToken0: boolean; decimals: number; symbol: string };
@@ -103,7 +103,7 @@ export function useRemoveQuote({
     account: address,
     chainId: arcTestnet.id,
     // Only simulate once we have an owner AND a non-zero position to remove (decreaseLiquidity(0)
-    // reverts - a 0-liquidity row has nothing to estimate).
+    // reverts — a 0-liquidity row has nothing to estimate).
     query: { enabled: Boolean(address) && liquidity > 0n },
   });
 
@@ -119,7 +119,7 @@ export function useRemoveQuote({
       }) as readonly [bigint, bigint];
       return decoded;
     } catch {
-      // A malformed/empty result is treated as "estimate unavailable" - caller falls back.
+      // A malformed/empty result is treated as "estimate unavailable" — caller falls back.
       return undefined;
     }
   }, [data]);

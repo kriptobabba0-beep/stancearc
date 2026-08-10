@@ -1,5 +1,5 @@
-// hooks/useSweepProgress.ts - polled settlement-processing progress -> {done,total}; gates Claim
-// (done===total). v1/v2 expose it as sweepProgress; v3 (entry-anchored) as processProgress - the
+// hooks/useSweepProgress.ts — polled settlement-processing progress -> {done,total}; gates Claim
+// (done===total). v1/v2 expose it as sweepProgress; v3 (entry-anchored) as processProgress — the
 // (uint64) -> (uint32,uint32) shape is identical, only the crank it tracks differs.
 import { useReadContract } from 'wagmi';
 import type { Abi } from 'viem';

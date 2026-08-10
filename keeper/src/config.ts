@@ -1,4 +1,4 @@
-// config.ts - load + validate the keeper environment. Throws on any missing/invalid
+// config.ts — load + validate the keeper environment. Throws on any missing/invalid
 // value so a misconfigured keeper fails fast at boot rather than mid-loop. Pure-ish:
 // loadConfig() reads process.env (after dotenv) and returns a frozen typed config.
 import 'dotenv/config';
@@ -12,7 +12,7 @@ import { DEFAULT_V2_WINDOW_MARGIN_SEC } from './decideV2.js';
 /** Persisted spend-cap configuration (the drain backstop). Disabled unless a cap is set. */
 export interface SpendCapConfig {
   enabled: boolean;
-  /** REQUIRED when enabled - the breaker must persist so a crash-loop can't reset it. */
+  /** REQUIRED when enabled — the breaker must persist so a crash-loop can't reset it. */
   ledgerFile?: string;
   caps: SpendCaps;
   /** Retain window for ledger events (>= caps.hourWindowMs). */
@@ -37,8 +37,8 @@ export interface ReserveGovConfig {
  * that window). v2 ALSO supports the OPTIONAL owner-key `fundSubsidy` per epoch.
  * v3 = FeeArenaV3 (ENTRY-ANCHORED: no startEpoch at all; the keeper samples a short
  * settlement average off-chain and submits it via submitSettlementPrice, then drives
- * processPositions/finalizeEpoch/unstakeBatch - see decideV3.ts/keeperV3.ts).
- * Defaults to 'v1' when a market omits the flag (back-compat - existing markets keep
+ * processPositions/finalizeEpoch/unstakeBatch — see decideV3.ts/keeperV3.ts).
+ * Defaults to 'v1' when a market omits the flag (back-compat — existing markets keep
  * their EXACT behavior).
  */
 export type MarketVersion = 'v1' | 'v2' | 'v3';
@@ -80,7 +80,7 @@ export interface MarketConfig {
 export interface KeeperConfig {
   /**
    * The primary RPC URL (the first of `rpcUrls`). Kept as a single field for
-   * back-compat (used to probe the chainId) - multi-RPC clients should use `rpcUrls`.
+   * back-compat (used to probe the chainId) — multi-RPC clients should use `rpcUrls`.
    */
   rpcUrl: string;
   /**
@@ -95,7 +95,7 @@ export interface KeeperConfig {
    * set, the keeper can self-heal a wedged epoch by calling the onlyOwner
    * `emergencySettle` with a SEPARATE owner signer; when undefined, behavior is
    * UNCHANGED (detect wedge -> log -> STUCK, as today). This is a TESTNET
-   * operational convenience - on mainnet, keep the owner key cold and recover
+   * operational convenience — on mainnet, keep the owner key cold and recover
    * manually/via multisig rather than loading a hot owner key into the keeper.
    */
   ownerPrivateKey?: Hex;
@@ -123,7 +123,7 @@ export interface KeeperConfig {
   /** Warn when the signer's native balance drops below this many wei. */
   lowBalanceWei: bigint;
   /**
-   * TASK 4b - bounded gas-tip escalation. Attempt 0 always uses `gasFloorWei`; on a
+   * TASK 4b — bounded gas-tip escalation. Attempt 0 always uses `gasFloorWei`; on a
    * receipt-wait timeout the write is re-sent with a higher (capped) tip, up to
    * `maxAttempts` times. maxAttempts === 0 (default) => OFF (only the floor-priced send,
    * behavior unchanged). See gasEscalation.ts.
@@ -136,7 +136,7 @@ export interface KeeperConfig {
   /** Consecutive failures after which the loop emits one loud WEDGED alert. */
   wedgedAlertThreshold: number;
   /**
-   * Port for the optional health/metrics HTTP server. 0 (default) = OFF - no server
+   * Port for the optional health/metrics HTTP server. 0 (default) = OFF — no server
    * is started. >0 starts a `node:http` server on `httpHost`:`httpPort`.
    */
   httpPort: number;
@@ -148,14 +148,14 @@ export interface KeeperConfig {
    */
   stallFactor: number;
   /**
-   * TASK 4a - path to the restart-safe metrics state file. When set, the cumulative
+   * TASK 4a — path to the restart-safe metrics state file. When set, the cumulative
    * counters (ticks/actions/failures/reverts/restarts) are seeded from it at boot and
    * persisted as the loop runs, so a restart/crash-loop doesn't zero the Prometheus series.
    * Empty (default) => persistence OFF: counters are in-memory only (unchanged behavior),
    * and the loop instead documents the reset via process_start_time_seconds + restarts.
    */
   metricsStateFile?: string;
-  /** TASK 4a - how often (ms) to flush the metrics state file while running. */
+  /** TASK 4a — how often (ms) to flush the metrics state file while running. */
   metricsPersistIntervalMs: number;
   /**
    * Real-alerting (dead-man's-switch) config. Both channel URLs are OFF unless set, so the
@@ -163,14 +163,14 @@ export interface KeeperConfig {
    */
   alert: AlertConfig;
   /**
-   * v2 ONLY - seconds shaved off the TAIL of the pinned start/end window so a fresh Hermes
+   * v2 ONLY — seconds shaved off the TAIL of the pinned start/end window so a fresh Hermes
    * blob's publishTime (~= now) plus the fetch->mine latency still lands inside
    * [endpointTime, endpointTime+settleWindow]. Default 2s. Irrelevant to v1 markets. See
    * decideV2.ts (DEFAULT_V2_WINDOW_MARGIN_SEC) and KEEPER_V2_WINDOW_MARGIN_SEC.
    */
   v2WindowMarginSec: bigint;
   /**
-   * v2 ONLY - the loop's poll interval (ms) used WHENEVER ≥1 market is v2. The pinned
+   * v2 ONLY — the loop's poll interval (ms) used WHENEVER ≥1 market is v2. The pinned
    * start/end window is tight (settleWindow default ~12s), so a 15s default poll could step
    * clean OVER the whole window and never attempt -> the epoch wedges. With ≥1 v2 market the
    * loop polls at min(pollIntervalMs, this) so it re-checks several times inside the window
@@ -178,16 +178,16 @@ export interface KeeperConfig {
    */
   v2PollIntervalMs: number;
   /**
-   * v3 ONLY - the settlement-average sampling window (seconds). At the settlement moment
+   * v3 ONLY — the settlement-average sampling window (seconds). At the settlement moment
    * the keeper samples the live Pyth price for this long, averages, and submits the
    * result as the epoch's finalPrice (anchored on-chain within settleSanityBps of a
    * fresh Pyth read). The PDF's recommended window is 60s.
    */
   v3SampleSec: number;
-  /** v3 ONLY - interval between settlement samples (ms). Default 2000. */
+  /** v3 ONLY — interval between settlement samples (ms). Default 2000. */
   v3SampleIntervalMs: number;
   /**
-   * v3 ONLY - PRE-SAMPLE the settlement average over [settlementTime - v3SampleSec, settlementTime]
+   * v3 ONLY — PRE-SAMPLE the settlement average over [settlementTime - v3SampleSec, settlementTime]
    * (the contract's documented "last 60s of Pyth prices") in the background, so the submit fires
    * within ~2s of the settlement moment instead of blocking the tick for the whole window AFTER it.
    * The legacy post-settlement window stays as the fallback (keeper restarted mid-window, sparse
@@ -196,7 +196,7 @@ export interface KeeperConfig {
    */
   v3PreSampleEnabled?: boolean;
   /**
-   * v3 ONLY - wall-clock budget (ms) for CHAINING settlement-pipeline cranks back-to-back inside a
+   * v3 ONLY — wall-clock budget (ms) for CHAINING settlement-pipeline cranks back-to-back inside a
    * single tick (SETTLE -> PROCESS.. -> FINALIZE -> UNSTAKE.. -> CREATE -> OPEN) instead of paying
    * a full poll gap between every step. Each chained step is still simulated, spend-capped and
    * receipt-awaited exactly like a lone action, and the FIRST failure breaks the chain into the
@@ -204,10 +204,10 @@ export interface KeeperConfig {
    * default grows by this budget so a mid-chain deadline kill can't orphan an in-flight step.
    */
   v3ChainBudgetMs?: number;
-  /** v3 ONLY - hard cap on chained steps per tick (backstop against a pathological loop). */
+  /** v3 ONLY — hard cap on chained steps per tick (backstop against a pathological loop). */
   v3ChainMaxSteps?: number;
   /**
-   * v3 ONLY - anchor-freshness margin (seconds). The contract rejects a settle whose anchor blob
+   * v3 ONLY — anchor-freshness margin (seconds). The contract rejects a settle whose anchor blob
    * is stamped BEFORE settlementTime (SettlePriceTooOld); the adaptive wake lands the SETTLE tick
    * essentially AT that moment, when Hermes's freshest blob can still be a second older. The
    * SETTLE crank waits out this bounded margin past settlementTime before fetching the anchor, so
@@ -217,7 +217,7 @@ export interface KeeperConfig {
   /**
    * Per-market tick DEADLINE (ms): a single market's crank is raced against this, so a black-holed
    * RPC/Hermes await (one that never resolves AND never trips viem's transport timeout) can never
-   * freeze the whole sequential loop - the tick fails fast, the breaker backs off, the next market
+   * freeze the whole sequential loop — the tick fails fast, the breaker backs off, the next market
    * runs. Defaults comfortably above the v3 settlement-sample window so a normal settle never trips it.
    */
   tickDeadlineMs: number;
@@ -230,7 +230,7 @@ export interface KeeperConfig {
   /**
    * DRAIN-ELIMINATION knobs (all optional so existing fixtures keep compiling; loadConfig always
    * sets them). simPreflight: simulate every keeper write before broadcasting so a doomed crank
-   * never mines+reverts (zero gas) - default ON. fallbackGasLimit: worst-case gas units used to
+   * never mines+reverts (zero gas) — default ON. fallbackGasLimit: worst-case gas units used to
    * estimate a timed-out tx's spend for the cap. v3MineLatencySec: a SETTLE is deferred (not
    * burned) when the on-chain maxPriceAge is below this, since no posted price could survive to the
    * mine block. spendCap: the persisted, sticky spend circuit-breaker. reserve: the owner-reserve
@@ -250,7 +250,7 @@ const DEFAULTS = {
   HERMES_URL: 'https://hermes.pyth.network',
   POLL_INTERVAL_MS: 15_000,
   SWEEP_BATCH: 50,
-  TX_GAS_CAP: 16_777_216n, // 2^24 - the Arc RPC's hard per-tx / estimate ceiling
+  TX_GAS_CAP: 16_777_216n, // 2^24 — the Arc RPC's hard per-tx / estimate ceiling
   GAS_FLOOR_GWEI: 20,
   HERMES_TIMEOUT_MS: 8_000,
   RECEIPT_TIMEOUT_MS: 90_000,
@@ -260,16 +260,16 @@ const DEFAULTS = {
   HTTP_PORT: 0, // 0 = health/metrics server OFF
   HTTP_HOST: '127.0.0.1',
   STALL_FACTOR: 3,
-  // v2 fast poll (ms) used when ≥1 market is v2 - well under the ~12s pin window so the loop
+  // v2 fast poll (ms) used when ≥1 market is v2 — well under the ~12s pin window so the loop
   // attempts the pinned start/end multiple times across it (else a 15s poll could skip it).
   V2_POLL_INTERVAL_MS: 4_000,
   // v3 settlement-average sampling: 60s window (the PDF's recommendation), one sample / 2s.
   V3_SAMPLE_SEC: 60,
   V3_SAMPLE_INTERVAL_MS: 2_000,
-  // TASK 4a - restart-safe metrics. Path empty => persistence OFF (in-memory only). When a
+  // TASK 4a — restart-safe metrics. Path empty => persistence OFF (in-memory only). When a
   // path IS set, flush the counters this often so a crash loses at most one interval's worth.
   METRICS_PERSIST_INTERVAL_MS: 30_000,
-  // TASK 4b - bounded gas escalation. ATTEMPTS 0 => OFF (only the floor-priced send,
+  // TASK 4b — bounded gas escalation. ATTEMPTS 0 => OFF (only the floor-priced send,
   // behavior unchanged). When ON, each retry multiplies the prior price by MULTIPLIER_BPS
   // (1.25x) up to MAX_FEE_GWEI. MAX_FEE_GWEI 0 => default the cap to 5x the floor.
   GAS_ESCALATION_ATTEMPTS: 0,
@@ -336,15 +336,15 @@ function validatePrivateKey(raw: string, source: string): Hex {
 
 /**
  * Resolve the keeper private key from EXACTLY ONE of:
- *   - KEEPER_PRIVATE_KEY      - inline hex value (testnet / simple deployments)
- *   - KEEPER_PRIVATE_KEY_FILE - path to a file containing the hex key (Docker secrets,
+ *   - KEEPER_PRIVATE_KEY      — inline hex value (testnet / simple deployments)
+ *   - KEEPER_PRIVATE_KEY_FILE — path to a file containing the hex key (Docker secrets,
  *                               secret-manager mounts, chmod-400 files on bare metal).
  *                               The file content is trimmed before validation.
  *
  * Both set OR neither set is a hard startup error (fail-fast).
  *
  * NOTE: full KMS / encrypted-keystore support (HSM, cloud KMS, Foundry keystore unlock)
- * is documented as a mainnet hardening item - see README "Key handling on mainnet".
+ * is documented as a mainnet hardening item — see README "Key handling on mainnet".
  */
 function resolvePrivateKey(): Hex {
   const hasEnv = (process.env.KEEPER_PRIVATE_KEY ?? '').trim() !== '';
@@ -352,7 +352,7 @@ function resolvePrivateKey(): Hex {
 
   if (hasEnv && hasFile) {
     throw new Error(
-      '[config] Set EXACTLY ONE of KEEPER_PRIVATE_KEY or KEEPER_PRIVATE_KEY_FILE - both are set. ' +
+      '[config] Set EXACTLY ONE of KEEPER_PRIVATE_KEY or KEEPER_PRIVATE_KEY_FILE — both are set. ' +
       'Remove the one you do not want to use.',
     );
   }
@@ -375,16 +375,16 @@ function resolvePrivateKey(): Hex {
     return validatePrivateKey(raw, 'KEEPER_PRIVATE_KEY_FILE');
   }
 
-  // hasEnv path - back-compat with the original reqPrivateKey logic.
+  // hasEnv path — back-compat with the original reqPrivateKey logic.
   return reqPrivateKey('KEEPER_PRIVATE_KEY');
 }
 
 /**
  * Resolve the OPTIONAL owner key for wedge auto-recovery from
- * KEEPER_OWNER_PRIVATE_KEY. Returns undefined when unset/blank (recovery OFF -
+ * KEEPER_OWNER_PRIVATE_KEY. Returns undefined when unset/blank (recovery OFF —
  * behavior unchanged). When set, it must be a valid 32-byte hex key, else boot
  * fails fast. The key is used SOLELY for the onlyOwner `emergencySettle`
- * recovery crank - never for any normal lifecycle action.
+ * recovery crank — never for any normal lifecycle action.
  *
  * TESTNET convenience: an always-loaded hot owner key is acceptable on a
  * testnet to keep the market self-sustaining across keeper downtime. On
@@ -514,7 +514,7 @@ export function loadAlertConfig(): AlertConfig {
  * (GAS_MAX_FEE_GWEI) defaults to 5x the floor when 0/unset; the multiplier must be >= 1.0x
  * (10_000 bps) so escalation only ever raises the price. ATTEMPTS 0 => OFF (only the floor
  * send). Cross-checks: cap must be >= floor, else a single escalated retry could bid BELOW
- * the floor - a hard startup error.
+ * the floor — a hard startup error.
  */
 export function loadGasEscalation(gasFloorWei: bigint): GasEscalationConfig {
   const maxAttempts = nonNegInt('GAS_ESCALATION_ATTEMPTS', DEFAULTS.GAS_ESCALATION_ATTEMPTS);
@@ -534,7 +534,7 @@ export function loadGasEscalation(gasFloorWei: bigint): GasEscalationConfig {
 /**
  * Resolve a single market's contract version from its `version` / `pinned` JSON fields.
  * Precedence: an explicit `version` string ('v1'|'v2', case-insensitive) wins; else a
- * boolean `pinned:true` => 'v2'; else default 'v1' (back-compat - an existing market with
+ * boolean `pinned:true` => 'v2'; else default 'v1' (back-compat — an existing market with
  * neither flag keeps its EXACT v1 behavior). Any other value is a hard error (a typo'd
  * "version":"V2x" must NOT silently fall back to v1 and crank the wrong path).
  */
@@ -639,10 +639,10 @@ function parseMarkets(name: string, globalSubsidy: bigint | undefined): MarketCo
     const hasPerMarketSubsidy =
       r.subsidyPerEpoch !== undefined && r.subsidyPerEpoch !== null && String(r.subsidyPerEpoch).trim() !== '';
     const subsidy = parseMarketSubsidy(r, name, i, version === 'v2' ? globalSubsidy : undefined);
-    // An EXPLICIT subsidy on a non-v2 market is a config mistake (only v2 has fundSubsidy) -
+    // An EXPLICIT subsidy on a non-v2 market is a config mistake (only v2 has fundSubsidy) —
     // fail fast so it's never silently dropped, rather than crank a market the operator thinks is funded.
     if (version !== 'v2' && hasPerMarketSubsidy && subsidy !== undefined) {
-      throw new Error(`[config] ${name}[${i}] sets subsidyPerEpoch but is a ${version} market (fundSubsidy is v2-only) - set "version":"v2" or remove the subsidy`);
+      throw new Error(`[config] ${name}[${i}] sets subsidyPerEpoch but is a ${version} market (fundSubsidy is v2-only) — set "version":"v2" or remove the subsidy`);
     }
 
     return {
@@ -676,7 +676,7 @@ export interface ArbMarketConfig {
   base: Address;
   /** The base token's decimals (cirBTC = 8). */
   baseDecimals: number;
-  /** The quote token (USDC, 6dp native) - the other leg of the pool. */
+  /** The quote token (USDC, 6dp native) — the other leg of the pool. */
   quote: Address;
   /** The quote token's decimals (USDC = 6). */
   quoteDecimals: number;
@@ -686,7 +686,7 @@ export interface ArbMarketConfig {
    * OPTIONAL second Pyth feed for a CROSS-quoted market (e.g. cirBTC/EURC settles on BTC/EUR =
    * BTC/USD ÷ EUR/USD). When set, the arb reads the cross rate `feedId / quoteFeedId` as its peg
    * reference (matching the on-chain CompositePythOracle) instead of the single `feedId`. Absent =>
-   * single-feed market - the existing cirBTC/USDC behavior is byte-for-byte unchanged.
+   * single-feed market — the existing cirBTC/USDC behavior is byte-for-byte unchanged.
    */
   quoteFeedId?: Hex;
   /** The Uniswap-V3 SwapRouter used to execute exactInputSingle. */
@@ -724,7 +724,7 @@ export interface ArbParamsConfig {
   poolDeliverableSafetyBps?: number;
   /**
    * TWO-SIDED PEG DEFENSE (opt-in). When true, the target-band gate no longer declines a peg-correcting
-   * BUY while cirBTC-heavy - so the keeper defends the DOWNSIDE of the peg (buys base to lift a sub-peg
+   * BUY while cirBTC-heavy — so the keeper defends the DOWNSIDE of the peg (buys base to lift a sub-peg
    * pool) up to its quote reserve, rather than letting the pool sit under peg. Safe one-sided relaxation:
    * a BUY refills the finite battery and is bounded by reserveQuote; the SELL (battery-draining) gate is
    * untouched. Omitted/false => legacy one-directional gate. Defaults OFF so the USDC arb is unchanged.
@@ -739,12 +739,12 @@ export interface ArbParamsConfig {
   /** Hard CAP on a single rebalancing swap's base notional (raw base units). */
   rebalanceMaxBase: bigint;
   /**
-   * FINDING 3 - minimum spacing (ms) between REBALANCE legs (rate-limit, like the heartbeat).
+   * FINDING 3 — minimum spacing (ms) between REBALANCE legs (rate-limit, like the heartbeat).
    * 0 => no interval guard. Defaults to the poll interval so a rebalance fires at most once
    * per poll batch instead of every tick while a leg sits below the floor.
    */
   rebalanceIntervalMs: number;
-  /** FINDING 4 - per-day cap on rebalance ATTEMPTS (not just settled notional). 0 => uncapped. */
+  /** FINDING 4 — per-day cap on rebalance ATTEMPTS (not just settled notional). 0 => uncapped. */
   rebalanceDailyMaxAttempts: number;
 
   // ---- TASK 3b: heartbeat volume (disabled => OFF, behavior unchanged) ----
@@ -756,7 +756,7 @@ export interface ArbParamsConfig {
   heartbeatDailyCapBase: bigint;
   /** Base notional per heartbeat leg (raw base units). */
   heartbeatTradeBase: bigint;
-  /** FINDING 4 - per-day cap on heartbeat ATTEMPTS (not just settled notional). 0 => uncapped. */
+  /** FINDING 4 — per-day cap on heartbeat ATTEMPTS (not just settled notional). 0 => uncapped. */
   heartbeatDailyMaxAttempts: number;
 }
 
@@ -764,13 +764,13 @@ export interface ArbParamsConfig {
 export interface ArbConfig {
   rpcUrl: string;
   rpcUrls: string[];
-  /** The arb signer key - SEPARATE from the lifecycle keeper key (KEEPER_ARB_PRIVATE_KEY). */
+  /** The arb signer key — SEPARATE from the lifecycle keeper key (KEEPER_ARB_PRIVATE_KEY). */
   privateKey: Hex;
   hermesUrl: string;
   market: ArbMarketConfig;
   params: ArbParamsConfig;
   /**
-   * FLOW BUDGET - the rolling-window cap on NET cirBTC the arb may sell (raw base units), with the
+   * FLOW BUDGET — the rolling-window cap on NET cirBTC the arb may sell (raw base units), with the
    * window length and a persisted ledger file. 0 budget OR 0 window => OFF. The executor maintains
    * the ledger across ticks + restarts and injects a FlowState snapshot into the pure decision.
    * Omitted => OFF (legacy; existing fixtures unaffected). loadArbConfig always sets them.
@@ -783,7 +783,7 @@ export interface ArbConfig {
   hermesTimeoutMs: number;
   receiptTimeoutMs: number;
   lowBalanceWei: bigint;
-  /** TASK 4b - bounded gas-tip escalation (shared with the lifecycle keeper). See above. */
+  /** TASK 4b — bounded gas-tip escalation (shared with the lifecycle keeper). See above. */
   gasEscalation: GasEscalationConfig;
   baseBackoffMs: number;
   maxBackoffMs: number;
@@ -803,14 +803,14 @@ export interface ArbConfig {
    */
   stallFactor: number;
   /**
-   * TASK 4a - path to the arb bot's restart-safe metrics state file (SEPARATE from the
+   * TASK 4a — path to the arb bot's restart-safe metrics state file (SEPARATE from the
    * lifecycle keeper's so the two processes never clobber each other's counters). Empty
    * (default) => persistence OFF (in-memory only). See KeeperConfig.metricsStateFile.
    */
   metricsStateFile?: string;
-  /** TASK 4a - how often (ms) to flush the arb metrics state file while running. */
+  /** TASK 4a — how often (ms) to flush the arb metrics state file while running. */
   metricsPersistIntervalMs: number;
-  /** Real-alerting (dead-man's-switch) config - same env vars as the lifecycle keeper. */
+  /** Real-alerting (dead-man's-switch) config — same env vars as the lifecycle keeper. */
   alert: AlertConfig;
 }
 
@@ -825,22 +825,22 @@ const ARB_DEFAULTS = {
   HTTP_PORT: 0, // 0 = health server OFF
   HTTP_HOST: '127.0.0.1',
   STALL_FACTOR: 3,
-  // TASK 3a - rebalancing. Floor 0 => OFF (behavior unchanged). Target 50/50 by value.
+  // TASK 3a — rebalancing. Floor 0 => OFF (behavior unchanged). Target 50/50 by value.
   REBALANCE_FLOOR_BPS: 0,
   REBALANCE_TARGET_BPS: 5_000,
-  // FINDING 3/4 - rebalance governors. 0 interval => no guard (resolved to the poll interval
+  // FINDING 3/4 — rebalance governors. 0 interval => no guard (resolved to the poll interval
   // below when unset, so a rebalance fires at most once per poll, not every tick). 0 attempts
   // => uncapped (the interval guard still applies).
   REBALANCE_INTERVAL_MS: 0,
   REBALANCE_DAILY_MAX_ATTEMPTS: 0,
-  // TASK 3b - heartbeat volume. Disabled by default; a 1h spacing is a sane baseline.
+  // TASK 3b — heartbeat volume. Disabled by default; a 1h spacing is a sane baseline.
   HEARTBEAT_ENABLED: false,
   HEARTBEAT_INTERVAL_MS: 3_600_000, // 1 hour
-  // FINDING 4 - per-day heartbeat ATTEMPT cap. 0 => uncapped (the notional cap still applies).
+  // FINDING 4 — per-day heartbeat ATTEMPT cap. 0 => uncapped (the notional cap still applies).
   HEARTBEAT_DAILY_MAX_ATTEMPTS: 0,
 } as const;
 
-/** Resolve the SEPARATE arb signer key (env only - keep it isolated from the lifecycle key). */
+/** Resolve the SEPARATE arb signer key (env only — keep it isolated from the lifecycle key). */
 function resolveArbPrivateKey(): Hex {
   return reqPrivateKey('KEEPER_ARB_PRIVATE_KEY');
 }
@@ -996,19 +996,19 @@ export function loadArbConfig(): ArbConfig {
       poolDeliverableSafetyBps: nonNegInt('ARB_POOL_DELIVERABLE_SAFETY_BPS', 0, 10_000),
       // Two-sided peg defense (opt-in). false => legacy one-directional gate (USDC arb unchanged).
       buyDefendsPeg: boolEnv('ARB_BUY_DEFENDS_PEG', false),
-      // TASK 3a - inventory rebalancing. Floor 0 => OFF. rebalanceMaxBase defaults to the arb cap.
+      // TASK 3a — inventory rebalancing. Floor 0 => OFF. rebalanceMaxBase defaults to the arb cap.
       rebalanceFloorBps: nonNegInt('ARB_REBALANCE_FLOOR_BPS', ARB_DEFAULTS.REBALANCE_FLOOR_BPS, 10_000),
       rebalanceTargetBps: nonNegInt('ARB_REBALANCE_TARGET_BPS', ARB_DEFAULTS.REBALANCE_TARGET_BPS, 10_000),
       rebalanceMaxBase: optBigInt('ARB_REBALANCE_MAX_BASE', 0n), // 0 => fall back to maxTradeBase below
-      // FINDING 3/4 - rebalance governors. Interval 0 => resolved to the poll interval below.
+      // FINDING 3/4 — rebalance governors. Interval 0 => resolved to the poll interval below.
       rebalanceIntervalMs: nonNegInt('ARB_REBALANCE_INTERVAL_MS', ARB_DEFAULTS.REBALANCE_INTERVAL_MS),
       rebalanceDailyMaxAttempts: nonNegInt('ARB_REBALANCE_DAILY_MAX_ATTEMPTS', ARB_DEFAULTS.REBALANCE_DAILY_MAX_ATTEMPTS),
-      // TASK 3b - heartbeat volume. Disabled by default; budgets default to 0 (also OFF).
+      // TASK 3b — heartbeat volume. Disabled by default; budgets default to 0 (also OFF).
       heartbeatEnabled: boolEnv('ARB_HEARTBEAT_ENABLED', ARB_DEFAULTS.HEARTBEAT_ENABLED),
       heartbeatIntervalMs: posInt('ARB_HEARTBEAT_INTERVAL_MS', ARB_DEFAULTS.HEARTBEAT_INTERVAL_MS),
       heartbeatDailyCapBase: optBigInt('ARB_HEARTBEAT_DAILY_CAP_BASE', 0n),
       heartbeatTradeBase: optBigInt('ARB_HEARTBEAT_TRADE_BASE', 0n),
-      // FINDING 4 - per-day heartbeat attempt cap. 0 => uncapped (notional cap still applies).
+      // FINDING 4 — per-day heartbeat attempt cap. 0 => uncapped (notional cap still applies).
       heartbeatDailyMaxAttempts: nonNegInt('ARB_HEARTBEAT_DAILY_MAX_ATTEMPTS', ARB_DEFAULTS.HEARTBEAT_DAILY_MAX_ATTEMPTS),
     },
     // FLOW BUDGET (rolling-window net cirBTC sold). A positive budget REQUIRES a positive window.
@@ -1036,17 +1036,17 @@ export function loadArbConfig(): ArbConfig {
     throw new Error('[config] ARB_MIN_TRADE_BASE must be <= ARB_MAX_TRADE_BASE');
   }
 
-  // TASK 3a - default the rebalance cap to the arb cap when unset (0), so an enabled
+  // TASK 3a — default the rebalance cap to the arb cap when unset (0), so an enabled
   // rebalance is bounded by the same per-trade ceiling as a normal arb unless overridden.
   if (cfg.params.rebalanceMaxBase === 0n) {
     cfg.params.rebalanceMaxBase = cfg.params.maxTradeBase;
   }
   // When rebalancing is ON, the floor must sit strictly below the target (a leg below the
-  // floor is topped up toward the target - an inverted pair would be nonsensical).
+  // floor is topped up toward the target — an inverted pair would be nonsensical).
   if (cfg.params.rebalanceFloorBps > 0 && cfg.params.rebalanceFloorBps >= cfg.params.rebalanceTargetBps) {
     throw new Error('[config] ARB_REBALANCE_FLOOR_BPS must be < ARB_REBALANCE_TARGET_BPS');
   }
-  // FINDING 3 - default the rebalance interval to the poll interval when unset (0) and
+  // FINDING 3 — default the rebalance interval to the poll interval when unset (0) and
   // rebalancing is enabled, so the rebalance leg is rate-limited to at most once per poll
   // instead of firing every tick (the old unbounded-per-poll behavior). An explicit value
   // (incl. a longer spacing) is honored as-is.
@@ -1054,7 +1054,7 @@ export function loadArbConfig(): ArbConfig {
     cfg.params.rebalanceIntervalMs = cfg.pollIntervalMs;
   }
 
-  // TASK 3b - when heartbeat mode is ON, the per-leg trade + daily cap must be positive and
+  // TASK 3b — when heartbeat mode is ON, the per-leg trade + daily cap must be positive and
   // the leg must not exceed the daily cap (else a single leg would blow the whole budget).
   if (cfg.params.heartbeatEnabled) {
     if (cfg.params.heartbeatTradeBase <= 0n) {
@@ -1075,7 +1075,7 @@ export function loadArbConfig(): ArbConfig {
 }
 
 // ---------------------------------------------------------------------------
-// Swap bot - a SEPARATE process + key (SWAPBOT_PRIVATE_KEY) whose ONLY job is to
+// Swap bot — a SEPARATE process + key (SWAPBOT_PRIVATE_KEY) whose ONLY job is to
 // generate continuous trading VOLUME so LP positions (staked or not) accrue claimable
 // fees even in quiet rounds. It does small balance-aware round-trip swaps on the SAME
 // pool the arb trades; the arb keeps the price pegged to Pyth, the swap bot just makes
@@ -1086,7 +1086,7 @@ export function loadArbConfig(): ArbConfig {
 export interface SwapbotConfig {
   rpcUrl: string;
   rpcUrls: string[];
-  /** The swap-bot signer key - SEPARATE from the keeper + arb keys (SWAPBOT_PRIVATE_KEY). */
+  /** The swap-bot signer key — SEPARATE from the keeper + arb keys (SWAPBOT_PRIVATE_KEY). */
   privateKey: Hex;
   /** Reuses the arb market (pool/base/quote/router/decimals/feeTier). */
   market: ArbMarketConfig;
@@ -1101,8 +1101,8 @@ export interface SwapbotConfig {
   gasFloorWei: bigint;
   /**
    * Bounded gas-tip escalation (reuses the shared GAS_ESCALATION_* keys, same as the arb). On a
-   * receipt-wait TIMEOUT the same swap is re-sent at a higher (capped) tip - viem replaces the
-   * still-pending nonce - so an under-priced/stuck tx gets unstuck instead of dropping the minute.
+   * receipt-wait TIMEOUT the same swap is re-sent at a higher (capped) tip — viem replaces the
+   * still-pending nonce — so an under-priced/stuck tx gets unstuck instead of dropping the minute.
    */
   gasEscalation: GasEscalationConfig;
   /** Receipt-wait timeout (ms). Kept BELOW the swap interval so one stuck tx can't block the loop. */
@@ -1116,7 +1116,7 @@ export interface SwapbotConfig {
   hermesTimeoutMs: number;
   /**
    * ROUND-TRIP mode (the peg-neutral volume generator). When true, each tick BUYS `tradeBase`-worth of
-   * base then immediately SELLS it back down to `targetBase` - two back-to-back swaps with ~zero net
+   * base then immediately SELLS it back down to `targetBase` — two back-to-back swaps with ~zero net
    * position + ~zero net price impact, so volume/fees accrue WITHOUT moving the peg (the arb rarely
    * intervenes). Only the QUOTE (USDC) leg needs funding. false => legacy strict-alternation.
    */
@@ -1126,7 +1126,7 @@ export interface SwapbotConfig {
   /**
    * DELIVERABILITY safety (bps): cap every SELL leg (round-trip recovery + buy-back, maker correct)
    * at this fraction of the pool's real USDC balance so it never reverts "Too little received" on a
-   * thin/one-sided pool - it idles instead. Omitted/0 => OFF (legacy behavior).
+   * thin/one-sided pool — it idles instead. Omitted/0 => OFF (legacy behavior).
    */
   poolDeliverableSafetyBps?: number;
   /**
@@ -1149,27 +1149,27 @@ export interface SwapbotConfig {
   };
   /**
    * PEG GATE (the swap-bot↔arb sync fix). The swap bot pauses volume whenever the pool's distance
-   * from the live Pyth reference exceeds this many bps - so it never pumps volume into an off-peg
+   * from the live Pyth reference exceeds this many bps — so it never pumps volume into an off-peg
    * pool the arb is still re-pegging (or can't, when depleted), which is what let the pool run away.
    * 0 => gate OFF (legacy strict-alternation behavior). Set > 0 (e.g. 200 = 2%) to enable.
    */
   maxPegDeviationBps: number;
   /**
-   * EPOCH mode - the per-epoch balanced peg-NEUTRAL pair (the drift-proof replacement for the
+   * EPOCH mode — the per-epoch balanced peg-NEUTRAL pair (the drift-proof replacement for the
    * continuous round-trip). When enabled it SUPERSEDES maker/roundTrip/alternate: instead of firing
    * ~15 round-trips a minute (which ratchet a thin pool up), the bot fires exactly ONE atomic
-   * multicall([SELL tradeBase, BUY tradeBase]) at the start of each NEW arena epoch - SELL-first,
+   * multicall([SELL tradeBase, BUY tradeBase]) at the start of each NEW arena epoch — SELL-first,
    * both legs' sqrtPriceLimit pinned to the live oracle so neither can push the pool past the peg,
    * sized to land the pool AT the oracle. Atomicity makes it structurally impossible to leave a
    * residual long or a pushed pool; a persisted lastEpochActed scalar makes it fire at most once per
-   * epoch and restart-safe. Also fixes "0-swap epochs earn no Stance fees" - every epoch gets one
+   * epoch and restart-safe. Also fixes "0-swap epochs earn no Stance fees" — every epoch gets one
    * guaranteed fee-generating pair. Disabled => legacy behavior is byte-for-byte unchanged.
    */
   epoch?: {
     enabled: boolean;
     /** The v3 ENTRY-ANCHORED arena to read currentEpochId() from (NOT market.arena, the v1 addr). */
     arena: Address;
-    /** Persisted lastEpochActed ledger path (REQUIRED when epoch mode is on - restart safety). */
+    /** Persisted lastEpochActed ledger path (REQUIRED when epoch mode is on — restart safety). */
     ledgerFile: string;
     /** Base-denominated notional of EACH leg of the pair, before depth/dust sizing (raw base). */
     pairTradeBase: bigint;
@@ -1183,7 +1183,7 @@ export interface SwapbotConfig {
      * Documentation only: the one-time cirBTC working reserve the bot must hold to fund the SELL-first
      * leg (leg B buys it straight back atomically, so it round-trips and is NOT consumed). Logged at
      * boot so an operator funds the wallet; not otherwise enforced (a short balance just reverts the
-     * atomic pair, which is safe - nothing happens).
+     * atomic pair, which is safe — nothing happens).
      */
     workingReserveBase: bigint;
   };
@@ -1207,10 +1207,10 @@ export function loadSwapbotConfig(): SwapbotConfig {
     tradeBase,
     swapsPerMin,
     intervalMs: Math.max(200, Math.floor(60_000 / swapsPerMin)),
-    slippageBps: posInt('SWAPBOT_SLIPPAGE_BPS', 200), // 2% - generous for tiny round-trips
+    slippageBps: posInt('SWAPBOT_SLIPPAGE_BPS', 200), // 2% — generous for tiny round-trips
     gasFloorWei: BigInt(gasFloorGwei) * 1_000_000_000n,
     gasEscalation: loadGasEscalation(BigInt(gasFloorGwei) * 1_000_000_000n),
-    // Default 25s - comfortably below the 60s/1-swap interval so a stuck tx times out + escalates
+    // Default 25s — comfortably below the 60s/1-swap interval so a stuck tx times out + escalates
     // (or drops at most THIS minute) instead of blocking the loop for the arb's 90s default.
     receiptTimeoutMs: posInt('SWAPBOT_RECEIPT_TIMEOUT_MS', 25_000),
     lowBalanceWei: posBigInt('LOW_BALANCE_WEI', DEFAULTS.LOW_BALANCE_WEI),
@@ -1227,12 +1227,12 @@ export function loadSwapbotConfig(): SwapbotConfig {
     // Deliverability safety: cap SELL legs at this fraction of the pool's real USDC so they idle
     // (not revert) on a one-sided pool. 0 => OFF. Set SWAPBOT_POOL_DELIVERABLE_SAFETY_BPS=7000 live.
     poolDeliverableSafetyBps: nonNegInt('SWAPBOT_POOL_DELIVERABLE_SAFETY_BPS', 0, 10_000),
-    // MARKET-MAKER mode - OFF unless SWAPBOT_MAKER=true (then it supersedes roundTrip/alternate).
+    // MARKET-MAKER mode — OFF unless SWAPBOT_MAKER=true (then it supersedes roundTrip/alternate).
     maker: boolEnv('SWAPBOT_MAKER', false)
       ? {
           enabled: true,
           deadbandBps: posInt('SWAPBOT_MAKER_DEADBAND_BPS', 40),
-          floorBase: optBigInt('SWAPBOT_MAKER_FLOOR_BASE', 300_000n), // 0.003 cirBTC - never sold below
+          floorBase: optBigInt('SWAPBOT_MAKER_FLOOR_BASE', 300_000n), // 0.003 cirBTC — never sold below
           targetBase: optBigInt('SWAPBOT_MAKER_TARGET_BASE', 1_000_000n), // 0.01 cirBTC working inventory
           reserveQuote: optBigInt('SWAPBOT_MAKER_RESERVE_QUOTE', 5_000_000n), // 5 USDC gas reserve
           skewK: posInt('SWAPBOT_MAKER_SKEW_K', 2), // buy-boost when low: up to (1+K)x => 3x by default
@@ -1241,16 +1241,16 @@ export function loadSwapbotConfig(): SwapbotConfig {
           closeFraction: fraction01('SWAPBOT_MAKER_CLOSE_FRACTION', 0.5),
         }
       : undefined,
-    // EPOCH mode - the once-per-epoch balanced peg-neutral pair. OFF unless SWAPBOT_EPOCH_MODE=true;
+    // EPOCH mode — the once-per-epoch balanced peg-neutral pair. OFF unless SWAPBOT_EPOCH_MODE=true;
     // when ON it supersedes maker/roundTrip/alternate. Requires the v3 arena (to read currentEpochId)
     // and a ledger file (the lastEpochActed scalar MUST persist across restarts or a crash mid-epoch
-    // could double-fire - hard-fail boot if it's missing, exactly like KEEPER_SPEND_LEDGER_FILE).
+    // could double-fire — hard-fail boot if it's missing, exactly like KEEPER_SPEND_LEDGER_FILE).
     epoch: boolEnv('SWAPBOT_EPOCH_MODE', false)
       ? (() => {
           const ledgerFile = optStr('SWAPBOT_EPOCH_LEDGER_FILE');
           if (ledgerFile === undefined) {
             throw new Error(
-              '[config] SWAPBOT_EPOCH_LEDGER_FILE is REQUIRED when SWAPBOT_EPOCH_MODE=true - the ' +
+              '[config] SWAPBOT_EPOCH_LEDGER_FILE is REQUIRED when SWAPBOT_EPOCH_MODE=true — the ' +
                 'lastEpochActed scalar must persist across restarts or a crash mid-epoch could double-fire.',
             );
           }
@@ -1276,7 +1276,7 @@ export function loadSwapbotConfig(): SwapbotConfig {
 // Staker bots: THREE wallets that each add liquidity (mint a full-range LP) and auto-stake it into
 // the v3 entry-anchored Arena every epoch on a FIXED side (UP / DOWN / RANGE), so the Arena always
 // has a participant on each side. Reuses the arb market (KEEPER_ARB_MARKET) for pool/tokens/
-// decimals/feedId/feeTier, but stakes into the SEPARATE v3 arena (STAKERBOT_ARENA - the arb market's
+// decimals/feedId/feeTier, but stakes into the SEPARATE v3 arena (STAKERBOT_ARENA — the arb market's
 // `arena` is the v1 address) and mints via the NPM (STAKERBOT_NPM).
 // ---------------------------------------------------------------------------
 export interface StakerConfig {
@@ -1318,7 +1318,7 @@ export interface StakerbotConfig {
 // ─── Limen Agent (ACT layer) ─────────────────────────────────────────────────────────────
 // The policy-bounded, signal-driven epoch participant. OFF unless LIMEN_AGENT_ENABLED=true;
 // its mandate (allowed views, confidence floor, expiry, budget) comes from LIMEN_AGENT_POLICY
-// as JSON and is enforced by the pure decideAgent engine - the same field set Circle Agent
+// as JSON and is enforced by the pure decideAgent engine — the same field set Circle Agent
 // Wallet spending policies use, so the mandate maps onto wallet-layer enforcement when it
 // lands on Arc mainnet. Shares the stakerbot's market/arena/NPM plumbing.
 
@@ -1397,7 +1397,7 @@ export function loadAgentBotConfig(): AgentBotConfig {
         : policy.maxStakeUsdc6,
     };
     if (enabled && policy.expiresAtSec <= 0) {
-      throw new Error('[config] LIMEN_AGENT_POLICY.expiresAtSec (unix seconds) is required - a mandate must have a hard end');
+      throw new Error('[config] LIMEN_AGENT_POLICY.expiresAtSec (unix seconds) is required — a mandate must have a hard end');
     }
     if (policy.maxStakeUsdc6 <= 0n) throw new Error('[config] LIMEN_AGENT_POLICY.maxStakeUsdc6 must be > 0');
   }
@@ -1489,14 +1489,14 @@ function usdcToWei(name: string, fallback: string): bigint {
   }
 }
 
-/** A cap that is effectively infinite - used for the window the operator left unset (never trips). */
+/** A cap that is effectively infinite — used for the window the operator left unset (never trips). */
 const UNCAPPED_WEI = 2n ** 255n;
 
 /**
  * Load the persisted spend circuit-breaker config. The cap is OFF unless an hour- or burst-cap is
- * set (so existing deployments are unchanged). When ON, a ledger file path is REQUIRED - the
+ * set (so existing deployments are unchanged). When ON, a ledger file path is REQUIRED — the
  * breaker MUST persist across restarts or a crash-loop could reset it (the exact bypass the
- * adversarial review flagged) - so we hard-fail boot if it's missing.
+ * adversarial review flagged) — so we hard-fail boot if it's missing.
  */
 function loadSpendCapConfig(): SpendCapConfig {
   const hourCapWei = usdcToWei('KEEPER_SPEND_CAP_HOUR_USDC', '0');
@@ -1508,7 +1508,7 @@ function loadSpendCapConfig(): SpendCapConfig {
   if (enabled && ledgerFile === undefined) {
     throw new Error(
       '[config] KEEPER_SPEND_LEDGER_FILE is REQUIRED when a spend cap (KEEPER_SPEND_CAP_HOUR_USDC / ' +
-        'KEEPER_SPEND_CAP_BURST_USDC) is set - the breaker must persist so a crash-loop cannot reset it.',
+        'KEEPER_SPEND_CAP_BURST_USDC) is set — the breaker must persist so a crash-loop cannot reset it.',
     );
   }
   return {
@@ -1588,7 +1588,7 @@ export function loadConfig(): KeeperConfig {
     alert: loadAlertConfig(),
     // v2 pinned-window safety margin (seconds). Non-negative; default 2s. Only affects v2 markets.
     v2WindowMarginSec: BigInt(nonNegInt('KEEPER_V2_WINDOW_MARGIN_SEC', Number(DEFAULT_V2_WINDOW_MARGIN_SEC))),
-    // v2 fast poll (ms) used when ≥1 v2 market is configured. Default 4000 - comfortably below
+    // v2 fast poll (ms) used when ≥1 v2 market is configured. Default 4000 — comfortably below
     // a 12s pin window so the loop attempts the pinned start/end multiple times inside it.
     v2PollIntervalMs: posInt('KEEPER_V2_POLL_INTERVAL_MS', DEFAULTS.V2_POLL_INTERVAL_MS),
     // v3 settlement-average sampling (entry-anchored markets): window seconds + sample interval.
@@ -1608,7 +1608,7 @@ export function loadConfig(): KeeperConfig {
     fallbackGasLimit: posBigInt('KEEPER_FALLBACK_GAS_LIMIT', 1_500_000n),
     v3MineLatencySec: posInt('KEEPER_MINE_LATENCY_SEC', 15),
     spendCap: loadSpendCapConfig(),
-    // The reserve governor needs the owner address to read the reserve balance - enable it only
+    // The reserve governor needs the owner address to read the reserve balance — enable it only
     // when an owner key is configured (it always is on the live keeper).
     reserve: loadReserveGovConfig(ownerPrivateKey !== undefined),
     refillSafeFile: optStr('KEEPER_REFILL_SAFE_FILE'),

@@ -1,7 +1,7 @@
 'use client';
 
-// components/ActivityFeed.tsx - human-readable on-chain activity. Each raw event is decoded into a
-// sentence ("0xab… staked UP on epoch #42", "Epoch #7 settled - DOWN won", "0xcd… claimed 1.2 USDC
+// components/ActivityFeed.tsx — human-readable on-chain activity. Each raw event is decoded into a
+// sentence ("0xab… staked UP on epoch #42", "Epoch #7 settled — DOWN won", "0xcd… claimed 1.2 USDC
 // from epoch #7") via the PURE describeEvent, with a relative-time label ("2m ago") off the resolved
 // block timestamp and the chain clock. Falls back to the raw event name for any unknown event.
 import { useActivityFeed } from '@/hooks/useActivityFeed';

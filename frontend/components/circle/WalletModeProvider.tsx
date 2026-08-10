@@ -1,6 +1,6 @@
 'use client';
 
-// components/circle/WalletModeProvider.tsx - which wallet the user chose: 'injected' (MetaMask) or
+// components/circle/WalletModeProvider.tsx — which wallet the user chose: 'injected' (MetaMask) or
 // 'embedded' (Circle). Persisted so the choice survives reloads. Drives useActiveWallet/useExecuteWrite.
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';

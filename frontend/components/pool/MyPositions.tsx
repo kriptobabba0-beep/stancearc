@@ -1,11 +1,11 @@
 'use client';
 
-// components/pool/MyPositions.tsx - the connected wallet's LP positions across ALL registry pools, shown
+// components/pool/MyPositions.tsx — the connected wallet's LP positions across ALL registry pools, shown
 // under the "My Positions" TAB of the Pool browser (PoolBrowser). Reuses the tested YourLiquidity
 // (withdraw / collect) per pool, rendering a group ONLY for pools where the wallet holds positions, with
 // one shared empty / disconnected state. Honors the browser's shared `query` (filters groups by pair)
 // and an `onCreate` callback so the empty state's "Add Liquidity" opens the same Create modal as the
-// toolbar. No heading of its own - the tab provides the label.
+// toolbar. No heading of its own — the tab provides the label.
 import { useAccount } from 'wagmi';
 import { useOwnedPositions } from '@/hooks/useOwnedPositions';
 import { POOLS, poolLabel } from '@/lib/pools';

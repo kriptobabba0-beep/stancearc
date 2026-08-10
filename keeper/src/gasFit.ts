@@ -1,9 +1,9 @@
-// gasFit.ts - fit a position-iterating crank under the RPC's hard per-tx gas cap.
+// gasFit.ts — fit a position-iterating crank under the RPC's hard per-tx gas cap.
 //
 // WHY THIS EXISTS: every Arc public RPC caps BOTH eth_estimateGas AND the per-tx gas limit at
 // exactly 16,777,216 (2^24). A single high-volume LP position can cost ~16.6M gas to process
-// (heavy fee collection), so the keeper's default `processPositions(epoch, 50)` - which tries to
-// process the whole backlog in one tx - estimates well above the cap. estimateGas then refuses
+// (heavy fee collection), so the keeper's default `processPositions(epoch, 50)` — which tries to
+// process the whole backlog in one tx — estimates well above the cap. estimateGas then refuses
 // ("gas required exceeds 16777216"), the keeper can't build the tx, and it backs off and retries
 // the identical doomed call forever (the epoch-1658 wedge).
 //
@@ -14,7 +14,7 @@
 
 /**
  * True when a thrown error is the node refusing a call/tx because its gas requirement exceeds the
- * per-tx / estimate cap - the signal to SHRINK the batch. Distinct from a contract revert (which
+ * per-tx / estimate cap — the signal to SHRINK the batch. Distinct from a contract revert (which
  * carries a reason string and must bubble up) and from a transport blip. Matches the phrasings Arc
  * RPCs use: "gas required exceeds 16777216", "gas limit too high" (code -32003), "intrinsic gas too
  * high", "exceeds block gas limit". Walks the viem error/cause chain via a full stringify.
@@ -59,12 +59,12 @@ export interface BatchFit {
 /**
  * Find the largest batch (<= `desired`) whose estimated gas fits under `cap`, halving on every
  * over-cap signal down to 1. `estimate(count)` runs the node's gas estimate for processing `count`
- * positions; it may THROW a gas-cap error (treated as "over cap, shrink") - any OTHER throw (a real
+ * positions; it may THROW a gas-cap error (treated as "over cap, shrink") — any OTHER throw (a real
  * revert / transport error) propagates so the caller's normal failure+backoff path handles it.
  *
  * Submits with a headroom buffer above the estimate (default +12.5%) but never above `cap`. When
  * even a single position won't estimate under the cap, returns `{ count: 1, gasLimit: cap }` as a
- * last resort - the only shot at making progress (and the caller logs it loudly).
+ * last resort — the only shot at making progress (and the caller logs it loudly).
  */
 export async function fitBatchUnderCap(opts: {
   desired: number;
@@ -81,7 +81,7 @@ export async function fitBatchUnderCap(opts: {
     try {
       est = await estimate(n);
     } catch (err) {
-      if (!isGasCapError(err)) throw err; // real revert / transport error - let the caller handle it
+      if (!isGasCapError(err)) throw err; // real revert / transport error — let the caller handle it
       est = null; // node refused: this batch needs more than the cap → shrink
     }
 

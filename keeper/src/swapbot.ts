@@ -1,17 +1,17 @@
-// swapbot.ts - the VOLUME bot. A SEPARATE process with a SEPARATE key (SWAPBOT_PRIVATE_KEY)
+// swapbot.ts — the VOLUME bot. A SEPARATE process with a SEPARATE key (SWAPBOT_PRIVATE_KEY)
 // whose ONLY job is to generate continuous trading volume on the cirBTC/USDC pool so that LP
-// positions - whether staked into an epoch or just providing liquidity - accrue REAL,
+// positions — whether staked into an epoch or just providing liquidity — accrue REAL,
 // claimable trading fees even in quiet rounds with no organic swaps.
 //
 // It does small BALANCE-AWARE round-trip swaps at a fixed rate (default 15/min): each tick it
 // reads the pool price + its own inventory and sells whichever leg is currently heavier (in
-// value), nudging the price a hair and paying the AMM's 0.3% fee - which is exactly the fee
+// value), nudging the price a hair and paying the AMM's 0.3% fee — which is exactly the fee
 // LPs earn. The arb bot (a separate process) keeps the price pegged to Pyth, so the swap bot's
 // tiny nudges are continuously corrected; net effect = steady fee generation, ~price-neutral.
 //
 // Reuses the arb's tested helpers: buildArbClients-style client setup, resolveBaseIsToken0,
 // ensureRouterApprovals (one max approval per token), and buildSwapArgs (the exact swap-arg +
-// bounded-sqrtPriceLimit + slippage math) - driven here with the pool's OWN price as the
+// bounded-sqrtPriceLimit + slippage math) — driven here with the pool's OWN price as the
 // reference and purpose='heartbeat' so the limit is a small bounded offset past current.
 import {
   defineChain,
@@ -54,7 +54,7 @@ export type SwapDir = 'SELL_BASE' | 'BUY_BASE' | 'NONE';
 
 /**
  * PURE direction picker for the VOLUME bot: STRICT ALTERNATION (sell, buy, sell, buy …). Each
- * sell↔buy pair is a round-trip that nets ~zero price impact and ~zero inventory change - it only
+ * sell↔buy pair is a round-trip that nets ~zero price impact and ~zero inventory change — it only
  * bleeds the 0.3% fee it exists to donate to LPs. So the bot is provably price-NEUTRAL: it never
  * drifts the pool or fights the arb, it ignores the pool price entirely (no peg logic, never stops),
  * and its own inventory stays balanced (a sell is matched by the next buy). Alternates away from the
@@ -85,7 +85,7 @@ export function decideSwapDirection(
 /**
  * PEG GATE (the swap-bot↔arb sync fix). PURE. Returns whether the pool is close ENOUGH to the live
  * reference for the volume bot to safely trade. When the pool is off-peg by more than `maxDevBps`, the
- * swap bot must STAND DOWN and let the arb re-peg - pumping round-trip volume into an off-peg pool is
+ * swap bot must STAND DOWN and let the arb re-peg — pumping round-trip volume into an off-peg pool is
  * pointless (wrong price) and dangerous (it churns/feeds the very divergence the arb is fighting, and
  * when the arb is depleted it's what let the pool run away). maxDevBps <= 0 disables the gate (legacy
  * strict-alternation behavior). A non-positive ref is treated as un-verifiable => CLOSED (fail-safe:
@@ -149,7 +149,7 @@ export async function runSwapOnce(
     ]);
 
     // PEG GATE (swap-bot↔arb sync): stand down when the pool is off-peg so we never pump volume into a
-    // pool the arb is still re-pegging (or can't, when depleted) - the failure mode that let the pool
+    // pool the arb is still re-pegging (or can't, when depleted) — the failure mode that let the pool
     // run away. Reference is the live Pyth price (same feed the arb uses); a Hermes failure fails CLOSED
     // (skip this tick) so we never trade blind. Gate OFF (maxPegDeviationBps<=0) => unchanged behavior.
     if (cfg.maxPegDeviationBps > 0) {
@@ -163,7 +163,7 @@ export async function runSwapOnce(
       if (!pegWithinBand(poolPrice18, ref18, cfg.maxPegDeviationBps)) {
         const diff = poolPrice18 > ref18 ? poolPrice18 - ref18 : ref18 - poolPrice18;
         const devBps = ref18 > 0n ? Number((diff * 10_000n) / ref18) : -1;
-        log({ msg: 'swapbot.peg-gate.paused', reason: 'pool off-peg - deferring to arb', poolPrice18, ref18, devBps, maxDevBps: cfg.maxPegDeviationBps });
+        log({ msg: 'swapbot.peg-gate.paused', reason: 'pool off-peg — deferring to arb', poolPrice18, ref18, devBps, maxDevBps: cfg.maxPegDeviationBps });
         return { ok: false, dir: 'NONE', error: 'peg-gate: off-peg' };
       }
     }
@@ -180,7 +180,7 @@ export async function runSwapOnce(
       cfg.market.quoteDecimals,
     );
     if (dir === 'NONE') {
-      log({ msg: 'swapbot.skip', reason: 'out of inventory - refill the swap-bot wallet', invBase, invQuote });
+      log({ msg: 'swapbot.skip', reason: 'out of inventory — refill the swap-bot wallet', invBase, invQuote });
       return { ok: false, dir };
     }
 
@@ -204,7 +204,7 @@ export async function runSwapOnce(
       cfg.slippageBps,
     );
 
-    // Build the full write for a given gas attempt - re-invoked per attempt so the deadline is
+    // Build the full write for a given gas attempt — re-invoked per attempt so the deadline is
     // refreshed (a stuck tx's old deadline may have lapsed by the time we re-send).
     const buildWrite = (gas: GasOverrides): Parameters<WalletClient['writeContract']>[0] =>
       ({
@@ -230,9 +230,9 @@ export async function runSwapOnce(
       } as Parameters<WalletClient['writeContract']>[0]);
 
     // BOUNDED gas-tip escalation (reuses the arb's pure primitives). Attempt 0 is the floor; on a
-    // receipt-wait TIMEOUT the SAME swap is re-sent at a higher capped tip - viem replaces the
+    // receipt-wait TIMEOUT the SAME swap is re-sent at a higher capped tip — viem replaces the
     // still-pending nonce (RBF), so a stuck/under-priced tx gets unstuck WITHOUT firing a second
-    // independent leg (no double-fill). A mined revert is returned (not escalated - can't un-revert).
+    // independent leg (no double-fill). A mined revert is returned (not escalated — can't un-revert).
     const attempts = totalAttempts(cfg.gasEscalation);
     let txHash: `0x${string}` | undefined;
     let receipt: { status: 'success' | 'reverted' } | undefined;
@@ -248,7 +248,7 @@ export async function runSwapOnce(
       } catch (err) {
         lastErr = err;
         if (!(err instanceof WaitForTransactionReceiptTimeoutError)) throw err;
-        if (attempt === attempts - 1) throw err; // exhausted - surface the timeout to the catch below
+        if (attempt === attempts - 1) throw err; // exhausted — surface the timeout to the catch below
       }
     }
     if (receipt === undefined) throw lastErr instanceof Error ? lastErr : new Error('gas escalation exhausted');
@@ -271,7 +271,7 @@ export function sellToFlatAmount(baseBalance: bigint, targetBase: bigint): bigin
 }
 
 /**
- * PURE: cap a desired SELL at what the pool can physically pay - a safety fraction of the pool's real
+ * PURE: cap a desired SELL at what the pool can physically pay — a safety fraction of the pool's real
  * USDC, converted to base at the pool price. On a one-sided (USDC-empty) pool this is ~0, so the
  * caller idles instead of firing a "Too little received" SELL. safetyBps<=0 => no cap (returns want).
  */
@@ -293,7 +293,7 @@ export function cappedSell(
   return want < cap ? want : cap;
 }
 
-/** Read the pool's real USDC (quote) balance - the hard ceiling on what a SELL can extract. */
+/** Read the pool's real USDC (quote) balance — the hard ceiling on what a SELL can extract. */
 async function readPoolQuoteBal(client: PublicClient, cfg: SwapbotConfig): Promise<bigint> {
   return (await client.readContract({
     address: cfg.market.quote,
@@ -304,9 +304,9 @@ async function readPoolQuoteBal(client: PublicClient, cfg: SwapbotConfig): Promi
 }
 
 /**
- * PURE: size a SELL so it can actually FILL - bounded by BOTH (a) price impact, via the pool's own
+ * PURE: size a SELL so it can actually FILL — bounded by BOTH (a) price impact, via the pool's own
  * depth: the cirBTC that moves the pool down by HALF the slippage tolerance (so the realized fill
- * clears the slippage-priced amountOutMinimum - no "Too little received" from over-sizing into a thin
+ * clears the slippage-priced amountOutMinimum — no "Too little received" from over-sizing into a thin
  * pool); and (b) deliverability: a safety fraction of the pool's real USDC (the one-sided-pool guard).
  * Returns min(want, impactCap, deliverableCap). This is why a 0.01-cirBTC long is sold in small
  * slippage-safe clips over many ticks instead of dumped in one reverting trade.
@@ -336,7 +336,7 @@ export function safeSellSize(
 }
 
 /**
- * PURE: the per-EPOCH pair notional - the base amount of EACH leg of the once-per-epoch balanced
+ * PURE: the per-EPOCH pair notional — the base amount of EACH leg of the once-per-epoch balanced
  * pair. It is the SMALLER of two ideas so the pair is always safe on a thin pool: (1) the operator's
  * `pairTradeBase` intent, and (2) a depth-derived size = the base that moves the pool from its spot
  * to a target UNDERSHOOTING the oracle by `closeFraction` (reusing baseAmountToMovePrice exactly as
@@ -344,11 +344,11 @@ export function safeSellSize(
  * pool past peg. The result is capped at `maxTradeBase` and dust-floored: below `minTradeBase` it
  * returns 0 (=> the caller skips the pair this epoch rather than fire a doomed dust swap). When the
  * pool is already AT the oracle (gap 0) the depth size is 0 → returns 0, which is correct: there's
- * nothing to arb, and the SELL/BUY legs would each just pay fees around the peg - the caller still
+ * nothing to arb, and the SELL/BUY legs would each just pay fees around the peg — the caller still
  * fires `pairTradeBase` in that AT-peg case (see below) since the whole point is fee VOLUME. To keep
  * this function honest as a pure "max safe leg size", it returns min(intent, depthCap) ONLY when a
  * meaningful gap exists; at/above peg with no gap it returns the intent (depth doesn't bound a
- * round-trip that nets to zero). devBps sign is irrelevant - |gap| is used.
+ * round-trip that nets to zero). devBps sign is irrelevant — |gap| is used.
  */
 export function pairSizeBase(
   liquidity: bigint,
@@ -442,7 +442,7 @@ async function sendSwapLeg(
 }
 
 /**
- * One NEUTRAL round-trip - the peg-safe volume primitive. BUY `tradeBase`-worth of base, then SELL it
+ * One NEUTRAL round-trip — the peg-safe volume primitive. BUY `tradeBase`-worth of base, then SELL it
  * back down to `targetBase`, as two back-to-back txns. Net base position ≈ 0 and net price impact ≈ 0
  * (the sell undoes the buy), so it generates 2 swaps of fee volume WITHOUT moving the peg, and the arb
  * almost never has to intervene. Self-correcting: if a previous sell leg failed and left a long, this
@@ -460,7 +460,7 @@ export async function runRoundTripOnce(
 ): Promise<{ ok: boolean; legs: number; error?: string }> {
   // The inventory level the round-trip returns to ("flat"). Legacy callers use cfg.targetBase (0 =
   // sell everything). The MAKER passes its WORKING RESERVE here so the round-trip buys+sells a small
-  // clip around the reserve for volume - and NEVER dumps the reserve as if it were a leftover long.
+  // clip around the reserve for volume — and NEVER dumps the reserve as if it were a leftover long.
   const flatTarget = flatTargetBase ?? cfg.targetBase;
   try {
     const { poolPrice18, sqrtPriceX96 } = await readPoolPrice(client, cfg, baseIsToken0);
@@ -468,9 +468,9 @@ export async function runRoundTripOnce(
     const mkDecision = (direction: SwapDir, amountInBase: bigint) =>
       ({ kind: 'SWAP', direction, amountInBase, purpose: 'heartbeat', reason: 'swapbot roundtrip' } as unknown as ArbDecision & { kind: 'SWAP' });
 
-    // RECOVERY FIRST - UN-GATED. A leftover long (from a prior failed sell leg) is the one way the
+    // RECOVERY FIRST — UN-GATED. A leftover long (from a prior failed sell leg) is the one way the
     // swap bot can distort the peg: it bought base (pushed the pool UP) but never sold it back. So we
-    // ALWAYS sell it back to flat BEFORE the peg gate - selling a long never pushes the pool up, and
+    // ALWAYS sell it back to flat BEFORE the peg gate — selling a long never pushes the pool up, and
     // when the pool is off-peg HIGH it actively helps the arb re-peg. (Gating this behind the peg band
     // was the bug: an off-peg leftover could never be cleared, leaving a permanent up-push.) Only acts
     // on a MEANINGFUL leftover (>= one tradeBase), and skips the buy this tick.
@@ -482,13 +482,13 @@ export async function runRoundTripOnce(
     const leftover = sellToFlatAmount(baseBefore, flatTarget);
     if (leftover >= cfg.tradeBase) {
       // Sell the leftover long in a SLIPPAGE-SAFE clip sized to the pool's depth (price-impact) AND
-      // bounded by the pool's USDC (deliverability) - NOT the whole long, which would blow past
+      // bounded by the pool's USDC (deliverability) — NOT the whole long, which would blow past
       // slippage and revert "Too little received". A long is worked down over many ticks. When the
-      // pool is genuinely too thin to even sell one safe clip, we IDLE (and don't buy more - that
+      // pool is genuinely too thin to even sell one safe clip, we IDLE (and don't buy more — that
       // would grow the un-sellable long) until the pool deepens.
       const sellable = safeSellSize(leftover, liquidity, poolQuoteBal, poolPrice18, cfg.slippageBps, cfg.poolDeliverableSafetyBps ?? 0, baseIsToken0, cfg.market.baseDecimals, cfg.market.quoteDecimals);
       if (sellable <= 0n) {
-        log({ msg: 'swapbot.roundtrip.defer', reason: 'pool too thin to sell even a slippage-safe clip - idling', leftover, poolQuoteBal, liquidity });
+        log({ msg: 'swapbot.roundtrip.defer', reason: 'pool too thin to sell even a slippage-safe clip — idling', leftover, poolQuoteBal, liquidity });
         return { ok: false, legs: 0, error: 'deferred: thin pool' };
       }
       const recoverSwap = buildSwapArgs(mkDecision('SELL_BASE', sellable), cfg.market, poolPrice18, baseIsToken0, cfg.slippageBps, sqrtPriceX96, cfg.slippageBps);
@@ -497,7 +497,7 @@ export async function runRoundTripOnce(
       return { ok: r.ok, legs: r.ok ? 1 : 0, error: r.error };
     }
 
-    // PEG GATE - gates only the BUY+SELL round-trip (a BUY adds volume by pushing the pool UP, which is
+    // PEG GATE — gates only the BUY+SELL round-trip (a BUY adds volume by pushing the pool UP, which is
     // pointless/dangerous when it's already off-peg). Defer to the arb. Fails CLOSED on a Hermes error.
     if (cfg.maxPegDeviationBps > 0) {
       let ref18: bigint;
@@ -510,22 +510,22 @@ export async function runRoundTripOnce(
       if (!pegWithinBand(poolPrice18, ref18, cfg.maxPegDeviationBps)) {
         const diff = poolPrice18 > ref18 ? poolPrice18 - ref18 : ref18 - poolPrice18;
         const devBps = ref18 > 0n ? Number((diff * 10_000n) / ref18) : -1;
-        log({ msg: 'swapbot.peg-gate.paused', reason: 'pool off-peg - deferring to arb', poolPrice18, ref18, devBps, maxDevBps: cfg.maxPegDeviationBps });
+        log({ msg: 'swapbot.peg-gate.paused', reason: 'pool off-peg — deferring to arb', poolPrice18, ref18, devBps, maxDevBps: cfg.maxPegDeviationBps });
         return { ok: false, legs: 0, error: 'peg-gate: off-peg' };
       }
     }
 
-    // BUY leg - acquire ~tradeBase of base (spends USDC at the pool price).
+    // BUY leg — acquire ~tradeBase of base (spends USDC at the pool price).
     const buySwap = buildSwapArgs(mkDecision('BUY_BASE', cfg.tradeBase), cfg.market, poolPrice18, baseIsToken0, cfg.slippageBps, sqrtPriceX96, cfg.slippageBps);
     const buy = await sendSwapLeg(client, wallet, account, chain, cfg, buySwap);
     if (!buy.ok) {
       log({ msg: 'swapbot.roundtrip.buy.failed', error: buy.error, txHash: buy.txHash });
-      return { ok: false, legs: 0, error: buy.error }; // no position change - buy didn't settle
+      return { ok: false, legs: 0, error: buy.error }; // no position change — buy didn't settle
     }
 
-    // SELL leg - sell back down to target (undoes the buy + any dust), re-pricing off the post-buy
+    // SELL leg — sell back down to target (undoes the buy + any dust), re-pricing off the post-buy
     // slot0 so the limit/min are correct. The BUY just added USDC to the pool, so the sell-back is
-    // normally deliverable; we still cap by the pool's (post-buy) USDC defensively - a partial cap
+    // normally deliverable; we still cap by the pool's (post-buy) USDC defensively — a partial cap
     // sells what it can and the residual is recovered next tick.
     const after = await readPoolPrice(client, cfg, baseIsToken0);
     const [baseAfter, poolQuoteBalAfter, liquidityAfter] = await Promise.all([
@@ -551,7 +551,7 @@ export async function runRoundTripOnce(
     const sellSwap = buildSwapArgs(mkDecision('SELL_BASE', sellAmt), cfg.market, after.poolPrice18, baseIsToken0, cfg.slippageBps, after.sqrtPriceX96, cfg.slippageBps);
     const sell = await sendSwapLeg(client, wallet, account, chain, cfg, sellSwap);
     if (!sell.ok) {
-      // Left holding `sellAmt` base - the NEXT tick's RECOVERY sells it off before buying again.
+      // Left holding `sellAmt` base — the NEXT tick's RECOVERY sells it off before buying again.
       log({ msg: 'swapbot.roundtrip.sell.failed', error: sell.error, heldBase: sellAmt, buyTx: buy.txHash, sellTx: sell.txHash });
       return { ok: false, legs: 1, error: sell.error };
     }
@@ -565,13 +565,13 @@ export async function runRoundTripOnce(
 }
 
 /**
- * MARKET-MAKER tick - the peg-band MM that replaces the one-way arb battery. Reads the pool price +
+ * MARKET-MAKER tick — the peg-band MM that replaces the one-way arb battery. Reads the pool price +
  * in-range liquidity + the bot's own inventory + the live Pyth ref, asks decideMaker for the single
  * inventory-skewed action, and executes it:
- *   - NEUTRAL  -> a peg-neutral round-trip (volume without moving the peg) - inside the deadband;
+ *   - NEUTRAL  -> a peg-neutral round-trip (volume without moving the peg) — inside the deadband;
  *   - SELL/BUY -> a single peg-CORRECTING leg, ref-pinned (purpose 'arb' so the AMM can fill UP TO the
  *                 oracle but never past it), sized by decideMaker (skewed + hard cirBTC floor);
- *   - NONE     -> idle (rationing near the floor on a high pool, or no USDC budget) - logged.
+ *   - NONE     -> idle (rationing near the floor on a high pool, or no USDC budget) — logged.
  * Fails CLOSED on a missing Pyth ref (never trades blind). Never throws out of the loop.
  */
 export async function runMakerOnce(
@@ -592,7 +592,7 @@ export async function runMakerOnce(
       client.readContract({ address: cfg.market.quote, abi: erc20Abi, functionName: 'balanceOf', args: [account.address] }) as Promise<bigint>,
     ]);
 
-    // The live Pyth reference (same feed the arena/arb use). A Hermes failure FAILS CLOSED - never
+    // The live Pyth reference (same feed the arena/arb use). A Hermes failure FAILS CLOSED — never
     // make a market against a price we can't verify.
     let ref18: bigint;
     try {
@@ -623,16 +623,16 @@ export async function runMakerOnce(
       return { ok: false, kind: 'NONE' };
     }
     if (decision.kind === 'NEUTRAL') {
-      // Inside the deadband - generate volume with a round-trip AROUND the working reserve (NOT down
+      // Inside the deadband — generate volume with a round-trip AROUND the working reserve (NOT down
       // to zero). Passing maker.targetBase as the flat target means: below target it net-accumulates
       // toward target, AT target it's a true buy==sell neutral round-trip, above target it net-sells
-      // toward target - volume + soft inventory centering, and the reserve is never dumped.
+      // toward target — volume + soft inventory centering, and the reserve is never dumped.
       log({ msg: 'swapmaker.neutral', devBps: decision.devBps, invBase, target: maker.targetBase });
       const rt = await runRoundTripOnce(client, wallet, account, chain, cfg, baseIsToken0, maker.targetBase);
       return { ok: rt.ok, kind: 'NEUTRAL', error: rt.error };
     }
 
-    // SELL_BASE / BUY_BASE - a peg-correcting leg. purpose 'arb' pins the limit at the ref so the AMM
+    // SELL_BASE / BUY_BASE — a peg-correcting leg. purpose 'arb' pins the limit at the ref so the AMM
     // fills up to the oracle and can NEVER push the pool past it (the same safety the arb uses).
     const dir = decision.kind; // 'SELL_BASE' | 'BUY_BASE'
     const dec = {
@@ -654,9 +654,9 @@ export async function runMakerOnce(
 }
 
 /**
- * EPOCH-PAIR tick - the once-per-epoch balanced, peg-NEUTRAL pair (the drift-proof replacement for
+ * EPOCH-PAIR tick — the once-per-epoch balanced, peg-NEUTRAL pair (the drift-proof replacement for
  * the continuous round-trip). Reads the pool price + in-range liquidity + the live Pyth ref (fails
- * CLOSED on a Hermes miss - never trades blind), STANDS DOWN if the pool is off-peg (same gate as
+ * CLOSED on a Hermes miss — never trades blind), STANDS DOWN if the pool is off-peg (same gate as
  * everywhere else so it never pumps volume into a pool the arb is re-pegging), sizes the pair by
  * pool depth via pairSizeBase, and fires ONE atomic router.multicall([SELL tradeBase, BUY
  * tradeBase]). SELL-first, both legs' sqrtPriceLimitX96 pinned to the oracle (purpose 'arb') so
@@ -682,7 +682,7 @@ export async function runEpochPairOnce(
       client.readContract({ address: cfg.market.pool, abi: v3PoolAbi, functionName: 'liquidity' }) as Promise<bigint>,
     ]);
 
-    // The live Pyth reference (same feed the arena/arb use). A Hermes failure FAILS CLOSED - never
+    // The live Pyth reference (same feed the arena/arb use). A Hermes failure FAILS CLOSED — never
     // fire the pair against a price we can't verify (and we DON'T stamp the ledger, so it retries).
     let ref18: bigint;
     try {
@@ -692,12 +692,12 @@ export async function runEpochPairOnce(
       return { ok: false, legs: 0, error: 'no ref' };
     }
 
-    // PEG GATE - stand down (do NOT stamp) when the pool is off-peg; let the arb re-peg first. Same
+    // PEG GATE — stand down (do NOT stamp) when the pool is off-peg; let the arb re-peg first. Same
     // fail-closed band as the round-trip/maker gate. Gate OFF (maxPegDeviationBps<=0) => no check.
     if (!pegWithinBand(poolPrice18, ref18, cfg.maxPegDeviationBps)) {
       const diff = poolPrice18 > ref18 ? poolPrice18 - ref18 : ref18 - poolPrice18;
       const devBps = ref18 > 0n ? Number((diff * 10_000n) / ref18) : -1;
-      log({ msg: 'swapbot.epoch.paused', epochId, reason: 'pool off-peg - deferring to arb (will retry this epoch)', poolPrice18, ref18, devBps, maxDevBps: cfg.maxPegDeviationBps });
+      log({ msg: 'swapbot.epoch.paused', epochId, reason: 'pool off-peg — deferring to arb (will retry this epoch)', poolPrice18, ref18, devBps, maxDevBps: cfg.maxPegDeviationBps });
       return { ok: false, legs: 0, error: 'peg-gate: off-peg' };
     }
 
@@ -715,13 +715,13 @@ export async function runEpochPairOnce(
       cfg.market.quoteDecimals,
     );
     if (sizeBase <= 0n) {
-      // Dust after depth-sizing - skip the pair this epoch but STAMP (we "acted": there was nothing
+      // Dust after depth-sizing — skip the pair this epoch but STAMP (we "acted": there was nothing
       // safe to trade). Returning ok here lets the caller stamp so we don't re-evaluate every tick.
-      log({ msg: 'swapbot.epoch.dust', epochId, reason: 'sized pair below the dust floor - skipping this epoch', liquidity, poolPrice18, ref18 });
+      log({ msg: 'swapbot.epoch.dust', epochId, reason: 'sized pair below the dust floor — skipping this epoch', liquidity, poolPrice18, ref18 });
       return { ok: true, legs: 0, sizeBase: 0n };
     }
 
-    // Build BOTH legs ref-pinned (purpose 'arb'): each fills UP TO the oracle and cannot cross it -
+    // Build BOTH legs ref-pinned (purpose 'arb'): each fills UP TO the oracle and cannot cross it —
     // the SELL stops at the peg from above, the BUY stops at the peg from below. SELL-first so, even
     // if the router were ever non-atomic, the pool is only ever transiently at-or-BELOW the oracle.
     const mkDecision = (direction: SwapDir) =>
@@ -748,7 +748,7 @@ export async function runEpochPairOnce(
       });
 
     // ONE atomic multicall([SELL, BUY]) sent through the same bounded gas-tip escalation as a single
-    // leg (RBF on a receipt timeout, never a second independent multicall - no double-fill). The
+    // leg (RBF on a receipt timeout, never a second independent multicall — no double-fill). The
     // deadline is refreshed per attempt (rebuild the calldata) exactly like the single-leg send.
     const buildWrite = (gas: GasOverrides): Parameters<WalletClient['writeContract']>[0] =>
       ({
@@ -857,13 +857,13 @@ async function main(): Promise<void> {
   process.on('SIGTERM', () => stop('SIGTERM'));
 
   // The bot TOLERATES being unfunded: it does not approve or swap until the wallet has enough
-  // native gas, and starts automatically once funded - no container restart needed after a top-up.
+  // native gas, and starts automatically once funded — no container restart needed after a top-up.
   // 0.005 native is enough to attempt a router approval + a swap; below it we idle and wait.
   const MIN_OPERATING_WEI = 5_000_000_000_000_000n;
   let approved = false; // router approval is done LAZILY (it needs gas), retried until it lands.
   let sinceBalanceCheck = 0;
   // Last SUCCESSFUL balance read. On a transient getBalance failure we carry this forward instead
-  // of treating the bot as broke - otherwise one flaky RPC read would idle a FULLY-FUNDED bot for
+  // of treating the bot as broke — otherwise one flaky RPC read would idle a FULLY-FUNDED bot for
   // the minute. Stays 0n until the first successful read (so a never-funded bot still idles).
   let lastGoodBal = 0n;
   // Strict alternation state: start at BUY_BASE so the first executed swap is a SELL_BASE. Only
@@ -887,7 +887,7 @@ async function main(): Promise<void> {
     try {
       bal = await publicClient.getBalance({ address: account.address });
       lastGoodBal = bal;
-    } catch { /* transient - reuse lastGoodBal for this tick */ }
+    } catch { /* transient — reuse lastGoodBal for this tick */ }
     if (sinceBalanceCheck <= 0) {
       log({ msg: bal < cfg.lowBalanceWei ? 'WARN low swapbot balance' : 'swapbot.balance', signer: account.address, balanceWei: bal.toString() });
       sinceBalanceCheck = 30;
@@ -897,7 +897,7 @@ async function main(): Promise<void> {
     // Gas gate: not enough native to operate -> idle (don't spam failing estimateGas). Starts
     // working on its own the moment the wallet is funded.
     if (bal < MIN_OPERATING_WEI) {
-      log({ msg: 'swapbot.waiting', reason: 'insufficient gas - fund the swap-bot wallet (gas + cirBTC + USDC)', balanceWei: bal.toString() });
+      log({ msg: 'swapbot.waiting', reason: 'insufficient gas — fund the swap-bot wallet (gas + cirBTC + USDC)', balanceWei: bal.toString() });
       await sleep(Math.max(2000, cfg.intervalMs));
       continue;
     }
@@ -935,7 +935,7 @@ async function main(): Promise<void> {
       try {
         epochId = (await publicClient.readContract({ address: cfg.epoch.arena, abi: feeArenaV3Abi, functionName: 'currentEpochId' })) as bigint;
       } catch (err) {
-        log({ msg: 'swapbot.epoch.read.error', reason: 'could not read currentEpochId - idling this tick', error: err instanceof Error ? err.message : String(err) });
+        log({ msg: 'swapbot.epoch.read.error', reason: 'could not read currentEpochId — idling this tick', error: err instanceof Error ? err.message : String(err) });
       }
       if (epochId !== undefined && shouldActThisEpoch(epochLedger, epochId)) {
         const res = await runEpochPairOnce(publicClient, walletClient, account, chain, cfg, baseIsToken0, epochId);

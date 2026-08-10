@@ -1,6 +1,6 @@
-// lib/activity/types.ts - shapes for the Circle SCP arena activity feed.
+// lib/activity/types.ts — shapes for the Circle SCP arena activity feed.
 //
-// A `CircleEventLog` is one entry from Circle's GET /v1/w3s/contracts/events (raw, UNDECODED - Circle
+// A `CircleEventLog` is one entry from Circle's GET /v1/w3s/contracts/events (raw, UNDECODED — Circle
 // returns decodedData: null for our UNVERIFIED-on-Arc contract, so we decode topics+data ourselves).
 // An `ActivityEvent` is the decoded, display-ready row the feed renders. Big numeric values are kept as
 // raw base-unit STRINGS (not bigint) so they serialize cleanly through the JSON API route.
@@ -18,13 +18,13 @@ export interface CircleEventLog {
   id: string;
   txHash: `0x${string}`;
   blockHeight: number | string;
-  /** Position of the log within its block - the tiebreaker for same-block ordering. */
+  /** Position of the log within its block — the tiebreaker for same-block ordering. */
   logIndex?: number | string;
   topics: readonly `0x${string}`[];
   data: `0x${string}`;
   /** Circle echoes the canonical signature; present but we decode by ABI/topic0 regardless. */
   eventName?: string;
-  /** First on-chain confirmation time (ISO) - used as the row timestamp. */
+  /** First on-chain confirmation time (ISO) — used as the row timestamp. */
   firstConfirmDate?: string;
 }
 
@@ -35,12 +35,12 @@ export interface ActivityEvent {
   kind: ActivityKind;
   marketId: string;
   marketLabel: string;
-  /** Quote token symbol ('USDC' | 'EURC') - the source of truth for the price glyph + payout label. */
+  /** Quote token symbol ('USDC' | 'EURC') — the source of truth for the price glyph + payout label. */
   quoteSymbol: string;
   epochId: number;
   txHash: `0x${string}`;
   blockHeight: number;
-  /** Log position within the block - deterministic same-block ordering tiebreaker. */
+  /** Log position within the block — deterministic same-block ordering tiebreaker. */
   logIndex: number;
   /** ISO timestamp of first confirmation, if Circle provided it. */
   ts?: string;
@@ -63,6 +63,6 @@ export interface ActivityEvent {
 /** The /api/circle/activity response shape (shared by the route + the client hook). */
 export interface ActivityResponse {
   events: ActivityEvent[];
-  /** True only when EVERY market query failed (total Circle/scope outage) - UI shows "catching up". */
+  /** True only when EVERY market query failed (total Circle/scope outage) — UI shows "catching up". */
   degraded?: boolean;
 }

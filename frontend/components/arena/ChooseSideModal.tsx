@@ -1,14 +1,14 @@
 'use client';
 
-// components/arena/ChooseSideModal.tsx - mockup #4, exact: the wide "Choose your side" dialog on the
+// components/arena/ChooseSideModal.tsx — mockup #4, exact: the wide "Choose your side" dialog on the
 // chamfered Arena frame.
 //   Choose your side
 //   Select the outcome for this round before staking.
 //   [⬤⬤  SELECTED LP POSITION · cirBTC / USDC   #18 · Full range   ▾]   ← a real PICKER: clicking
 //        expands the wallet's OTHER stakeable positions; selecting one re-points the whole flow.
-//   [ UP ↗ ] [ DOWN ↘ ] [ RANGE ∿ ]  - zigzag trend glyphs, name, two-line meaning, hairline,
+//   [ UP ↗ ] [ DOWN ↘ ] [ RANGE ∿ ]  — zigzag trend glyphs, name, two-line meaning, hairline,
 //        "Current side depth" + the big live % (sideContribution6 share).
-//   [ 🗄 Current fee pot: $X │ 🕐 Entry closes in 00:04:32 ]  - split info bar, red countdown.
+//   [ 🗄 Current fee pot: $X │ 🕐 Entry closes in 00:04:32 ]  — split info bar, red countdown.
 //   [ Back ] [ Continue to stake ]
 // All values are live (depth/pot/countdown); picking a side stores it on the flow; Continue advances
 // to the review modal. Staking is gated on the REAL entry phase.
@@ -111,7 +111,7 @@ export function ChooseSideModal({ flow }: { flow: ArenaFlow }) {
         <p className="mt-1 text-sm text-ink-soft">Select how the selected market should settle relative to your entry reference price.</p>
       </div>
 
-      {/* Selected LP position - a real picker over every stakeable position in the wallet. */}
+      {/* Selected LP position — a real picker over every stakeable position in the wallet. */}
       <button
         type="button"
         data-testid="csm-position-toggle"
@@ -134,7 +134,7 @@ export function ChooseSideModal({ flow }: { flow: ArenaFlow }) {
             <span className="truncate text-sm font-semibold text-ink">{market.baseSymbol} / USDC</span>
           </span>
           <span className="mt-0.5 block truncate font-mono text-[12px] text-ink-soft">
-            #{flow.selectedPosition?.tokenId.toString() ?? '-'} · {range?.label ?? '…'}
+            #{flow.selectedPosition?.tokenId.toString() ?? '—'} · {range?.label ?? '…'}
           </span>
         </span>
         {hasAlternatives && (
@@ -165,7 +165,7 @@ export function ChooseSideModal({ flow }: { flow: ArenaFlow }) {
         This is your LP price range. Market view thresholds are based on your entry reference price.
       </p>
 
-      {/* Side cards - zigzag trend glyphs + the entry-anchored meaning per side. */}
+      {/* Side cards — zigzag trend glyphs + the entry-anchored meaning per side. */}
       <div className="mt-4 grid gap-3 sm:grid-cols-3">
         {ARENA_SIDES.map((s) => {
           const selected = flow.selectedSide === s;

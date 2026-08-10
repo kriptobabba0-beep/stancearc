@@ -1,4 +1,4 @@
-// POST /api/circle/email-token { deviceId, email } - mint an email-OTP device token (Circle sends the OTP).
+// POST /api/circle/email-token { deviceId, email } — mint an email-OTP device token (Circle sends the OTP).
 import { NextResponse } from 'next/server';
 import { createEmailDeviceToken } from '@/lib/server/circleServer';
 import { readJson, errorJson, badRequest, reqStr } from '../_lib';

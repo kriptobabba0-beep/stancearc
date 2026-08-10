@@ -1,10 +1,10 @@
 'use client';
 
-// app/arena/page.tsx - ARENA, rebuilt to the mockup design: a 3-column "HUD" with the round's market
+// app/arena/page.tsx — ARENA, rebuilt to the mockup design: a 3-column "HUD" with the round's market
 // context (left), the live epoch hero (center), and the guided entry rail (right) that walks the user
 // through Add liquidity → Choose side → Stake via three modals. The full journey happens on this one
 // page. Below the grid, the settlement banner + claim/unstake panel preserve the post-settlement
-// lifecycle (claim winnings, return the NFT) - the mockups cover entry; this keeps claiming reachable.
+// lifecycle (claim winnings, return the NFT) — the mockups cover entry; this keeps claiming reachable.
 //
 // All on-chain wiring is the existing hooks (useArenaFlow composes useOwnedPositions / useUserStakes /
 // useCurrentEpoch; the modals reuse ProvideLiquidity + useStakeWithSide). This file only assembles them.
@@ -24,7 +24,7 @@ import { CircleActivityFeed } from '@/components/CircleActivityFeed';
 export default function StancePage() {
   const flow = useArenaFlow();
 
-  // Top-left chip - a one-line live summary of where the user is in the flow, INCLUDING the
+  // Top-left chip — a one-line live summary of where the user is in the flow, INCLUDING the
   // wallet-connection status. (Only the "STATE:" label was dropped; the status text stays.)
   const stateText = !flow.isConnected
     ? 'Wallet not connected'
@@ -39,7 +39,7 @@ export default function StancePage() {
       {/* Win moment: a prominent claimable-win banner for the just-settled epoch. */}
       <SettlementBanner />
 
-      {/* Market switcher - pick WHICH arena to enter (cirBTC/USDC or cirBTC/EURC). Surfaced here on the
+      {/* Market switcher — pick WHICH arena to enter (cirBTC/USDC or cirBTC/EURC). Surfaced here on the
           Arena page (not just the navbar "···" menu) so the market choice is obvious before entering.
           Renders only when >1 market is configured (MarketSelector itself no-ops on a single market). */}
       {MARKETS.length >= 2 && (
@@ -62,7 +62,7 @@ export default function StancePage() {
         </span>
       </div>
 
-      {/* The 3-column HUD: market context · live epoch · entry rail. EQUAL columns, EQUAL height -
+      {/* The 3-column HUD: market context · live epoch · entry rail. EQUAL columns, EQUAL height —
           the grid stretches all three panels to the tallest (with a generous floor), and each panel
           bottom-anchors its last section so the extra height reads intentional.
           Mobile order: rail (action) → epoch → context; desktop: context | epoch | rail. */}
@@ -87,8 +87,8 @@ export default function StancePage() {
       {/* Live activity + your positions, SIDE BY SIDE on desktop (stacked on mobile) so the positions
           card sits next to the feed instead of far below it. Top-aligned (items-start) since the two
           cards have different natural heights.
-            • Left  - the Circle SCP event-monitor pulse (polled).
-            • Right - the post-settlement claim/unstake lifecycle; keeps the `arena-claim` anchor the
+            • Left  — the Circle SCP event-monitor pulse (polled).
+            • Right — the post-settlement claim/unstake lifecycle; keeps the `arena-claim` anchor the
               rail's "View position" affordance scrolls to. */}
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-2">
         <section className="motion-safe:animate-fade-up" style={{ animationDelay: '150ms' }}>

@@ -1,7 +1,7 @@
-// reserveGovernor.ts - PURE drawdown math for the owner reserve (0x891b…) that funds the
+// reserveGovernor.ts — PURE drawdown math for the owner reserve (0x891b…) that funds the
 // gas-watchdog's keeper-signer refills. The gas-burn DRAIN bug is fixed, but a sustained
 // LEGITIMATE burn can still outpace the human's faucet top-ups and slowly bleed the reserve
-// to empty - at which point the watchdog can't refill the signer and the whole keeper wedges
+// to empty — at which point the watchdog can't refill the signer and the whole keeper wedges
 // on insufficient gas. Watching only the ABSOLUTE level is too late: by the time the balance
 // is "low" there may be minutes, not hours, of runway left. So this module measures the
 // drawdown RATE over a sliding window and projects the time-to-floor, giving the operator
@@ -28,7 +28,7 @@ export interface ReserveHistory {
 export interface ReserveParams {
   /** Latest reserve balance (the loop's freshest read). */
   currentWei: bigint;
-  /** Stop/throttle floor - the reserve must stay above this or the keeper halts. */
+  /** Stop/throttle floor — the reserve must stay above this or the keeper halts. */
   floorWei: bigint;
   /** Begin throttling at/below this level (caller should keep this >= floorWei). */
   throttleWei: bigint;
@@ -52,7 +52,7 @@ export interface ReserveDecision {
   stop: boolean;
 }
 
-/** One hour in ms - the unit we normalize the drawdown rate to. */
+/** One hour in ms — the unit we normalize the drawdown rate to. */
 const HOUR_MS = 3_600_000n;
 
 /** A fresh, empty history. */
@@ -61,7 +61,7 @@ export function freshReserveHistory(): ReserveHistory {
 }
 
 /**
- * Append a sample and prune everything older than `now - retainMs`. PURE - returns a NEW
+ * Append a sample and prune everything older than `now - retainMs`. PURE — returns a NEW
  * history (never mutates the input array). Pruning bounds the window so the measured rate
  * reflects RECENT drawdown, not the whole run, and keeps the persisted history small.
  */
@@ -82,7 +82,7 @@ export function recordReserve(
 /**
  * Measured drawdown rate in wei/hour from the OLDEST to the NEWEST in-window sample.
  * Returns null when there are <2 samples (can't measure a slope) or when the reserve GREW
- * over the window (delta <= 0 - not draining, nothing to warn about). Guards divide-by-zero
+ * over the window (delta <= 0 — not draining, nothing to warn about). Guards divide-by-zero
  * when two samples share a timestamp. PURE.
  *
  *   delta = oldest.wei - newest.wei            (positive while draining)
@@ -95,9 +95,9 @@ export function drawdownWeiPerHour(history: ReserveHistory, now: number): bigint
   const oldest = samples[0]!;
   const newest = samples[samples.length - 1]!;
   const dtMs = newest.ts - oldest.ts;
-  if (dtMs <= 0) return null; // same instant (or out-of-order) - no measurable slope
+  if (dtMs <= 0) return null; // same instant (or out-of-order) — no measurable slope
   const delta = BigInt(oldest.wei) - BigInt(newest.wei);
-  if (delta <= 0n) return null; // reserve held flat or grew - not draining
+  if (delta <= 0n) return null; // reserve held flat or grew — not draining
   return (delta * HOUR_MS) / BigInt(dtMs);
 }
 
@@ -119,19 +119,19 @@ export function projectDryMs(
   floorWei: bigint,
 ): number | null {
   const rate = drawdownWeiPerHour(history, now);
-  if (rate === null || rate <= 0n) return null; // not draining - no projection
+  if (rate === null || rate <= 0n) return null; // not draining — no projection
   const headroom = currentWei - floorWei;
-  if (headroom <= 0n) return null; // already at/below floor - nothing to project
+  if (headroom <= 0n) return null; // already at/below floor — nothing to project
   return Number((headroom * HOUR_MS) / rate);
 }
 
 /**
  * The full decision. PURE. Computes the rate + projection once, then resolves the loop
  * signals. Alert precedence (highest severity wins):
- *   'floor'      - currentWei <= floorWei (we are stopping NOW)
- *   'projection' - projectedDryMs != null && < projectDryWarnMs (dry SOON)
- *   'rate'       - drawdownWeiPerHour != null && > warnDrawdownWeiPerHour (fast bleed)
- *   'none'       - healthy
+ *   'floor'      — currentWei <= floorWei (we are stopping NOW)
+ *   'projection' — projectedDryMs != null && < projectDryWarnMs (dry SOON)
+ *   'rate'       — drawdownWeiPerHour != null && > warnDrawdownWeiPerHour (fast bleed)
+ *   'none'       — healthy
  * throttle/stop are independent level gates (throttle at throttleWei, stop at floorWei).
  */
 export function evaluateReserve(

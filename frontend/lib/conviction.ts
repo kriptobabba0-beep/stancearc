@@ -1,4 +1,4 @@
-// lib/conviction.ts - FeeArena v2 conviction-input parsing + bounds validation.
+// lib/conviction.ts — FeeArena v2 conviction-input parsing + bounds validation.
 //
 // The v2 stake form takes a human USDC amount (the at-risk conviction) and must turn it into the 6dp
 // base-units bigint the arena expects, validated against the market's [minConv, maxConv]. USDC is

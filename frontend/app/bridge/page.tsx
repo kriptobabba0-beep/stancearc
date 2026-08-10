@@ -34,7 +34,7 @@ export default function BridgePage() {
         <span className="kicker">Onboard</span>
         <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-ink">Bring USDC to Arc</h1>
         <p className="mt-2 text-[15px] text-ink-soft">
-          Move USDC onto Arc testnet from another chain - the standard way via Circle CCTP V2, or instantly
+          Move USDC onto Arc testnet from another chain — the standard way via Circle CCTP V2, or instantly
           via Circle Gateway’s unified balance. No faucet required once you hold source-chain testnet USDC.
         </p>
       </header>

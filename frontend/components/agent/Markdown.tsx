@@ -1,7 +1,7 @@
-// components/agent/Markdown.tsx - a deliberately tiny markdown renderer for copilot replies.
+// components/agent/Markdown.tsx — a deliberately tiny markdown renderer for copilot replies.
 //
-// The model emits a small, predictable subset - paragraphs, **bold**, *italic*, `code`,
-// and -/1. lists - so this renders exactly that and nothing more (no dependency, no HTML
+// The model emits a small, predictable subset — paragraphs, **bold**, *italic*, `code`,
+// and -/1. lists — so this renders exactly that and nothing more (no dependency, no HTML
 // injection surface: everything is built as React elements from plain text).
 import { Fragment, type ReactNode } from 'react';
 

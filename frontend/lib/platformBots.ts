@@ -1,6 +1,6 @@
-// lib/platformBots.ts - the platform's own operational wallets (keeper, price keepers,
+// lib/platformBots.ts — the platform's own operational wallets (keeper, price keepers,
 // swapbots, stakerbots, owner/reserve). The leaderboard badges these so visitors can't
-// mistake house activity for organic users. Addresses are public on-chain - listing them
+// mistake house activity for organic users. Addresses are public on-chain — listing them
 // here is transparency, not exposure. External actors (e.g. the 2026-07-01 whale contract)
 // are deliberately NOT on this list: they are real third parties.
 const PLATFORM_BOTS: ReadonlyArray<`0x${string}`> = [

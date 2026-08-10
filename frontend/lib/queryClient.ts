@@ -1,5 +1,5 @@
-// lib/queryClient.ts - TanStack QueryClient defaults (staleTime, retry). BigInt values flow through
-// query data untouched; do NOT JSON-serialize query data (keys must avoid raw bigint - callers stringify).
+// lib/queryClient.ts — TanStack QueryClient defaults (staleTime, retry). BigInt values flow through
+// query data untouched; do NOT JSON-serialize query data (keys must avoid raw bigint — callers stringify).
 import { QueryClient } from '@tanstack/react-query';
 
 export function makeQueryClient(): QueryClient {

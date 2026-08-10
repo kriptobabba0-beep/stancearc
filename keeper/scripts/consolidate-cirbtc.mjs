@@ -1,4 +1,4 @@
-// consolidate-cirbtc.mjs - one-off ops tool. Sweeps the idle cirBTC sitting in the 3 staker-bot
+// consolidate-cirbtc.mjs — one-off ops tool. Sweeps the idle cirBTC sitting in the 3 staker-bot
 // wallets into the ARB (price-keeper) wallet, concentrating the project's scarce cirBTC where it
 // actually defends the peg. Run INSIDE the keeper container (it has viem + the keys in env):
 //   docker compose cp keeper/scripts/consolidate-cirbtc.mjs keeper:/app/ \

@@ -1,4 +1,4 @@
-// lib/agent/signalCore.ts - one implementation of "the stance signal for a market, now".
+// lib/agent/signalCore.ts — one implementation of "the stance signal for a market, now".
 //
 // Shared by the REST endpoint (/api/agent/signal) and the Limen Copilot's get_stance_signal
 // tool so the two can never drift apart: read the LIVE epoch (band, settlement time) from the
@@ -57,7 +57,7 @@ export interface SignalBundle {
   epoch: EpochSlice;
   signal: StanceSignal | null;
   rationale: string | null;
-  /** Present when signal is null - the honest reason there is nothing to estimate. */
+  /** Present when signal is null — the honest reason there is nothing to estimate. */
   reason: string | null;
   generatedAt: number;
 }
@@ -75,7 +75,7 @@ export async function buildSignalBundle(marketId: string): Promise<SignalBundle>
       epoch,
       signal: null,
       rationale: null,
-      reason: 'epoch is past its settlement moment - a fresh signal arrives with the next epoch',
+      reason: 'epoch is past its settlement moment — a fresh signal arrives with the next epoch',
       generatedAt: nowSec,
     };
   }
@@ -97,4 +97,4 @@ export async function buildSignalBundle(marketId: string): Promise<SignalBundle>
 
 /** The disclaimer every surfaced estimate ships with. */
 export const SIGNAL_DISCLAIMER =
-  'Statistical estimate from recent oracle prices - not financial advice. The agent can be wrong; stance only reallocates epoch fees, never LP principal.';
+  'Statistical estimate from recent oracle prices — not financial advice. The agent can be wrong; stance only reallocates epoch fees, never LP principal.';

@@ -1,9 +1,9 @@
 'use client';
 
-// hooks/useMediaQuery.ts - subscribe to a CSS media query in JS so a component can MOUNT only at the
+// hooks/useMediaQuery.ts — subscribe to a CSS media query in JS so a component can MOUNT only at the
 // matching breakpoint (not merely be hidden via CSS `display:none`, which keeps it mounted + running
-// its effects). Used by the dashboard to render <ActivityFeed/> exactly ONCE - in the xl right-rail or
-// the below-xl full-width slot - so its getLogs backfill + live watcher don't run twice (which would
+// its effects). Used by the dashboard to render <ActivityFeed/> exactly ONCE — in the xl right-rail or
+// the below-xl full-width slot — so its getLogs backfill + live watcher don't run twice (which would
 // double the activity-feed RPC load and work against the multi-RPC resilience goal).
 import { useEffect, useState } from 'react';
 

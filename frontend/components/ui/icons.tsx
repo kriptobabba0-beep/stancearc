@@ -23,7 +23,7 @@ function Svg({ children, ...props }: IconProps) {
 }
 
 /**
- * Brand glyph: the Limen doorway mark as a MONOCHROME currentColor icon - the arch with its
+ * Brand glyph: the Limen doorway mark as a MONOCHROME currentColor icon — the arch with its
  * two tilted marks, for tinted/decorative contexts (menu rows, feed nodes, muted states).
  * The full-color mark lives in components/ui/BrandMark.tsx; use that for identity surfaces.
  */
@@ -37,7 +37,7 @@ export function Logo(props: IconProps) {
   );
 }
 
-/** Speech bubble - the navbar's Feedback button. */
+/** Speech bubble — the navbar's Feedback button. */
 export function Feedback(props: IconProps) {
   return (
     <Svg {...props}>
@@ -46,7 +46,7 @@ export function Feedback(props: IconProps) {
   );
 }
 
-/** Robot head - marks the platform's own bot wallets on the leaderboard. */
+/** Robot head — marks the platform's own bot wallets on the leaderboard. */
 export function Bot(props: IconProps) {
   return (
     <Svg {...props}>
@@ -215,7 +215,7 @@ export function ChevronDown(props: IconProps) {
   );
 }
 
-/** Plus glyph - the "New position" / "Create position" affordance (Uniswap Pool page). */
+/** Plus glyph — the "New position" / "Create position" affordance (Uniswap Pool page). */
 export function Plus(props: IconProps) {
   return (
     <Svg {...props}>
@@ -240,7 +240,7 @@ export function Menu(props: IconProps) {
   );
 }
 
-/** Magnifying glass - the nav search affordance (Uniswap-style). */
+/** Magnifying glass — the nav search affordance (Uniswap-style). */
 export function Search(props: IconProps) {
   return (
     <Svg {...props}>
@@ -250,7 +250,7 @@ export function Search(props: IconProps) {
   );
 }
 
-/** Horizontal ellipsis - the nav overflow ("···") menu trigger. */
+/** Horizontal ellipsis — the nav overflow ("···") menu trigger. */
 export function Dots(props: IconProps) {
   return (
     <Svg {...props}>
@@ -286,7 +286,7 @@ export function Moon(props: IconProps) {
   );
 }
 
-/** Two opposing vertical arrows - the swap "flip direction" control + the Swap section glyph. */
+/** Two opposing vertical arrows — the swap "flip direction" control + the Swap section glyph. */
 export function SwapArrows(props: IconProps) {
   return (
     <Svg {...props}>
@@ -298,7 +298,7 @@ export function SwapArrows(props: IconProps) {
   );
 }
 
-/** Calendar - the "epoch length" market-context row glyph. */
+/** Calendar — the "epoch length" market-context row glyph. */
 export function Calendar(props: IconProps) {
   return (
     <Svg {...props}>
@@ -308,7 +308,7 @@ export function Calendar(props: IconProps) {
   );
 }
 
-/** Bell - the "notify me on settlement" affordance glyph. */
+/** Bell — the "notify me on settlement" affordance glyph. */
 export function Bell(props: IconProps) {
   return (
     <Svg {...props}>
@@ -318,7 +318,7 @@ export function Bell(props: IconProps) {
   );
 }
 
-/** Bar-chart - the "view stake details" affordance glyph. */
+/** Bar-chart — the "view stake details" affordance glyph. */
 export function BarChart(props: IconProps) {
   return (
     <Svg {...props}>
@@ -327,7 +327,7 @@ export function BarChart(props: IconProps) {
   );
 }
 
-/** Zigzag trend-up arrow - the Arena side cards' UP glyph (mockup style, not a straight arrow). */
+/** Zigzag trend-up arrow — the Arena side cards' UP glyph (mockup style, not a straight arrow). */
 export function TrendUp(props: IconProps) {
   return (
     <Svg strokeWidth={2} {...props}>
@@ -337,7 +337,7 @@ export function TrendUp(props: IconProps) {
   );
 }
 
-/** Zigzag trend-down arrow - the Arena side cards' DOWN glyph. */
+/** Zigzag trend-down arrow — the Arena side cards' DOWN glyph. */
 export function TrendDown(props: IconProps) {
   return (
     <Svg strokeWidth={2} {...props}>
@@ -347,7 +347,7 @@ export function TrendDown(props: IconProps) {
   );
 }
 
-/** Waveform between bounds - the Arena side cards' RANGE glyph (price oscillating in a band). */
+/** Waveform between bounds — the Arena side cards' RANGE glyph (price oscillating in a band). */
 export function WaveRange(props: IconProps) {
   return (
     <Svg strokeWidth={2} {...props}>
@@ -356,7 +356,7 @@ export function WaveRange(props: IconProps) {
   );
 }
 
-/** Gift box - the "eligible to share the pot" note glyph (stake review). */
+/** Gift box — the "eligible to share the pot" note glyph (stake review). */
 export function Gift(props: IconProps) {
   return (
     <Svg {...props}>
@@ -368,7 +368,7 @@ export function Gift(props: IconProps) {
   );
 }
 
-/** Stacked layers - the "Stake into Arena" step glyph. */
+/** Stacked layers — the "Stake into Arena" step glyph. */
 export function Layers(props: IconProps) {
   return (
     <Svg {...props}>

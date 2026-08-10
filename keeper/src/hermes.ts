@@ -1,4 +1,4 @@
-// hermes.ts - fetch the latest signed Pyth price update for a feed id from Hermes
+// hermes.ts — fetch the latest signed Pyth price update for a feed id from Hermes
 // (Pyth's off-chain aggregator). Mirrors frontend/lib/pyth.ts. The returned hex
 // blobs are passed as the `bytes[] priceData` arg to startEpoch/endEpoch, and are
 // also priced via Pyth.getUpdateFee to compute the `value` to pay.
@@ -6,7 +6,7 @@
 // IMPORTANT (capture-pinning): fetch a FRESH update immediately before each of
 // startEpoch and endEpoch so the update's publishTime is at/after the epoch
 // boundary timestamp (see script/keeper/post-and-crank.md). The keeper calls this
-// once per START and once per END - never reuses a stale blob.
+// once per START and once per END — never reuses a stale blob.
 
 /** Shape of the Hermes v2 latest-update JSON response (only the fields we read). */
 interface HermesLatestResponse {
@@ -42,7 +42,7 @@ const DEFAULT_TIMEOUT_MS = 8_000;
 /**
  * Fetch the latest signed Pyth update(s) for a single feed id.
  * @param timeoutMs abort the request after this many ms so a hung Hermes can't wedge
- *   the whole sequential market loop - the rejection is caught and retried next tick.
+ *   the whole sequential market loop — the rejection is caught and retried next tick.
  * @returns array of 0x-prefixed hex blobs (the `bytes[]` priceData).
  * @throws on a non-ok HTTP response, an empty update set, or a timeout/abort.
  */
@@ -69,7 +69,7 @@ export async function fetchPythUpdate(
 }
 
 /**
- * Fetch the latest PARSED Pyth reference price for a single feed id (READ-ONLY - the arb
+ * Fetch the latest PARSED Pyth reference price for a single feed id (READ-ONLY — the arb
  * bot does NOT post these updates on-chain; it only reads the live reference to decide a
  * trade). Returns the price scaled to 18dp + its publish time so the caller can compute
  * the reference age (staleness) against the wall clock.
@@ -105,7 +105,7 @@ export async function fetchPythRef(
 /**
  * Fetch BOTH the signed update blob(s) AND the parsed price18 in ONE request. Used to place an
  * entry-anchored stake: the `bytes[] priceData` blob is posted on-chain AND the `expectedEntryPrice18`
- * the contract slippage-guards must agree with it - fetching both from the same response keeps them
+ * the contract slippage-guards must agree with it — fetching both from the same response keeps them
  * consistent (vs two separate calls that could straddle a price tick).
  * @throws on a non-ok HTTP response, an empty update set, a missing parsed price, or a timeout/abort.
  */

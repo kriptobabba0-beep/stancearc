@@ -1,12 +1,12 @@
 'use client';
 
-// components/SettlementBanner.tsx - the WIN MOMENT. When the connected wallet holds a CLAIMABLE win in
-// the just-settled current epoch, this renders a prominent dashboard banner ("DOWN won - you won ~$X -
+// components/SettlementBanner.tsx — the WIN MOMENT. When the connected wallet holds a CLAIMABLE win in
+// the just-settled current epoch, this renders a prominent dashboard banner ("DOWN won — you won ~$X —
 // Claim") with a primary Claim CTA and a Share button, right where the user already is (claim is
 // otherwise buried on /claim, unreachable on mobile). A subtle, one-shot celebration plays via the
 // motion-safe `win-pop` animation (held still under prefers-reduced-motion).
 //
-// Numbers come from previewClaim (the contract's floor projection), NOT client payout math - only the
+// Numbers come from previewClaim (the contract's floor projection), NOT client payout math — only the
 // USD valuation (payout tokens × the live oracle price) is computed here, and it's clearly framed "~$X".
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
@@ -33,7 +33,7 @@ interface WinEntry {
 
 /**
  * Invisible probe: reads previewClaim for one stake and reports it up via onResult. Rendering one of
- * these per stake keeps hooks unconditional (no hooks-in-a-loop) - mirrors LiveStatus's PositionRealized.
+ * these per stake keeps hooks unconditional (no hooks-in-a-loop) — mirrors LiveStatus's PositionRealized.
  */
 function ClaimableProbe({
   epochId,
@@ -100,7 +100,7 @@ export function SettlementBanner() {
   const isSettled = epoch?.phase === PhaseView.Settled;
   const epochId = epoch?.epochId;
 
-  // Stakes in THIS (current, just-settled) epoch - the win moment is for the live settlement only.
+  // Stakes in THIS (current, just-settled) epoch — the win moment is for the live settlement only.
   const myEpochStakes = useMemo(
     () =>
       epochId !== undefined
@@ -180,7 +180,7 @@ export function SettlementBanner() {
               <div className="min-w-0">
                 <p className="kicker text-side-up">Epoch #{epochId.toString()} settled</p>
                 <p className="font-display text-lg font-semibold leading-tight text-ink">
-                  {winningLabel} won - you won{' '}
+                  {winningLabel} won — you won{' '}
                   <span data-testid="banner-amount" className="font-mono tnum text-side-up">
                     ~{formatUsd6(totalUsd6)}
                   </span>

@@ -1,8 +1,8 @@
-// COPY - do NOT edit. The canonical file is frontend/abis/feeArenaV3.ts; the keeper cannot import across packages
+// COPY — do NOT edit. The canonical file is frontend/abis/feeArenaV3.ts; the keeper cannot import across packages
 // (its Docker build context is keeper/), so this is a byte-identical copy. Edit the canonical
 // file and re-run `node scripts/sync-leaderboard-engine.mjs`. A test in BOTH suites fails the
 // moment the two drift apart.
-// abis/feeArenaV3.ts - FeeArenaV3 (ENTRY-ANCHORED) surface. Mirrors src/interfaces/IFeeArenaV3.sol
+// abis/feeArenaV3.ts — FeeArenaV3 (ENTRY-ANCHORED) surface. Mirrors src/interfaces/IFeeArenaV3.sol
 // EXACTLY (field order/types). v3 has NO startEpoch/endEpoch: stakes anchor their own entryPrice
 // (read in the stake tx with a slippage guard) and one keeper-submitted settlement price closes
 // the epoch; positions resolve INDIVIDUALLY (processPositions) and winners keep their own fees

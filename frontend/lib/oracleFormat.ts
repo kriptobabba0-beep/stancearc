@@ -1,4 +1,4 @@
-// lib/oracleFormat.ts - PURE render-only formatters for Pyth oracle provenance on the epoch-detail
+// lib/oracleFormat.ts — PURE render-only formatters for Pyth oracle provenance on the epoch-detail
 // page. A Pyth price is a signed int64 mantissa scaled by 10^expo (expo is usually negative, e.g. -8).
 // We format exactly with BigInt string math (no float drift), then trim trailing zeros.
 
@@ -33,7 +33,7 @@ export function formatPythPrice(price: bigint, expo: bigint): string {
  * so SSR and client agree). 0/undefined → em-dash.
  */
 export function formatUnixTime(unixSec: bigint | undefined): string {
-  if (unixSec === undefined || unixSec === 0n) return '-';
+  if (unixSec === undefined || unixSec === 0n) return '—';
   const d = new Date(Number(unixSec) * 1000);
   const pad = (n: number) => String(n).padStart(2, '0');
   return (

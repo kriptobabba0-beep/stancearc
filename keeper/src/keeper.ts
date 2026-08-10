@@ -1,4 +1,4 @@
-// keeper.ts - the per-market crank. runMarketOnce() reads the market's current epoch,
+// keeper.ts — the per-market crank. runMarketOnce() reads the market's current epoch,
 // asks the PURE decideAction() what to do, and executes AT MOST ONE action this tick,
 // awaiting the receipt before returning. One action per market per tick keeps the
 // single keeper key nonce-safe (no overlapping in-flight txs).
@@ -49,19 +49,19 @@ export const SWEEP_ALREADY_DONE_SELECTOR = '0x562d6d1b';
 
 /**
  * The raw 4 selector bytes (0x56,0x2d,0x6d,0x1b) of SweepAlreadyDone() rendered as a Latin-1
- * string - i.e. String.fromCharCode(0x56,0x2d,0x6d,0x1b) === 'V-m\x1b'. The Arc RPC's
+ * string — i.e. String.fromCharCode(0x56,0x2d,0x6d,0x1b) === 'V-m\x1b'. The Arc RPC's
  * eth_call/eth_estimateGas error path returns the revert payload as a "reason" STRING, and viem
  * Latin-1-decodes those 4 bytes into this control-char sequence INSIDE err.message / err.details
  * (e.g. "Execution reverted with reason: V-m\x1b"). The literal hex "0x562d6d1b" is NOT present
  * in that message (only the calldata hex is), so a plain msg.includes('0x562d6d1b') misses the
- * LIVE shape - this exact 4-byte control sequence is the distinctive fingerprint for it. The
+ * LIVE shape — this exact 4-byte control sequence is the distinctive fingerprint for it. The
  * trailing 0x1b (ESC) makes it impossible to occur by accident in a normal revert string.
  */
 const SWEEP_ALREADY_DONE_RAW_BYTES = String.fromCharCode(0x56, 0x2d, 0x6d, 0x1b); // 'V-m\x1b'
 
 /**
  * Recursively scan an error and its entire `.cause` chain (including plain non-Error RPC objects
- * that BaseError.walk() can't traverse into) for a hex string field - `.data` or `.signature` -
+ * that BaseError.walk() can't traverse into) for a hex string field — `.data` or `.signature` —
  * that carries the SweepAlreadyDone selector. On the Arc raw-eth_call path the selector survives
  * ONLY as the innermost RPC error's `.data === '0x562d6d1b'`; on the undecoded-ABI simulate/estimate
  * path it survives as a ContractFunctionRevertedError's `.signature === '0x562d6d1b'`. Bounded
@@ -86,13 +86,13 @@ function rawRevertDataHasSelector(err: unknown, depth = 0): boolean {
  * signals in priority order; any one is sufficient:
  *
  *   (a) viem DECODED it: a ContractFunctionRevertedError anywhere in the cause chain whose
- *       `data.errorName === 'SweepAlreadyDone'`. This is the clean path - both keeper ABIs declare
+ *       `data.errorName === 'SweepAlreadyDone'`. This is the clean path — both keeper ABIs declare
  *       the error, so simulate/estimate with the keeper's own ABI decode to errorName.
  *
  *   (b) the raw selector survives as STRUCTURED revert DATA: a `.data` / `.signature` hex string
  *       (anywhere in the .cause chain, including the innermost non-Error RPC object) that
  *       startsWith 0x562d6d1b. This is the LIVE eth_call shape: viem's CallExecutionError ->
- *       ExecutionRevertedError -> RpcRequestError -> {data:'0x562d6d1b'} - the only place the
+ *       ExecutionRevertedError -> RpcRequestError -> {data:'0x562d6d1b'} — the only place the
  *       selector survives uncorrupted (the message Latin-1-mangles it; see below). It also covers
  *       the undecoded-ABI simulate/estimate shape (ContractFunctionRevertedError.signature).
  *
@@ -101,13 +101,13 @@ function rawRevertDataHasSelector(err: unknown, depth = 0): boolean {
  *       - the raw 4 selector bytes Latin-1-rendered as 'V-m\x1b' (the LIVE raw-eth_call message
  *         "Execution reverted with reason: V-m\x1b", where the hex is NOT present).
  *
- * Conservative by construction: it ONLY ever matches this exact selector - never a broad
- * "reverted" match - so it can't swallow an unrelated revert. SweepAlreadyDone is UNAMBIGUOUS
+ * Conservative by construction: it ONLY ever matches this exact selector — never a broad
+ * "reverted" match — so it can't swallow an unrelated revert. SweepAlreadyDone is UNAMBIGUOUS
  * ("the sweep for this epoch is ALREADY complete"), so converting it to a benign "mark swept +
  * finalize next tick" recovery is always safe. Pure: no I/O.
  */
 export function isSweepAlreadyDone(err: unknown): boolean {
-  // (a) viem DECODED it - walk the cause chain for a ContractFunctionRevertedError whose errorName
+  // (a) viem DECODED it — walk the cause chain for a ContractFunctionRevertedError whose errorName
   // resolved to 'SweepAlreadyDone' (works because both keeper ABIs declare the error).
   if (err instanceof BaseError) {
     const reverted = err.walk((e) => e instanceof ContractFunctionRevertedError);
@@ -129,7 +129,7 @@ export function isSweepAlreadyDone(err: unknown): boolean {
 }
 
 /** Structured single-line log record for one market tick. The action union covers v1/v2
- *  (`Action`) plus the v3 entry-anchored cranks (SETTLE/PROCESS - see decideV3.ts). */
+ *  (`Action`) plus the v3 entry-anchored cranks (SETTLE/PROCESS — see decideV3.ts). */
 export interface TickLog {
   ts: string;
   market: string;
@@ -149,13 +149,13 @@ export interface TickLog {
   sweptEpochId?: bigint;
   /**
    * Set to the epochId (as bigint) when this tick FIRED the optional owner-key
-   * wedge recovery (emergencySettle) SUCCESSFULLY. Purely observational - lets the
+   * wedge recovery (emergencySettle) SUCCESSFULLY. Purely observational — lets the
    * loop/operator see that a wedge was auto-cleared (the txHash is in `txHash`).
    * Only ever set when KEEPER_OWNER_PRIVATE_KEY is configured.
    */
   recoveredEpochId?: bigint;
   /**
-   * v2 ONLY - set when a START/END action was DEFERRED because the block time is not yet
+   * v2 ONLY — set when a START/END action was DEFERRED because the block time is not yet
    * inside the contract's pinned publishTime window ('WAIT', too early) or has fallen past
    * the safe tail of it ('MISSED'). On 'WAIT' the tick is a NO-OP success (re-check soon);
    * on 'MISSED' it is recorded as a failure so the breaker backs off and a repeatedly-missed
@@ -163,7 +163,7 @@ export interface TickLog {
    */
   windowState?: 'WAIT' | 'MISSED';
   /**
-   * v2 ONLY - set to the epochId (as bigint) when this tick funded the OPTIONAL per-epoch
+   * v2 ONLY — set to the epochId (as bigint) when this tick funded the OPTIONAL per-epoch
    * subsidy via the owner key's fundSubsidy. Purely observational.
    */
   fundedSubsidyEpochId?: bigint;
@@ -173,19 +173,19 @@ export interface TickLog {
   /** Classified revert reason when a crank was caught by pre-flight simulation (e.g. 'StalePrice'
    *  / 'WrongPhase'). Lets the loop apply the StalePrice-specific backoff + a precise alert. */
   revertReason?: string;
-  /** True when the crank was SKIPPED before broadcast by the simulate gate - ZERO gas burned
+  /** True when the crank was SKIPPED before broadcast by the simulate gate — ZERO gas burned
    *  (the doomed crank that used to mine+revert and drain the signer). */
   simSkipped?: boolean;
   /** True when the keeper-side freshness gate DEFERRED a SETTLE because the on-chain maxPriceAge is
-   *  too tight vs mine latency for any price to survive to the mine block (don't burn - alert). */
+   *  too tight vs mine latency for any price to survive to the mine block (don't burn — alert). */
   freshnessDeferred?: boolean;
-  /** Set to the trip reason ('hour-cap' / 'burst-cap') when the persisted spend cap is OPEN - the
+  /** Set to the trip reason ('hour-cap' / 'burst-cap') when the persisted spend cap is OPEN — the
    *  loop must STOP all cranking until an operator clears the ledger. */
   spendCapTripped?: string;
-  /** v3 pipeline - how many settlement-pipeline actions this tick chained AFTER the first one
+  /** v3 pipeline — how many settlement-pipeline actions this tick chained AFTER the first one
    *  (SETTLE -> PROCESS -> ... -> OPEN back-to-back). Absent on legacy one-action ticks. */
   chainedActions?: number;
-  /** v3 pipeline - loop hint: ms until this market next needs attention (the pre-sample start or
+  /** v3 pipeline — loop hint: ms until this market next needs attention (the pre-sample start or
    *  the settlement moment). The loop shortens its end-of-pass sleep to the smallest hint so a
    *  boundary crank fires within ~2s instead of up to a full poll late. Absent when nothing is near. */
   nextWakeMsHint?: number;
@@ -198,7 +198,7 @@ const PHASE_NAME: Record<number, string> = {
   [PhaseView.Settled]: 'Settled',
 };
 
-/** Emit a structured log line (single JSON object per line - easy to grep/ship). */
+/** Emit a structured log line (single JSON object per line — easy to grep/ship). */
 export function logTick(rec: TickLog): void {
   // eslint-disable-next-line no-console
   console.log(JSON.stringify(rec, (_key, value) =>
@@ -206,7 +206,7 @@ export function logTick(rec: TickLog): void {
   ));
 }
 
-/** Emit a one-off structured log line (bigint-safe) - used for gas-escalation notices. */
+/** Emit a one-off structured log line (bigint-safe) — used for gas-escalation notices. */
 function logLine(o: Record<string, unknown>): void {
   // eslint-disable-next-line no-console
   console.log(JSON.stringify({ ts: new Date().toISOString(), ...o }, (_k, v) => (typeof v === 'bigint' ? v.toString() : v)));
@@ -219,20 +219,20 @@ interface WriteFields {
   value?: bigint;
   /**
    * Optional EXPLICIT gas-limit. When set, simulate + writeContract use it verbatim instead of
-   * letting viem run eth_estimateGas - the v3 position cranks pass a value clamped to the RPC's
+   * letting viem run eth_estimateGas — the v3 position cranks pass a value clamped to the RPC's
    * per-tx cap so a heavy batch can never trip the cap (the wedge) on the estimate or the send.
    */
   gas?: bigint;
 }
 
 /**
- * A doomed crank caught by PRE-FLIGHT SIMULATION - carries the classified revert reason. NO
+ * A doomed crank caught by PRE-FLIGHT SIMULATION — carries the classified revert reason. NO
  * transaction was broadcast, so NO gas was burned. The caller records it as a tick failure (the
  * normal backoff path) and, for a StalePrice reason, applies the freshness-specific backoff.
  */
 export class WouldRevertError extends Error {
   constructor(public readonly info: RevertInfo, cause?: unknown) {
-    super(`crank would revert (${info.name}) - skipped before broadcast`);
+    super(`crank would revert (${info.name}) — skipped before broadcast`);
     this.name = 'WouldRevertError';
     if (cause !== undefined) (this as { cause?: unknown }).cause = cause;
   }
@@ -274,19 +274,19 @@ function receiptSpendWei(
 }
 
 /**
- * TASK 4b + drain-elimination - send a write with PRE-FLIGHT SIMULATION, a persisted SPEND CAP,
+ * TASK 4b + drain-elimination — send a write with PRE-FLIGHT SIMULATION, a persisted SPEND CAP,
  * BOUNDED gas-tip escalation, and honest gas accounting.
  *
  * 1. PRE-FLIGHT (when `send.simulate`): simulate the call FIRST. If it would revert, throw a
- *    WouldRevertError WITHOUT broadcasting - a doomed crank now costs ZERO gas instead of a full
+ *    WouldRevertError WITHOUT broadcasting — a doomed crank now costs ZERO gas instead of a full
  *    mined-revert burn (the original drain). A non-revert sim error (RPC/transport) is best-effort:
  *    we log and broadcast anyway so a flaky sim RPC never wedges a legitimate crank.
  * 2. SPEND CAP (when `send.guard`): checked IMMEDIATELY before each broadcast (not once per sweep,
- *    so a batch can't overshoot) - a tripped cap throws SpendCapTrippedError, halting the keeper.
+ *    so a batch can't overshoot) — a tripped cap throws SpendCapTrippedError, halting the keeper.
  * 3. ESCALATION: attempt 0 prices at the floor (unchanged). The receipt is awaited with
  *    `cfg.receiptTimeoutMs`:
  *      - resolves (success OR mined-revert) -> book the ACTUAL gas spent + return it (a revert is
- *        NOT escalated - bidding more won't un-revert a doomed crank);
+ *        NOT escalated — bidding more won't un-revert a doomed crank);
  *      - TIMES OUT with attempts left -> re-send the SAME tx at the next (capped) tip (viem fetches
  *        the pending nonce, so the higher-priced resend REPLACES it);
  *      - TIMES OUT with no attempts left -> book a WORST-CASE estimate (a late-mining tx must not
@@ -305,7 +305,7 @@ export async function sendWriteWithEscalation(
 ): Promise<{ txHash: `0x${string}`; receipt: { status: 'success' | 'reverted' }; gasSpentWei: bigint }> {
   const nowFn = send?.now ?? Date.now;
 
-  // (1) PRE-FLIGHT SIMULATION - block a doomed crank before it can mine+revert (zero gas). We
+  // (1) PRE-FLIGHT SIMULATION — block a doomed crank before it can mine+revert (zero gas). We
   // simulate at the attempt-0 (floor) gas; the request's estimated gas (when viem returns it)
   // doubles as the worst-case spend estimate for a later timeout.
   let simGas: bigint | undefined;
@@ -317,7 +317,7 @@ export async function sendWriteWithEscalation(
         functionName: fields.functionName,
         ...(fields.args !== undefined ? { args: fields.args } : {}),
         ...(fields.value !== undefined ? { value: fields.value } : {}),
-        // Explicit gas-limit (when supplied) makes the sim an eth_call at exactly that gas -
+        // Explicit gas-limit (when supplied) makes the sim an eth_call at exactly that gas —
         // no internal estimateGas to trip the RPC cap, and it doubles as the worst-case spend.
         ...(fields.gas !== undefined ? { gas: fields.gas } : {}),
       } as Parameters<PublicClient['simulateContract']>[0]);
@@ -325,11 +325,11 @@ export async function sendWriteWithEscalation(
       if (typeof reqGas === 'bigint') simGas = reqGas;
     } catch (simErr) {
       if (isRevertError(simErr)) {
-        // Doomed - the contract would revert. Don't broadcast; surface the classified reason.
+        // Doomed — the contract would revert. Don't broadcast; surface the classified reason.
         throw new WouldRevertError(classifyRevert(simErr), simErr);
       }
       // Best-effort gate: a non-revert sim failure (RPC/transport blip) must not stop a legit
-      // crank - log it and fall through to broadcast.
+      // crank — log it and fall through to broadcast.
       logLine({ msg: 'keeper.sim.skip', market: ctx.market, action: ctx.action, error: simErr instanceof Error ? simErr.message : String(simErr) });
     }
   }
@@ -339,7 +339,7 @@ export async function sendWriteWithEscalation(
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     const gas = escalatedGas(attempt, cfg.gasEscalation);
 
-    // (2) SPEND CAP - check right before the broadcast so the cap can't be overshot by a whole
+    // (2) SPEND CAP — check right before the broadcast so the cap can't be overshot by a whole
     // batch of sends. A tripped cap halts the keeper (the loop catches this + stops cranking).
     if (send?.guard) {
       const s = send.guard.status(nowFn());
@@ -363,7 +363,7 @@ export async function sendWriteWithEscalation(
       functionName: fields.functionName,
       ...(fields.args !== undefined ? { args: fields.args } : {}),
       ...(fields.value !== undefined ? { value: fields.value } : {}),
-      // Explicit gas-limit (when supplied) bypasses viem's estimateGas + its buffer - essential
+      // Explicit gas-limit (when supplied) bypasses viem's estimateGas + its buffer — essential
       // for a crank whose true cost sits just under the cap (estimate*buffer would exceed it).
       ...(fields.gas !== undefined ? { gas: fields.gas } : {}),
     } as Parameters<WalletClient['writeContract']>[0])) as `0x${string}`;
@@ -380,7 +380,7 @@ export async function sendWriteWithEscalation(
     } catch (err) {
       lastErr = err;
       // Only a receipt-wait TIMEOUT warrants an escalated re-send. Any other error
-      // (RPC failure, malformed tx) is terminal - rethrow immediately.
+      // (RPC failure, malformed tx) is terminal — rethrow immediately.
       if (!(err instanceof WaitForTransactionReceiptTimeoutError)) throw err;
       // Timeout with attempts left -> loop re-sends a REPLACEMENT (its receipt/timeout is booked).
       // Final timeout -> the tx may STILL mine out-of-band, so book a worst-case estimate now so a
@@ -402,7 +402,7 @@ export async function sendWriteWithEscalation(
  * startTime, endTime, settlePrice18, sweepCursor, stakedCount).
  *
  * For a v2 market it ALSO reads `settleWindow` (the contract pin width) so the pinned-window
- * timing logic can bound the attempt - returned via the second tuple element (undefined for v1).
+ * timing logic can bound the attempt — returned via the second tuple element (undefined for v1).
  */
 async function readState(
   client: PublicClient,
@@ -413,9 +413,9 @@ async function readState(
   const arena = market.arena;
   const abi = arenaAbiFor(market);
   const isV2 = market.version === 'v2';
-  // maxStartDelay + paused are plain getters (NOT in EpochView) - read alongside the
+  // maxStartDelay + paused are plain getters (NOT in EpochView) — read alongside the
   // epoch so decideAction can bound the start window and skip cranks while paused. For v2,
-  // settleWindow is read too (the pin width) - a single extra batched read.
+  // settleWindow is read too (the pin width) — a single extra batched read.
   const reads = [
     client.readContract({ address: arena, abi, functionName: 'currentEpochId' }),
     client.readContract({ address: arena, abi, functionName: 'currentEpoch' }),
@@ -439,11 +439,11 @@ async function readState(
   const settleWindow = isV2 ? BigInt(results[4] as number | bigint) : undefined;
 
   // v1 AUTO-RETURN backlog: the most recently Settled epoch + its on-chain unstake
-  // cursor. Two dependent reads (progress needs the epochId), v1 only - v2 has no
+  // cursor. Two dependent reads (progress needs the epochId), v1 only — v2 has no
   // unstakeBatch, so the fields stay undefined and decideAction never picks UNSTAKE.
   // BEST-EFFORT by design: auto-return is a convenience crank, so a failed read here
   // (RPC blip, or an OLD v1 arena predating unstakeProgress) leaves the fields
-  // undefined - no backlog, lifecycle decisions unchanged - instead of failing the tick.
+  // undefined — no backlog, lifecycle decisions unchanged — instead of failing the tick.
   let lastSettledEpochId: bigint | undefined;
   let unstakeDone: number | undefined;
   let unstakeTotal: number | undefined;
@@ -456,7 +456,7 @@ async function readState(
       })) as bigint;
       if (lastSettledEpochId !== 0n && lastSettledEpochId !== undefined) {
         // No dedicated unstakeProgress view on-chain (EIP-170 size pressure): the pair is
-        // (unstakeCursor(id), sweepProgress(id).total) - total == the epoch's stakedCount.
+        // (unstakeCursor(id), sweepProgress(id).total) — total == the epoch's stakedCount.
         const [cursor, sweepPair] = await Promise.all([
           client.readContract({
             address: arena,
@@ -481,8 +481,8 @@ async function readState(
     }
   }
 
-  // CRITICAL - PHASE-ENUM COLLAPSE. v1's currentEpoch() runs EpochViewLib.toView/collapse, so it
-  // ALREADY returns the external 4-phase PhaseView (Idle=0/EntryOpen=1/Running=2/Settled=3) -
+  // CRITICAL — PHASE-ENUM COLLAPSE. v1's currentEpoch() runs EpochViewLib.toView/collapse, so it
+  // ALREADY returns the external 4-phase PhaseView (Idle=0/EntryOpen=1/Running=2/Settled=3) —
   // use it as-is. v2's currentEpoch() returns the RAW EpochV2 struct with the INTERNAL 6-phase
   // Phase enum (None=0/EntryOpen=1/Running=2/Resolved=3/Swept=4/Settled=5) and does NOT collapse,
   // so we MUST collapse it here (mirroring EpochViewLib.collapse) before decideAction. Without
@@ -523,9 +523,9 @@ async function readState(
  *   has elapsed, the keeper calls the onlyOwner `emergencySettle(epochId, RANGE)`
  *   with THIS separate wallet to self-heal, then resumes normal cranking on the next
  *   tick. When undefined, the wedge surfaces as STUCK exactly as before (unchanged).
- *   The owner key is used SOLELY for emergencySettle - every normal crank
+ *   The owner key is used SOLELY for emergencySettle — every normal crank
  *   (create/open/start/end/sweep/finalize) still uses the default keeper `account`.
- *   TESTNET convenience only - see decide.ts / README for the mainnet caveat.
+ *   TESTNET convenience only — see decide.ts / README for the mainnet caveat.
  */
 export async function runMarketOnce(
   client: PublicClient,
@@ -561,7 +561,7 @@ export async function runMarketOnce(
     const action = decideAction(state);
     rec.action = action;
     if (action === 'NONE') {
-      // v2 ONLY - even with no lifecycle action this tick, the OPTIONAL per-epoch subsidy may
+      // v2 ONLY — even with no lifecycle action this tick, the OPTIONAL per-epoch subsidy may
       // still need funding (e.g. EntryOpen before entry closes). Try it, then return.
       await maybeFundSubsidy(client, market, cfg, state, owner, rec, chain);
       logTick(rec);
@@ -570,7 +570,7 @@ export async function runMarketOnce(
 
     // STUCK: the start window was missed (now > entryCloseTime + maxStartDelay), so
     // startEpoch would revert StartDelayExceeded forever. The keeper key cannot clear
-    // this - the only exit is the onlyOwner emergencySettle.
+    // this — the only exit is the onlyOwner emergencySettle.
     if (action === 'STUCK') {
       // OPTIONAL owner-key auto-recovery. With NO owner key configured, behavior is
       // UNCHANGED: surface loudly as a failure, send NO tx, let the loop back off and
@@ -579,17 +579,17 @@ export async function runMarketOnce(
 
       if (recovery === 'NONE') {
         rec.error =
-          'epoch wedged: start window missed - owner must emergencySettle / rotate keeper';
+          'epoch wedged: start window missed — owner must emergencySettle / rotate keeper';
         logTick(rec);
         return rec;
       }
 
       if (recovery === 'WAIT_GRACE') {
         // Genuinely wedged + owner key present, but the on-chain GRACE window has not
-        // elapsed (emergencySettle would revert GraceNotElapsed). Do NOT spam it - record
+        // elapsed (emergencySettle would revert GraceNotElapsed). Do NOT spam it — record
         // a failure so the per-market backoff throttles retries, and try again later.
         rec.error =
-          'epoch wedged: owner recovery armed but GRACE not yet elapsed (endTime + GRACE) - backing off, will retry';
+          'epoch wedged: owner recovery armed but GRACE not yet elapsed (endTime + GRACE) — backing off, will retry';
         logTick(rec);
         return rec;
       }
@@ -615,23 +615,23 @@ export async function runMarketOnce(
       if (recoverReceipt.status !== 'success') {
         // Mined-but-reverted (e.g. a borderline GraceNotElapsed due to chain-vs-local clock
         // skew, or a race with a manual settle). Treat as a failure so the loop backs off
-        // and retries - never as a cleared wedge.
+        // and retries — never as a cleared wedge.
         rec.error = `owner recovery emergencySettle reverted for epoch ${state.currentEpochId}`;
         logTick(rec);
         return rec;
       }
-      // Recovery succeeded - the wedge is cleared. Loud, explicit log: epochId + tx hash.
+      // Recovery succeeded — the wedge is cleared. Loud, explicit log: epochId + tx hash.
       rec.recoveredEpochId = state.currentEpochId;
       logTick(rec);
       return rec;
     }
 
-    // v2 ONLY - before a START/END, the OPTIONAL subsidy can still be funded (phase < Resolved
+    // v2 ONLY — before a START/END, the OPTIONAL subsidy can still be funded (phase < Resolved
     // covers EntryOpen at START time and Running at END time). Fund first so external value is
     // committed even if the pinned-window attempt below has to defer to a later tick.
     await maybeFundSubsidy(client, market, cfg, state, owner, rec, chain);
 
-    // v2 ONLY - PINNED-WINDOW GATE for START/END. The contract forces the posted blob's
+    // v2 ONLY — PINNED-WINDOW GATE for START/END. The contract forces the posted blob's
     // publishTime into [endpointTime, endpointTime+settleWindow]; a post outside it reverts
     // (parsePriceFeedUpdates PriceFeedNotFoundWithinRange). decidePinnedWindow says whether
     // NOW is a safe instant to fetch+post:
@@ -653,11 +653,11 @@ export async function runMarketOnce(
       if (decision === 'WAIT') {
         rec.windowState = 'WAIT';
         logTick(rec);
-        return rec; // not yet inside the window - no-op success
+        return rec; // not yet inside the window — no-op success
       }
       if (decision === 'MISSED') {
         rec.windowState = 'MISSED';
-        rec.error = `v2 pinned ${action} window missed: now=${state.nowSec} not in [${endpointTime}, ${endpointTime + win}] (margin ${cfg.v2WindowMarginSec}s) - will retry with a fresher blob; repeated misses wedge -> owner emergencySettle`;
+        rec.error = `v2 pinned ${action} window missed: now=${state.nowSec} not in [${endpointTime}, ${endpointTime + win}] (margin ${cfg.v2WindowMarginSec}s) — will retry with a fresher blob; repeated misses wedge -> owner emergencySettle`;
         logTick(rec);
         return rec; // failure -> backoff + (on repeat) WEDGED alert
       }
@@ -665,14 +665,14 @@ export async function runMarketOnce(
     }
 
     // Base write target (gas overrides are now applied PER ATTEMPT by the escalation helper,
-    // which prices attempt 0 at the Arc floor - unchanged - and bumps a stuck tx's tip up to
+    // which prices attempt 0 at the Arc floor — unchanged — and bumps a stuck tx's tip up to
     // the cap on a receipt-wait timeout so a congestion spike can't wedge a crank's window).
     const base = { address: market.arena, abi, account, chain } as const;
 
     // Each action contributes only its function-specific fields; the helper handles gas +
     // escalation + the bounded receipt wait. A START/END additionally fetches a fresh Pyth
     // update + its fee (paid as `value`). For v2 the same (bytes[]) startEpoch/endEpoch are
-    // posted - the contract pins the publishTime window internally (decidePinnedWindow above
+    // posted — the contract pins the publishTime window internally (decidePinnedWindow above
     // ensures the freshly-fetched blob lands inside it).
     let fields: WriteFields | undefined;
 
@@ -713,7 +713,7 @@ export async function runMarketOnce(
         // v1 AUTO-RETURN: push one bounded batch of the settled epoch's NFTs back to
         // their owners. Permissionless + cursor-resumable on-chain; a parked (reverting)
         // receiver is skipped by the contract and never retried, so this can't loop.
-        // Reuses the sweep batch size - same bounded-gas rationale.
+        // Reuses the sweep batch size — same bounded-gas rationale.
         const target = state.lastSettledEpochId!; // UNSTAKE only fires when backlog exists
         fields = { functionName: 'unstakeBatch', args: [target, BigInt(cfg.sweepBatch)] };
         rec.unstaked = `${state.unstakeDone}->~${Math.min((state.unstakeDone ?? 0) + cfg.sweepBatch, state.unstakeTotal ?? 0)}/${state.unstakeTotal} (epoch ${target})`;
@@ -724,7 +724,7 @@ export async function runMarketOnce(
     if (fields) {
       // Send with bounded gas escalation. The helper AWAITs the receipt so only one action
       // lands per market per tick (no nonce races). CRITICAL: a tx can be MINED-but-REVERTED
-      // (StartDelayExceeded / StartPriceTooOld / SettlePriceTooOld / paused / StalePrice) -
+      // (StartDelayExceeded / StartPriceTooOld / SettlePriceTooOld / paused / StalePrice) —
       // a revert is returned (NOT escalated) and inspected below; a non-'success' status is a
       // FAILURE, not success, else the keeper re-sends the same doomed crank every tick. A
       // receipt-wait TIMEOUT (tx stuck) is what the helper escalates; exhausting the attempts
@@ -759,7 +759,7 @@ export async function runMarketOnce(
         // lastSweptEpochId resets to null, so for an ALREADY-swept empty epoch decideAction
         // can't tell Swept-empty from Resolved-empty (both collapse to cursor==0==stakedCount)
         // and re-issues SWEEP. The contract then reverts SweepAlreadyDone() (0x562d6d1b). That
-        // is NOT a real failure - the sweep genuinely IS done - so do NOT count it toward
+        // is NOT a real failure — the sweep genuinely IS done — so do NOT count it toward
         // WEDGED. Instead, RECORD the sweep (rec.sweptEpochId) so the loop persists
         // lastSweptEpochId and the VERY NEXT tick decides FINALIZE, and leave rec.error UNSET so
         // the breaker/backoff is not advanced. Converges: SWEEP -> SweepAlreadyDone -> (learn)
@@ -775,23 +775,23 @@ export async function runMarketOnce(
             msg: 'keeper.sweep.alreadyDone',
             market: market.id,
             epochId: state.currentEpochId,
-            note: 'sweep already complete for this epoch (post-restart) - marking swept, will FINALIZE next tick',
+            note: 'sweep already complete for this epoch (post-restart) — marking swept, will FINALIZE next tick',
           });
         } else {
-          throw writeErr; // not the benign case - preserve the existing failure handling
+          throw writeErr; // not the benign case — preserve the existing failure handling
         }
       }
     }
   } catch (err) {
     if (err instanceof SpendCapTrippedError) {
-      // The persisted spend cap is OPEN - the keeper must STOP. The loop reads spendCapTripped
+      // The persisted spend cap is OPEN — the keeper must STOP. The loop reads spendCapTripped
       // and halts all cranking; the trip is sticky on disk so a restart stays stopped.
       rec.error = err.message;
       rec.spendCapTripped = err.reason ?? 'cap';
     } else if (err instanceof WouldRevertError) {
-      // Pre-flight simulation caught a doomed crank - NO tx was sent, so ZERO gas burned (this is
+      // Pre-flight simulation caught a doomed crank — NO tx was sent, so ZERO gas burned (this is
       // the drain the fix eliminates). Record the reason so the loop can apply the right backoff.
-      rec.error = `would revert: ${err.info.name} (${rec.action}) - skipped before broadcast`;
+      rec.error = `would revert: ${err.info.name} (${rec.action}) — skipped before broadcast`;
       rec.revertReason = err.info.name;
       rec.simSkipped = true;
     } else if (err instanceof WaitForTransactionReceiptTimeoutError) {
@@ -809,14 +809,14 @@ export async function runMarketOnce(
 }
 
 /**
- * v2 ONLY - OPTIONAL per-epoch subsidy via the owner key's `fundSubsidy(epochId, amount)`.
+ * v2 ONLY — OPTIONAL per-epoch subsidy via the owner key's `fundSubsidy(epochId, amount)`.
  * This is what makes staking +EV (external value injected into the pot). It runs at most
  * once per epoch and is a STRICT no-op unless ALL of these hold:
  *   - the market is v2 (v1 has no fundSubsidy);
  *   - a subsidy amount is configured (market.subsidyPerEpoch > 0);
- *   - an owner key is configured (fundSubsidy is onlyOwner - the keeper key can't call it);
+ *   - an owner key is configured (fundSubsidy is onlyOwner — the keeper key can't call it);
  *   - the epoch exists (currentEpochId != 0) and its phase is < Resolved (None/EntryOpen, or
- *     Running with settlePrice18 == 0 - once ended, fundSubsidy reverts WrongPhase).
+ *     Running with settlePrice18 == 0 — once ended, fundSubsidy reverts WrongPhase).
  *
  * IDEMPOTENCE is on-chain, not in-memory: it reads the epoch's already-committed `subsidyUSDC`
  * and only tops up the REMAINING amount toward the configured target, hard-clamped to the
@@ -826,7 +826,7 @@ export async function runMarketOnce(
  * Best-effort: it CATCHES its own errors and logs `keeper.subsidy.error` rather than failing
  * the lifecycle tick (a subsidy hiccup must never wedge the crank). Success sets
  * rec.fundedSubsidyEpochId. The owner key is used SOLELY for the approve + fundSubsidy here
- * and for emergencySettle - never for a normal lifecycle crank.
+ * and for emergencySettle — never for a normal lifecycle crank.
  */
 async function maybeFundSubsidy(
   client: PublicClient,
@@ -868,7 +868,7 @@ async function maybeFundSubsidy(
     if (topUp <= 0n) return;
 
     // Ensure the owner has approved enough USDC to the arena (fundSubsidy pulls it). Approve
-    // the exact top-up when allowance is short (idempotent - re-approves only when needed).
+    // the exact top-up when allowance is short (idempotent — re-approves only when needed).
     const allowance = (await client.readContract({
       address: usdc,
       abi: erc20Abi,
@@ -903,7 +903,7 @@ async function maybeFundSubsidy(
       logLine({ msg: 'keeper.subsidy.error', market: market.id, epochId: state.currentEpochId, error: 'fundSubsidy reverted', txHash });
     }
   } catch (err) {
-    // Never let a subsidy problem wedge the lifecycle crank - log + move on.
+    // Never let a subsidy problem wedge the lifecycle crank — log + move on.
     logLine({ msg: 'keeper.subsidy.error', market: market.id, epochId: state.currentEpochId, error: err instanceof Error ? err.message : String(err) });
   }
 }

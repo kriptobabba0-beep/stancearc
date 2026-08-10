@@ -1,4 +1,4 @@
-// app/api/leaderboard/ingest/route.ts - the ONLY way standings enter the site.
+// app/api/leaderboard/ingest/route.ts — the ONLY way standings enter the site.
 //
 // The keeper's indexer owns the leaderboard and POSTs a ready-to-serve payload here; this handler
 // authenticates it, checks the shape, and puts it in KV. Nothing else writes that key, which is
@@ -6,7 +6,7 @@
 //
 // The secret is a shared string rather than a signature because both ends are ours and the
 // transport is TLS: a signature would add key management without changing who can write. It is
-// compared in constant time, and a missing secret fails CLOSED - an unconfigured deploy rejects
+// compared in constant time, and a missing secret fails CLOSED — an unconfigured deploy rejects
 // every write rather than accepting anonymous ones.
 import { NextResponse } from 'next/server';
 import { secretsMatch, validatePayload, writePayload, writeSelfIndex } from '@/lib/leaderboardStore';
@@ -41,7 +41,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
   // The indexer sends { payload, index }: the capped board a browser receives, and the per-address
   // index only this server reads. A bare payload is still accepted so an older indexer keeps
-  // working through a deploy - it just cannot answer "where do I stand?" past the capped rows.
+  // working through a deploy — it just cannot answer "where do I stand?" past the capped rows.
   const wrapped = body as { payload?: unknown; index?: unknown };
   const hasIndex = typeof wrapped?.payload === 'object' && wrapped.payload !== null;
   const payload = hasIndex ? wrapped.payload : body;

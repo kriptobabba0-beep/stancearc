@@ -1,6 +1,6 @@
 'use client';
 
-// hooks/useArenaActivity.ts - the live arena activity feed (Circle SCP event monitors), polled from
+// hooks/useArenaActivity.ts — the live arena activity feed (Circle SCP event monitors), polled from
 // our /api/circle/activity route. The Circle API key never reaches the client; this just fetches the
 // decoded, public on-chain events. Polls every 12s (Circle indexes Arc events ~3s after confirmation).
 

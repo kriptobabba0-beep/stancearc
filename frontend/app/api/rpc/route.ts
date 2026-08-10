@@ -1,4 +1,4 @@
-// app/api/rpc/route.ts - edge JSON-RPC cache/proxy for the Arc testnet RPC.
+// app/api/rpc/route.ts — edge JSON-RPC cache/proxy for the Arc testnet RPC.
 // All logic lives in lib/rpcProxy.ts (route files only export HTTP handlers). The browser's
 // wagmi transport points here FIRST; the direct Arc endpoints stay in the fallback chain, so
 // if this route is ever down the app behaves exactly as before the proxy existed.

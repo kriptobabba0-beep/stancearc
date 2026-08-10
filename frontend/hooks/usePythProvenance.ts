@@ -1,6 +1,6 @@
 'use client';
 
-// hooks/usePythProvenance.ts - read the oracle PROVENANCE for the active market's Pyth feed via
+// hooks/usePythProvenance.ts — read the oracle PROVENANCE for the active market's Pyth feed via
 // IPyth.getPriceUnsafe(feedId) -> (price, conf, expo, publishTime). Used by the provably-fair epoch
 // detail page to surface WHO/WHAT priced the settlement: the immutable feed id (from market config)
 // plus the latest on-chain publishTime + confidence interval. Best-effort; degrades gracefully.

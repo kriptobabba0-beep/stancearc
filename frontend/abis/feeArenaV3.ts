@@ -1,4 +1,4 @@
-// abis/feeArenaV3.ts - FeeArenaV3 (ENTRY-ANCHORED) surface. Mirrors src/interfaces/IFeeArenaV3.sol
+// abis/feeArenaV3.ts — FeeArenaV3 (ENTRY-ANCHORED) surface. Mirrors src/interfaces/IFeeArenaV3.sol
 // EXACTLY (field order/types). v3 has NO startEpoch/endEpoch: stakes anchor their own entryPrice
 // (read in the stake tx with a slippage guard) and one keeper-submitted settlement price closes
 // the epoch; positions resolve INDIVIDUALLY (processPositions) and winners keep their own fees

@@ -1,7 +1,7 @@
-// metricsState.ts - restart-safe COUNTER persistence. PROBLEM: index.ts / arb.ts hold the
+// metricsState.ts — restart-safe COUNTER persistence. PROBLEM: index.ts / arb.ts hold the
 // Prometheus counters (ticksTotal / actionsTotal / failuresTotal / revertsTotal) in process
 // memory, so every restart zeroes them. Prometheus `rate()` / `increase()` treat a counter
-// that goes DOWN as a reset and silently drop the interval - so under a crash-loop the
+// that goes DOWN as a reset and silently drop the interval — so under a crash-loop the
 // alerting curves go quiet exactly when the keeper is least healthy.
 //
 // FIX (this module): persist the cumulative counters to a tiny JSON state file and, at
@@ -13,7 +13,7 @@
 //
 // PURE by design (mirrors backoff.ts / heartbeat.ts): all the merge/serialize/parse math is
 // clock- and I/O-free and unit-tested; loadMetricsState/saveMetricsState are the only
-// functions that touch the filesystem, and both are best-effort - a missing/corrupt/locked
+// functions that touch the filesystem, and both are best-effort — a missing/corrupt/locked
 // state file degrades to "start from zero" and is logged, never thrown, so persistence can
 // NEVER wedge the loop it is meant to make more reliable.
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs';
@@ -21,7 +21,7 @@ import { dirname } from 'node:path';
 
 /**
  * The cumulative, restart-surviving counters. Deliberately a FLAT, additive shape so the
- * merge is a trivial element-wise sum - gauges (balance, lastTickTs, wedged) are NOT here
+ * merge is a trivial element-wise sum — gauges (balance, lastTickTs, wedged) are NOT here
  * because a gauge's current value is re-derived each tick and must never be carried across a
  * restart. `restartsTotal` counts process boots (incremented by recordRestart at startup).
  */
@@ -33,7 +33,7 @@ export interface PersistedMetrics {
   restartsTotal: number;
 }
 
-/** A zeroed counter set - the seed when no prior state file exists (first ever boot). */
+/** A zeroed counter set — the seed when no prior state file exists (first ever boot). */
 export function freshPersistedMetrics(): PersistedMetrics {
   return { ticksTotal: 0, actionsTotal: {}, failuresTotal: {}, revertsTotal: 0, restartsTotal: 0 };
 }
@@ -69,7 +69,7 @@ function coerceCounterMap(v: unknown): Record<string, number> {
 /**
  * Parse the raw JSON text of a state file into a PersistedMetrics, tolerating ANY corruption
  * (truncated write, hand-edit, schema drift): every field is individually coerced and a
- * missing/garbage field falls back to its zero. PURE - no I/O. A parse failure is signalled
+ * missing/garbage field falls back to its zero. PURE — no I/O. A parse failure is signalled
  * by returning null so the caller can log it; a structurally-valid-but-partial object is
  * salvaged field-by-field.
  */
@@ -92,7 +92,7 @@ export function parsePersistedMetrics(text: string): PersistedMetrics | null {
 }
 
 /**
- * Increment the restart counter by one boot. PURE - returns a NEW object. Called once at
+ * Increment the restart counter by one boot. PURE — returns a NEW object. Called once at
  * startup AFTER the prior state is loaded so `restartsTotal` reflects the boot we're in:
  * the very first boot (fresh, restartsTotal 0) becomes 1, and each subsequent boot adds 1,
  * making a crash-loop a monotonically-rising, alertable counter (`increase(...[1h])`).
@@ -106,7 +106,7 @@ export function recordRestart(prev: PersistedMetrics): PersistedMetrics {
  * (so the file is the source of truth the next boot seeds from); gauges are intentionally
  * excluded. Stable key order keeps diffs/readability sane for an operator inspecting the
  * file. The current in-memory `ticks/actions/failures/reverts` are passed straight through
- * because the loop already seeded them from the prior file at boot - they ARE the running
+ * because the loop already seeded them from the prior file at boot — they ARE the running
  * cumulative total.
  */
 export function serializeMetricsState(m: PersistedMetrics): string {
@@ -139,7 +139,7 @@ export function loadMetricsState(
   try {
     text = readFileSync(path, 'utf8');
   } catch (err) {
-    // ENOENT is the normal first-boot case - log at info; anything else is worth surfacing.
+    // ENOENT is the normal first-boot case — log at info; anything else is worth surfacing.
     const code = (err as NodeJS.ErrnoException | undefined)?.code;
     if (code !== 'ENOENT') {
       log({ msg: 'metrics.state.read.error', path, error: err instanceof Error ? err.message : String(err) });
@@ -157,7 +157,7 @@ export function loadMetricsState(
 /**
  * Persist the current cumulative counters to `path` atomically (write a temp file then
  * rename, so a crash mid-write can't leave a truncated file the next boot would discard).
- * Best-effort: any failure (read-only FS, ENOSPC, perms) is logged and swallowed - a failed
+ * Best-effort: any failure (read-only FS, ENOSPC, perms) is logged and swallowed — a failed
  * metrics save must never crash the keeper. Creates the parent dir if needed. Returns true
  * on success so a test/caller can assert the persist happened.
  */

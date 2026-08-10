@@ -1,4 +1,4 @@
-// hooks/useIsOwner.ts - FeeArena.owner() === connected account (contract still enforces regardless).
+// hooks/useIsOwner.ts — FeeArena.owner() === connected account (contract still enforces regardless).
 'use client';
 
 import { useAccount, useReadContract } from 'wagmi';

@@ -1,4 +1,4 @@
-// heartbeat.ts - the PURE heartbeat-volume budget ledger (TASK 3b). The decision of WHETHER
+// heartbeat.ts — the PURE heartbeat-volume budget ledger (TASK 3b). The decision of WHETHER
 // to emit a heartbeat leg lives in decideArb (pure, given an injected HeartbeatState
 // snapshot). This module owns the running BUDGET state that the arb executor carries across
 // ticks: the day's spend, the last heartbeat timestamp, and the UTC-day boundary used to
@@ -13,7 +13,7 @@
 
 import type { HeartbeatState } from './decideArb.js';
 
-/** Milliseconds in a UTC day - the daily-cap reset window. */
+/** Milliseconds in a UTC day — the daily-cap reset window. */
 export const DAY_MS = 86_400_000;
 
 /** The executor-owned, mutable-by-copy MM ledger (heartbeat + rebalance) carried across ticks. */
@@ -25,23 +25,23 @@ export interface HeartbeatLedger {
   /** Wall-clock (ms) of the last heartbeat leg, or null if none yet. */
   lastHeartbeatMs: number | null;
   /**
-   * FINDING 4 - heartbeat ATTEMPTS made in the current day, stamped on EVERY attempt
+   * FINDING 4 — heartbeat ATTEMPTS made in the current day, stamped on EVERY attempt
    * (success OR revert). The notional cap (spentTodayBase) only advances on success, so a
    * reverting leg can't charge it; this attempt counter bounds the retries instead. Resets
    * with the day.
    */
   heartbeatAttemptsToday: number;
   /**
-   * FINDING 3 - wall-clock (ms) of the last REBALANCE leg, or null if none yet. Gives the
+   * FINDING 3 — wall-clock (ms) of the last REBALANCE leg, or null if none yet. Gives the
    * rebalance path the same interval rate-limit the heartbeat already had. Stamped on EVERY
    * rebalance attempt (regardless of success) so a reverting rebalance can't fire each poll.
    */
   lastRebalanceMs: number | null;
-  /** FINDING 4 - rebalance ATTEMPTS in the current day (stamped on every attempt). Resets daily. */
+  /** FINDING 4 — rebalance ATTEMPTS in the current day (stamped on every attempt). Resets daily. */
   rebalanceAttemptsToday: number;
 }
 
-/** UTC-day start (ms) for a given instant - floors to the previous midnight UTC. */
+/** UTC-day start (ms) for a given instant — floors to the previous midnight UTC. */
 export function utcDayStart(nowMs: number): number {
   return Math.floor(nowMs / DAY_MS) * DAY_MS;
 }
@@ -60,13 +60,13 @@ export function freshHeartbeatLedger(nowMs: number): HeartbeatLedger {
 
 /**
  * Roll the budget day if `nowMs` has crossed into a new UTC day: returns a ledger with the
- * day reset (spend back to 0, dayStartMs advanced) - otherwise returns the ledger unchanged.
+ * day reset (spend back to 0, dayStartMs advanced) — otherwise returns the ledger unchanged.
  * PURE: returns a NEW object on a roll, the SAME reference when no roll is needed. The
  * lastHeartbeatMs is preserved across a roll so the interval rate-limit still spans midnight.
  */
 export function rollHeartbeatDay(ledger: HeartbeatLedger, nowMs: number): HeartbeatLedger {
   const today = utcDayStart(nowMs);
-  if (today <= ledger.dayStartMs) return ledger; // same (or earlier) day - no roll
+  if (today <= ledger.dayStartMs) return ledger; // same (or earlier) day — no roll
   return {
     dayStartMs: today,
     spentTodayBase: 0n,
@@ -98,8 +98,8 @@ export function snapshotHeartbeat(ledger: HeartbeatLedger, nowMs: number): Heart
  * Record a SETTLED heartbeat leg of `amountBase` (raw) at `nowMs`: advances the day's SPEND
  * (the notional cap) and stamps lastHeartbeatMs. Called only on a SUCCESSFUL heartbeat swap
  * (a revert must not charge the notional cap). The interval/attempt rate-limit is handled
- * separately by recordHeartbeatAttempt (stamped regardless of success - FINDING 4) so a
- * reverting leg still advances the rate-limit. PURE - returns a NEW ledger; clamps negatives.
+ * separately by recordHeartbeatAttempt (stamped regardless of success — FINDING 4) so a
+ * reverting leg still advances the rate-limit. PURE — returns a NEW ledger; clamps negatives.
  */
 export function recordHeartbeatSpend(
   ledger: HeartbeatLedger,
@@ -115,10 +115,10 @@ export function recordHeartbeatSpend(
 }
 
 /**
- * FINDING 4 - record a heartbeat ATTEMPT at `nowMs`: stamps lastHeartbeatMs (so the interval
+ * FINDING 4 — record a heartbeat ATTEMPT at `nowMs`: stamps lastHeartbeatMs (so the interval
  * rate-limit advances) and bumps the per-day attempt counter. Called on EVERY heartbeat swap
- * attempt - success OR revert - so a reverting leg (FINDING 1) advances the rate-limit + the
- * attempt cap and can never retry unbounded. PURE - returns a NEW ledger.
+ * attempt — success OR revert — so a reverting leg (FINDING 1) advances the rate-limit + the
+ * attempt cap and can never retry unbounded. PURE — returns a NEW ledger.
  */
 export function recordHeartbeatAttempt(ledger: HeartbeatLedger, nowMs: number): HeartbeatLedger {
   return {
@@ -129,10 +129,10 @@ export function recordHeartbeatAttempt(ledger: HeartbeatLedger, nowMs: number): 
 }
 
 /**
- * FINDING 3/4 - record a REBALANCE ATTEMPT at `nowMs`: stamps lastRebalanceMs (the rebalance
+ * FINDING 3/4 — record a REBALANCE ATTEMPT at `nowMs`: stamps lastRebalanceMs (the rebalance
  * interval rate-limit) and bumps the per-day rebalance attempt counter. Called on EVERY
  * rebalance swap attempt regardless of success, so a reverting rebalance advances its
- * governor and can't fire every poll. PURE - returns a NEW ledger.
+ * governor and can't fire every poll. PURE — returns a NEW ledger.
  */
 export function recordRebalanceAttempt(ledger: HeartbeatLedger, nowMs: number): HeartbeatLedger {
   return {

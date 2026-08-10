@@ -1,10 +1,10 @@
 'use client';
 
-// hooks/useLiquidityDeposit.ts - the deposit mechanics for a range-selected V3 mint, lifted out of
+// hooks/useLiquidityDeposit.ts — the deposit mechanics for a range-selected V3 mint, lifted out of
 // ProvideLiquidity so the new chart-driven /pool/[id] page reuses the EXACT same, battle-tested flow:
-//   • reads the pool's live slot0 (sqrtPriceX96 / tick / human price) - also the source the chart +
+//   • reads the pool's live slot0 (sqrtPriceX96 / tick / human price) — also the source the chart +
 //     presets use, so there's one price read;
-//   • LINKED AMOUNTS - the last-edited leg drives, the other is the bigint-exact counterpart for the
+//   • LINKED AMOUNTS — the last-edited leg drives, the other is the bigint-exact counterpart for the
 //     CALLER-SUPPLIED range (the range comes from the chart handles OR a preset button);
 //   • out-of-range one-sided handling, balances + insufficiency, NPM approvals, the mint + receipt→
 //     tokenId parse, and the faucet-needed flag.

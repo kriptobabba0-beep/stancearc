@@ -48,7 +48,7 @@ function ClaimUnstakeRowV1({ stake }: { stake: StakeView }) {
 
   // Unstake: Settled + position.swept + !unstaked. The keeper auto-returns every position
   // right after settlement (unstakeBatch), so this manual button is a fallback for the
-  // short crank window - or for a contract wallet whose auto-return was parked.
+  // short crank window — or for a contract wallet whose auto-return was parked.
   const canUnstake = isSettled && stake.swept && !stake.unstaked;
 
   return (
@@ -72,8 +72,8 @@ function ClaimUnstakeRowV1({ stake }: { stake: StakeView }) {
         {preview?.isWinner && preview.payWETH === 0n && preview.payUSDC === 0n && (
           <span className="text-xs text-amber-600">
             {epoch && (epoch.potWETH > 0n || epoch.potUSDC > 0n)
-              ? 'Winning side, but this position was out of range this epoch - it earned no share of the pot.'
-              : 'Winning side - but the pot was empty this epoch (no trading fees were forfeited), so there was nothing to split.'}
+              ? 'Winning side, but this position was out of range this epoch — it earned no share of the pot.'
+              : 'Winning side — but the pot was empty this epoch (no trading fees were forfeited), so there was nothing to split.'}
           </span>
         )}
       </div>
@@ -90,12 +90,12 @@ function ClaimUnstakeRowV1({ stake }: { stake: StakeView }) {
       )}
       {isSettled && preview && !preview.isWinner && (
         <p className="mt-2 text-xs text-ink-muted">
-          Wrong side - no reward. Your LP comes back to your wallet automatically.
+          Wrong side — no reward. Your LP comes back to your wallet automatically.
         </p>
       )}
       {canUnstake && (
         <p className="mt-2 text-xs text-ink-muted">
-          Your LP is being returned automatically - or pull it now without waiting.
+          Your LP is being returned automatically — or pull it now without waiting.
         </p>
       )}
 
@@ -130,10 +130,10 @@ function ClaimUnstakeRowV1({ stake }: { stake: StakeView }) {
 }
 
 // ── v2 row: conviction-parimutuel. A WINNER collects TWO things (decoupled on-chain):
-//      1. CLAIM - the sqrt-weighted pot share (previewClaim, gated on claimable).
-//      2. REFUND CONVICTION - the staked conviction principal 1:1 (previewRefund, gated on refundable).
+//      1. CLAIM — the sqrt-weighted pot share (previewClaim, gated on claimable).
+//      2. REFUND CONVICTION — the staked conviction principal 1:1 (previewRefund, gated on refundable).
 //    "Collect" fires whichever of the two is still outstanding (it may call both).
-//    A LOSER's conviction is BURNED (forfeited) - there is NOTHING to claim or refund; we say so
+//    A LOSER's conviction is BURNED (forfeited) — there is NOTHING to claim or refund; we say so
 //    explicitly and never render a refund affordance. Either way the LP NFT is recovered via Unstake.
 function ClaimUnstakeRowV2({ stake }: { stake: StakeView }) {
   const { data: epoch } = useEpoch(stake.epochId);
@@ -191,7 +191,7 @@ function ClaimUnstakeRowV2({ stake }: { stake: StakeView }) {
         <div className="mt-2 space-y-1 text-xs text-ink-muted">
           {preview!.payWETH === 0n && preview!.payUSDC === 0n && (
             <p className="text-amber-600">
-              Winning side, but this position was out of range - earned no pot share.
+              Winning side, but this position was out of range — earned no pot share.
             </p>
           )}
           {refund && refund.amount > 0n && (
@@ -219,7 +219,7 @@ function ClaimUnstakeRowV2({ stake }: { stake: StakeView }) {
       {/* LOSER: conviction is forfeited/burned. Do NOT imply any refund. */}
       {isLoser && (
         <p className="mt-2 text-xs text-ink-muted">
-          Wrong side - your conviction was forfeited (burned) and nothing is collectable. You can still
+          Wrong side — your conviction was forfeited (burned) and nothing is collectable. You can still
           unstake to recover your position NFT.
         </p>
       )}
@@ -245,13 +245,13 @@ function ClaimUnstakeRowV2({ stake }: { stake: StakeView }) {
   );
 }
 
-// ── v3 row (ENTRY-ANCHORED): per-position result language. There is NO global winner - the
+// ── v3 row (ENTRY-ANCHORED): per-position result language. There is NO global winner — the
 //    position resolved against ITS OWN entry price, so every line speaks about "your entry"
 //    and "your call". Winners claim own fees + the pot share; losers lose only the round's
 //    fees; everyone's LP auto-returns after settlement.
 function ClaimUnstakeRowV3({ stake }: { stake: StakeView }) {
   const v3 = (stake as StakeV3View).v3;
-  // This arena's quote token (USDC or EURC) - both 6dp, so only the symbol LABEL differs.
+  // This arena's quote token (USDC or EURC) — both 6dp, so only the symbol LABEL differs.
   const quoteSymbol = quoteToken(useActiveMarket().quoteSymbol).symbol;
   const quoteGlyph = quoteSymbol === 'EURC' ? '€' : '$'; // EUR-settled market shows € prices, not $
   const { data: epoch } = useEpoch(stake.epochId);
@@ -271,7 +271,7 @@ function ClaimUnstakeRowV3({ stake }: { stake: StakeView }) {
   const alreadyClaimed = preview?.alreadyClaimed === true;
   // A WINNER whose position produced no trading fees this round has nothing to claim: in the
   // entry-anchored model the reward IS fees (you keep your own + split the losers' forfeited fees),
-  // so a round with no swaps - hence no fees and no forfeited pot - has no reward pool to distribute.
+  // so a round with no swaps — hence no fees and no forfeited pot — has no reward pool to distribute.
   const wonWithReward = isSettled && v3?.processed === true && v3.won && canClaim;
   const wonNoReward =
     isSettled && v3?.processed === true && v3.won && !canClaim && !alreadyClaimed;
@@ -295,10 +295,10 @@ function ClaimUnstakeRowV3({ stake }: { stake: StakeView }) {
         )}
       </div>
 
-      {/* THE anchor line - always show what this position is measured against. */}
+      {/* THE anchor line — always show what this position is measured against. */}
       <p className="mt-2 text-xs text-ink-muted">
         Your entry anchor:{' '}
-        <span className="font-mono text-ink">{entry > 0n ? formatUsdPrice18(entry, quoteGlyph) : '-'}</span>
+        <span className="font-mono text-ink">{entry > 0n ? formatUsdPrice18(entry, quoteGlyph) : '—'}</span>
         {isSettled && finalPrice18 > 0n && (
           <>
             {' '}
@@ -315,7 +315,7 @@ function ClaimUnstakeRowV3({ stake }: { stake: StakeView }) {
 
       {!isSettled && (
         <p className="mt-1.5 text-xs font-medium text-amber-600">
-          Locked until settlement - your result is measured against YOUR entry, not a global start.
+          Locked until settlement — your result is measured against YOUR entry, not a global start.
         </p>
       )}
       {wonWithReward && (

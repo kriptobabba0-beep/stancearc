@@ -1,17 +1,17 @@
 'use client';
 
-// components/arena/AddLiquidityModal.tsx - mockup #2, exact: the Arena's "Add liquidity" modal.
+// components/arena/AddLiquidityModal.tsx — mockup #2, exact: the Arena's "Add liquidity" modal.
 //
 //   Add liquidity
 //   Create a cirBTC / USDC position to enter the Stance.
-//   ① DEPOSIT ASSETS   - two asset rows (coin · SYMBOL ▾ · amount + ~$usd · Balance + MAX), linked by
+//   ① DEPOSIT ASSETS   — two asset rows (coin · SYMBOL ▾ · amount + ~$usd · Balance + MAX), linked by
 //                         a small ⇅ badge; the LAST-EDITED leg drives, the other is computed from the
 //                         live pool price + the selected range (lib/rangeMath.counterpartAmount).
-//   1 cirBTC ≈ … USDC  - the live pool rate.
-//   ② CHOOSE RANGE     - three preset cards (Narrow/Balanced/Wide - REAL ±5/15/50% presets, not the
+//   1 cirBTC ≈ … USDC  — the live pool rate.
+//   ② CHOOSE RANGE     — three preset cards (Narrow/Balanced/Wide — REAL ±5/15/50% presets, not the
 //                         mock's placeholder ±0.5/1.5/3) with waveform glyphs; Balanced default.
-//   ③ PREVIEW POSITION - pair · range · est. share of pool (new-L vs pool.liquidity(), display-only).
-//   Cancel | Create LP position - the primary button walks approvals first (approve base → approve
+//   ③ PREVIEW POSITION — pair · range · est. share of pool (new-L vs pool.liquidity(), display-only).
+//   Cancel | Create LP position — the primary button walks approvals first (approve base → approve
 //                         USDC → mint) so the mock's single CTA drives the whole real flow.
 //
 // All on-chain wiring reuses the SAME hooks as /pool's ProvideLiquidity (useMintPosition,
@@ -75,14 +75,14 @@ function parseAmount(s: string, decimals: number): bigint {
 /**
  * Parse a HUMAN price string, FAIL-CLOSED: NaN unless the WHOLE trimmed string is a plain decimal.
  * (Bare parseFloat would silently truncate a comma-grouped paste like "63,750" to 63 and mint a
- * far-off band - same guard as ProvideLiquidity.)
+ * far-off band — same guard as ProvideLiquidity.)
  */
 function parsePrice(s: string): number {
   const t = s.trim();
   return /^(\d+\.?\d*|\.\d+)$/.test(t) ? Number.parseFloat(t) : Number.NaN;
 }
 
-/** In-range liquidity for the given amounts (display-only "est. share of pool" - floors, min leg). */
+/** In-range liquidity for the given amounts (display-only "est. share of pool" — floors, min leg). */
 function liquidityFromAmounts(
   sqrtP: bigint,
   sqrtL: bigint,
@@ -144,7 +144,7 @@ function AssetRow({
   insufficient: boolean;
   onMax: () => void;
   inputTestId: string;
-  /** Locked at 0 - the selected band excludes the current price, so this leg isn't deposited. */
+  /** Locked at 0 — the selected band excludes the current price, so this leg isn't deposited. */
   readOnly?: boolean;
 }) {
   return (
@@ -197,7 +197,7 @@ export function AddLiquidityModal({ flow }: { flow: ArenaFlow }) {
     baseIsToken0,
   } = useActiveBaseToken();
   const { pool } = useMarketContracts();
-  // The active arena's QUOTE token (USDC or EURC) - the second pool leg. Both 6dp, so the amount math
+  // The active arena's QUOTE token (USDC or EURC) — the second pool leg. Both 6dp, so the amount math
   // (USDC_DECIMALS / formatUSDC / counterpartAmount) is unchanged; only the token address + symbol differ.
   const quote = quoteToken(useActiveMarket().quoteSymbol);
   const { data: oracle } = useOraclePrice();
@@ -275,7 +275,7 @@ export function AddLiquidityModal({ flow }: { flow: ArenaFlow }) {
   );
 
   // A custom band can exclude the current price → the mint is ONE-SIDED ('below' in raw tick space =
-  // deposit only token0; with baseIsToken0=false the human reading inverts - lib/rangeMath owns that).
+  // deposit only token0; with baseIsToken0=false the human reading inverts — lib/rangeMath owns that).
   const rangeStatus =
     range && currentTick !== undefined
       ? tickRangeStatus(currentTick, range.tickLower, range.tickUpper)
@@ -358,13 +358,13 @@ export function AddLiquidityModal({ flow }: { flow: ArenaFlow }) {
 
   // ── Est. share of pool (new in-range L vs pool's active L; display-only) ───────────────────────
   const shareText = useMemo(() => {
-    if (!sqrtBounds || sqrtPriceX96 <= 0n || poolLiq === undefined || baseIsToken0 === undefined) return '-';
+    if (!sqrtBounds || sqrtPriceX96 <= 0n || poolLiq === undefined || baseIsToken0 === undefined) return '—';
     const amount0 = baseIsToken0 ? baseAmount : usdcAmount;
     const amount1 = baseIsToken0 ? usdcAmount : baseAmount;
     const newL = liquidityFromAmounts(sqrtPriceX96, sqrtBounds.lower, sqrtBounds.upper, amount0, amount1);
-    if (newL <= 0n) return '-';
+    if (newL <= 0n) return '—';
     const pctX4 = Number((newL * 1_000_000n) / (poolLiq + newL)) / 10_000; // % with 4dp headroom
-    if (!Number.isFinite(pctX4)) return '-';
+    if (!Number.isFinite(pctX4)) return '—';
     return `~${pctX4 < 0.001 ? '<0.001' : pctX4.toFixed(3)}%`;
   }, [sqrtBounds, sqrtPriceX96, poolLiq, baseIsToken0, baseAmount, usdcAmount]);
 
@@ -459,16 +459,16 @@ export function AddLiquidityModal({ flow }: { flow: ArenaFlow }) {
     setDriver('usdc');
   };
 
-  // ── The selected band as human prices ("60,286 - 66,759 USDC per cirBTC" / "0 - ∞ …") ──────────
+  // ── The selected band as human prices ("60,286 — 66,759 USDC per cirBTC" / "0 — ∞ …") ──────────
   const isFull = !!range && isFullRangeTicks(range.tickLower, range.tickUpper, spacing);
   let bandText: string;
   if (!range) {
     bandText = choice === 'custom' ? 'Enter a min and max price' : '…';
   } else if (isFull) {
-    bandText = `0 - ∞ USDC per ${baseSymbol}`;
+    bandText = `0 — ∞ USDC per ${baseSymbol}`;
   } else if (dec0 !== undefined && dec1 !== undefined && baseIsToken0 !== undefined) {
     const { min, max } = bandPrices(range.tickLower, range.tickUpper, dec0, dec1, baseIsToken0);
-    bandText = `${formatHumanPrice(min)} - ${formatHumanPrice(max)} USDC per ${baseSymbol}`;
+    bandText = `${formatHumanPrice(min)} — ${formatHumanPrice(max)} USDC per ${baseSymbol}`;
   } else {
     bandText = '…';
   }
@@ -619,7 +619,7 @@ export function AddLiquidityModal({ flow }: { flow: ArenaFlow }) {
               Full range
             </span>
             <span className={cn('font-mono text-[11px] font-semibold', choice === 'full' ? 'text-brand' : 'text-ink-soft')}>
-              0 - ∞
+              0 — ∞
             </span>
             <span className="text-[10px] leading-tight text-ink-muted">
               Always in range
@@ -653,7 +653,7 @@ export function AddLiquidityModal({ flow }: { flow: ArenaFlow }) {
               Custom
             </span>
             <span className={cn('font-mono text-[11px] font-semibold', choice === 'custom' ? 'text-brand' : 'text-ink-soft')}>
-              min - max
+              min — max
             </span>
             <span className="text-[10px] leading-tight text-ink-muted">
               Set your own range
@@ -663,7 +663,7 @@ export function AddLiquidityModal({ flow }: { flow: ArenaFlow }) {
           </button>
         </div>
 
-        {/* General range disclaimer - shown directly below the preset cards, regardless of choice. */}
+        {/* General range disclaimer — shown directly below the preset cards, regardless of choice. */}
         <p data-testid="alm-range-note" className="mt-2.5 text-[11px] leading-snug text-ink-muted">
           Note: If price moves outside your selected range, your position stops earning fees until
           price returns. LP position value can change with market price and impermanent loss.
@@ -699,12 +699,12 @@ export function AddLiquidityModal({ flow }: { flow: ArenaFlow }) {
         {choice === 'custom' && !customValid && (minPriceInput !== '' || maxPriceInput !== '') && (
           <p data-testid="alm-custom-invalid" role="alert" className="mt-1.5 text-[11px] text-side-down">
             {priceFormatBad
-              ? 'Enter prices as plain numbers (e.g. 63750.50) - no thousands separators, letters or symbols.'
+              ? 'Enter prices as plain numbers (e.g. 63750.50) — no thousands separators, letters or symbols.'
               : 'Enter a valid band: min price must be above 0 and below max price.'}
           </p>
         )}
 
-        {/* The selected band as human prices - what range you are joining. */}
+        {/* The selected band as human prices — what range you are joining. */}
         <div
           data-testid="alm-band"
           className="mt-2.5 rounded-lg border border-line bg-surface-muted px-3 py-2 text-center font-mono text-[12px] tnum text-ink-soft"
@@ -718,7 +718,7 @@ export function AddLiquidityModal({ flow }: { flow: ArenaFlow }) {
             data-testid="alm-oor-warning"
             className="mt-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-[11px] leading-snug text-amber-700 dark:text-amber-300"
           >
-            Price is outside this band - you&apos;ll deposit only {baseActive ? baseSymbol : quote.symbol}, and
+            Price is outside this band — you&apos;ll deposit only {baseActive ? baseSymbol : quote.symbol}, and
             the position earns no fees and no arena contribution until the price enters the range.
           </p>
         )}

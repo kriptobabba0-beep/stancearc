@@ -1,9 +1,9 @@
 'use client';
 
-// components/arena/StakeReviewModal.tsx - mockup #5. The final "Stake into Stance" review: a summary of
+// components/arena/StakeReviewModal.tsx — mockup #5. The final "Stake into Stance" review: a summary of
 // the entry (position, range, chosen side, round, entry countdown, lock period, settlement source), the
 // lock warning + payout note, then "Confirm stake". Confirm calls the existing useStakeWithSide hook
-// (NPM.safeTransferFrom → FeeArena with the encoded side) - unchanged on-chain logic. The mockup's
+// (NPM.safeTransferFrom → FeeArena with the encoded side) — unchanged on-chain logic. The mockup's
 // "2h external-oracle TWAP" becomes the REAL settlement source: Pyth spot at the band.
 import { useStakeWithSide } from '@/hooks/useStakeWithSide';
 import { useIsEmbeddedWallet } from '@/hooks/useIsEmbeddedWallet';
@@ -71,13 +71,13 @@ export function StakeReviewModal({ flow }: { flow: ArenaFlow }) {
 
   const open = flow.modal === 'stake-review';
   const side = flow.selectedSide;
-  const sideLabel = SIDE_LABELS[side] ?? '-';
+  const sideLabel = SIDE_LABELS[side] ?? '—';
   const entryOpen = epoch?.phase === PhaseView.EntryOpen;
   const canConfirm =
     entryOpen && flow.selectedTokenId !== undefined && isValidStakeSide(side) && !isPending;
 
   // v3 ENTRY ANCHOR preview: the indicative reference (the live oracle price) + the personal
-  // thresholds it implies. The REAL anchor is read on-chain at confirmation - within 0.5% of
+  // thresholds it implies. The REAL anchor is read on-chain at confirmation — within 0.5% of
   // this preview or the stake reverts (the slippage guard), so the box is honest.
   const liveRef = livePrice?.price18 ?? 0n;
   const thresholds = v3 && epoch && liveRef > 0n ? entryThresholds(liveRef, epoch.bandBps) : undefined;
@@ -110,7 +110,7 @@ export function StakeReviewModal({ flow }: { flow: ArenaFlow }) {
           label="Position"
           value={
             <span className="font-mono">
-              {market.baseSymbol} / USDC · #{flow.selectedPosition?.tokenId.toString() ?? '-'}
+              {market.baseSymbol} / USDC · #{flow.selectedPosition?.tokenId.toString() ?? '—'}
             </span>
           }
         />
@@ -123,7 +123,7 @@ export function StakeReviewModal({ flow }: { flow: ArenaFlow }) {
         <ReviewRow
           icon={<Calendar className="h-4 w-4" />}
           label="Epoch"
-          value={epoch ? `#${epoch.epochId.toString()}` : '-'}
+          value={epoch ? `#${epoch.epochId.toString()}` : '—'}
         />
         <ReviewRow
           icon={<Clock className="h-4 w-4" />}
@@ -146,7 +146,7 @@ export function StakeReviewModal({ flow }: { flow: ArenaFlow }) {
         />
       </div>
 
-      {/* v3 ENTRY ANCHOR box - the PDF's "net kutu": the user's own reference price + the exact
+      {/* v3 ENTRY ANCHOR box — the PDF's "net kutu": the user's own reference price + the exact
           thresholds their side needs. The price LOCKS at confirmation (slippage-guarded). */}
       {v3 && (
         <div
@@ -157,7 +157,7 @@ export function StakeReviewModal({ flow }: { flow: ArenaFlow }) {
             Your {market.baseSymbol} reference price · locks at confirmation
           </div>
           <div className="mt-1 font-mono text-2xl font-semibold tnum text-ink">
-            {liveRef > 0n ? formatUsdPrice18(liveRef, quoteGlyph) : '-'}
+            {liveRef > 0n ? formatUsdPrice18(liveRef, quoteGlyph) : '—'}
             <span className="ml-2 align-middle text-[11px] font-medium uppercase tracking-wide text-ink-faint">
               live · max 0.5% drift
             </span>
@@ -170,7 +170,7 @@ export function StakeReviewModal({ flow }: { flow: ArenaFlow }) {
             </div>
           )}
           <p className="mt-2 text-[12px] leading-snug text-ink-muted">
-            Your result is measured against YOUR entry price - entering later means a later anchor,
+            Your result is measured against YOUR entry price — entering later means a later anchor,
             never an advantage.
           </p>
         </div>

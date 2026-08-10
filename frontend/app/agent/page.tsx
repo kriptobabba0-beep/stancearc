@@ -1,11 +1,11 @@
 'use client';
 
-// app/agent/page.tsx - the Limen Copilot: a conversational agent with live protocol access.
+// app/agent/page.tsx — the Limen Copilot: a conversational agent with live protocol access.
 //
 // Two-panel HUD: an identity rail (who the agent is, which model runs it, what it can do,
 // the live context it operates in) and the conversation itself. The copilot reads the LIVE
 // chain and oracle through tools before answering, and acts only through confirmation cards
-// the user's own wallet signs - never silently. Brain: /api/agent/chat (docs/AGENT.md).
+// the user's own wallet signs — never silently. Brain: /api/agent/chat (docs/AGENT.md).
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAccount, usePublicClient } from 'wagmi';
 import { useActiveMarket } from '@/components/MarketProvider';
@@ -35,7 +35,7 @@ import { ARC_CHAIN_ID } from '@/lib/chain';
 
 const AUTOPILOT_KEY = 'limen-autopilot-v1';
 const ALL_VIEWS: StanceView[] = ['UP', 'DOWN', 'RANGE'];
-// The History record is rebuilt from event logs (the only per-epoch truth - position
+// The History record is rebuilt from event logs (the only per-epoch truth — position
 // records are overwritten on restake). A bounded lookback keeps the popover snappy.
 const RESULTS_LOOKBACK_BLOCKS = 250_000n;
 function v3Event(name: string): AbiEvent {
@@ -51,21 +51,21 @@ const VIEW_CHIP: Record<StanceView, string> = {
   RANGE: 'border-side-range/50 text-side-range',
 };
 
-/** Stable identity for a proposal - remounts the ActionCard when the SUBSTANCE changes. */
+/** Stable identity for a proposal — remounts the ActionCard when the SUBSTANCE changes. */
 function actionKey(a: ActionProposal): string {
   return [a.type, a.side ?? '', a.amountUsdc ?? '', a.priceLower ?? '', a.priceUpper ?? '', (a.tokenIds ?? []).join('.'), a.marketId].join('|');
 }
 
 /** An ActionCard outcome, rephrased for the thread (autopilot notes never hit the model). */
 function autopilotOutcome(summary: string): string {
-  return `**Autopilot** - ${summary
+  return `**Autopilot** — ${summary
     .replace(/^\[Action result\]\s*/, '')
     .replace(/\s*Acknowledge briefly.*$/i, '')
     .replace(/\s*Explain briefly.*$/i, '')
     .trim()}`;
 }
 
-/** The session LP's band, formatted for the console + feed notes ("63,800 - 66,400 USDC"). */
+/** The session LP's band, formatted for the console + feed notes ("63,800 – 66,400 USDC"). */
 function describeLpRange(
   range: { tickLower: number; tickUpper: number; poolTick: number; baseIsToken0: boolean },
   baseDecimals: number,
@@ -86,9 +86,9 @@ function describeLpRange(
 const STATE_META: Record<string, { title: string; tone: 'idle' | 'live' | 'act' | 'warn' }> = {
   off: { title: 'Stopped', tone: 'idle' },
   paused: { title: 'Paused', tone: 'idle' },
-  watching: { title: 'Running - watching', tone: 'live' },
-  evaluating: { title: 'Running - evaluating odds', tone: 'live' },
-  waiting: { title: 'Running - epoch locked', tone: 'live' },
+  watching: { title: 'Running — watching', tone: 'live' },
+  evaluating: { title: 'Running — evaluating odds', tone: 'live' },
+  waiting: { title: 'Running — epoch locked', tone: 'live' },
   entering: { title: 'Entering epoch', tone: 'act' },
   claiming: { title: 'Collecting fee share', tone: 'act' },
   retrying: { title: 'Recovering', tone: 'warn' },
@@ -134,7 +134,7 @@ function Countdown({ seconds, since }: { seconds: number | null; since: number |
     const t = setInterval(() => force((n) => n + 1), 1000);
     return () => clearInterval(t);
   }, []);
-  if (seconds === null) return <>-</>;
+  if (seconds === null) return <>—</>;
   const elapsed = since === null ? 0 : Math.floor((Date.now() - since) / 1000);
   const left = Math.max(0, seconds - elapsed);
   const m = Math.floor(left / 60);
@@ -217,18 +217,18 @@ const CAPABILITIES = [
   { label: 'Cross-market comparison', hint: 'cirBTC/USDC vs cirBTC/EURC, side by side' },
   { label: 'Executes with your confirmation', hint: 'stake · swap · liquidity · claim' },
   { label: 'Unattended session signer', hint: 'budget-capped key, zero prompts, sweeps home' },
-  { label: 'Auto-claims settled fee shares', hint: 'collects before every re-entry - nothing strands' },
-  { label: 'Pay-per-message billing', hint: 'Circle x402 - gasless USDC, same price every model' },
+  { label: 'Auto-claims settled fee shares', hint: 'collects before every re-entry — nothing strands' },
+  { label: 'Pay-per-message billing', hint: 'Circle x402 — gasless USDC, same price every model' },
 ];
 
 const SUGGESTIONS = [
   'What is happening in this epoch right now?',
-  'Which view do the odds favor - and why?',
+  'Which view do the odds favor — and why?',
   'Add $5 of liquidity in a ±10% range.',
   'How did the last 6 epochs settle?',
   'What can I claim right now?',
   'Which side is most crowded this epoch?',
-  'Compare both markets - where would you enter?',
+  'Compare both markets — where would you enter?',
   'Enter this epoch for me with the best view.',
   'Buy $100 of cirBTC with USDC.',
 ];
@@ -237,7 +237,7 @@ function shortAddr(a?: string): string {
   return a ? `${a.slice(0, 6)}…${a.slice(-4)}` : 'not connected';
 }
 
-/** The epoch ring: fills second by second as the phase runs out - full at zero, then
+/** The epoch ring: fills second by second as the phase runs out — full at zero, then
  *  restarts from empty when the next window begins. Circumference = 2π·66 ≈ 414.7. */
 function EpochRing({ pilot }: { pilot: ReturnType<typeof useAutopilot> }) {
   const [, force] = useState(0);
@@ -279,9 +279,9 @@ function EpochRing({ pilot }: { pilot: ReturnType<typeof useAutopilot> }) {
         />
       </svg>
       <div className="text-center">
-        <div className="font-display text-[30px] font-bold leading-none tracking-tight text-ink">{pilot.epochId ?? '-'}</div>
+        <div className="font-display text-[30px] font-bold leading-none tracking-tight text-ink">{pilot.epochId ?? '—'}</div>
         <div className="mt-1.5 font-mono text-[13px] font-semibold text-ink-soft">
-          {left === null ? '-' : `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`}
+          {left === null ? '–' : `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`}
         </div>
         <div className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-ink-faint">
           {pilot.entryLeftSec !== null ? 'until entry closes' : 'until settlement'}
@@ -294,7 +294,7 @@ function EpochRing({ pilot }: { pilot: ReturnType<typeof useAutopilot> }) {
 export default function AgentPage() {
   const { address } = useAccount();
   const market = useActiveMarket();
-  // Session-signer addresses for the copilot's context - bridged through state because the
+  // Session-signer addresses for the copilot's context — bridged through state because the
   // session hook is declared further down. The chat must know WHO the autopilot is on-chain,
   // or it reads the connected wallet, finds nothing, and denies the autopilot's own work.
   const [sessionAddrCtx, setSessionAddrCtx] = useState<{ live?: `0x${string}`; past: string[] }>({ past: [] });
@@ -354,14 +354,14 @@ export default function AgentPage() {
   const [autoAction, setAutoAction] = useState<ActionProposal | null>(null);
   const [mandate, setMandate] = useState<AgentMandate>(DEFAULT_MANDATE);
   const [copied, setCopied] = useState(false);
-  // The console's "last activity" line - every meaningful agent event lands here too.
+  // The console's "last activity" line — every meaningful agent event lands here too.
   const [lastEvent, setLastEvent] = useState<{ text: string; txHash?: string; at: number } | null>(null);
   useEffect(() => {
     try {
       setAutopilotOn(window.localStorage.getItem(AUTOPILOT_KEY) === 'on');
       setMandate(parseMandate(window.localStorage.getItem(MANDATE_STORAGE_KEY)));
     } catch {
-      // storage blocked - defaults
+      // storage blocked — defaults
     }
   }, []);
   const updateMandate = (next: AgentMandate) => {
@@ -394,14 +394,14 @@ export default function AgentPage() {
     const live = session.active && session.address !== null ? session.address : undefined;
     setSessionAddrCtx({
       live,
-      // Swept sessions' history still belongs to the user - keep attributing it.
+      // Swept sessions' history still belongs to the user — keep attributing it.
       past: recentSessionAddresses()
         .filter((a) => a.toLowerCase() !== (live ?? '').toLowerCase())
         .slice(0, 3),
     });
   }, [session.active, session.address]);
   // Sessions on OTHER markets (per-market keys): funds are parked there, safe, and
-  // manageable the moment the user switches - the console must SAY so, not hide it.
+  // manageable the moment the user switches — the console must SAY so, not hide it.
   const [parkedSessions, setParkedSessions] = useState<string[]>([]);
   useEffect(() => {
     setParkedSessions(marketsWithSessions(MARKETS.map((m) => m.id)).filter((id) => id !== market.id));
@@ -416,35 +416,35 @@ export default function AgentPage() {
     // proposal (the loop marks epochs handled when it proposes).
     setAutoAction(action);
   }, []);
-  /** Session-signed entry (zero prompts). Returns true when this epoch is dealt with -
+  /** Session-signed entry (zero prompts). Returns true when this epoch is dealt with —
    *  a transient failure returns false so the watch loop retries instead of burning it. */
-  // Transient entry failures used to retry in TOTAL silence - if the same snag repeated
+  // Transient entry failures used to retry in TOTAL silence — if the same snag repeated
   // through the whole window, the feed showed nothing and the epoch just slipped by.
   // Voice each distinct snag once, and RE-voice it every 10 minutes: the one-shot dedupe
   // once hid a repeating blocker for two straight hours.
   const entrySnagSeen = useRef<{ key: string; at: number } | null>(null);
-  // Timestamp of the last autopilot note in the feed - the no-entry heartbeat keys off it.
+  // Timestamp of the last autopilot note in the feed — the no-entry heartbeat keys off it.
   const lastAutoNoteAt = useRef(Date.now());
   const executeEntry = useCallback(
     async (side: StanceView, odds: { up: number; down: number; range: number }) => {
-      if (stopPendingRef.current) return true; // stop armed - never start another epoch
+      if (stopPendingRef.current) return true; // stop armed — never start another epoch
       const r = await sessionRef.current.enterEpoch(side);
       if (r.ok) {
         if (r.claimedFirst) {
-          appendLocalNote('**Autopilot** - collected the previous epoch\'s fee share into the session before re-entering. 💰');
+          appendLocalNote('**Autopilot** — collected the previous epoch\'s fee share into the session before re-entering. 💰');
         }
-        // The chosen side is the strongest the MANDATE allows - which may not be the global
+        // The chosen side is the strongest the MANDATE allows — which may not be the global
         // favorite (a user who excludes RANGE is deliberately betting the other sides).
         const sideOdds = side === 'UP' ? odds.up : side === 'DOWN' ? odds.down : odds.range;
         const isGlobalBest = sideOdds >= Math.max(odds.up, odds.down, odds.range);
         appendLocalNote(
-          `**Autopilot** - entered ${side} with the session signer. Computed odds: UP ${odds.up}% · DOWN ${odds.down}% · RANGE ${odds.range}% - ${side} was the strongest${isGlobalBest ? '' : ' your mandate allows'}. Tx ${r.txHash.slice(0, 18)}… 🎯`,
+          `**Autopilot** — entered ${side} with the session signer. Computed odds: UP ${odds.up}% · DOWN ${odds.down}% · RANGE ${odds.range}% — ${side} was the strongest${isGlobalBest ? '' : ' your mandate allows'}. Tx ${r.txHash.slice(0, 18)}… 🎯`,
         );
         setLastEvent({ text: `Entered ${side} (${side === 'UP' ? odds.up : side === 'DOWN' ? odds.down : odds.range}% odds)`, txHash: r.txHash, at: Date.now() });
         entrySnagSeen.current = null;
         lastAutoNoteAt.current = Date.now();
       } else if (r.permanent && r.reason !== 'already entered this epoch') {
-        appendLocalNote(`**Autopilot** - cannot enter: ${r.reason}`);
+        appendLocalNote(`**Autopilot** — cannot enter: ${r.reason}`);
         setLastEvent({ text: `Entry blocked: ${r.reason}`, at: Date.now() });
         lastAutoNoteAt.current = Date.now();
       } else if (!r.permanent) {
@@ -452,7 +452,7 @@ export default function AgentPage() {
         const now = Date.now();
         if (entrySnagSeen.current?.key !== key || now - entrySnagSeen.current.at > 600_000) {
           entrySnagSeen.current = { key, at: now };
-          appendLocalNote(`**Autopilot** - entry attempt hit a snag (retrying): ${r.reason} ⏳`);
+          appendLocalNote(`**Autopilot** — entry attempt hit a snag (retrying): ${r.reason} ⏳`);
           setLastEvent({ text: `Entry retrying: ${r.reason.slice(0, 60)}`, at: Date.now() });
           lastAutoNoteAt.current = now;
         }
@@ -469,11 +469,11 @@ export default function AgentPage() {
       const budgetLabel =
         (market.quoteSymbol ?? 'USDC') === 'USDC' ? `$${mandate.maxStakeUsdc}` : `${mandate.maxStakeUsdc} ${market.quoteSymbol}`;
       appendLocalNote(
-        `**Autopilot** - unattended session live on ${market.label}. A dedicated session signer now holds ${budgetLabel} + gas and will enter epochs by itself, with no prompts, until you press Stop. 🚀`,
+        `**Autopilot** — unattended session live on ${market.label}. A dedicated session signer now holds ${budgetLabel} + gas and will enter epochs by itself, with no prompts, until you press Stop. 🚀`,
       );
       setLastEvent({ text: `Session started with a ${budgetLabel} budget`, at: Date.now() });
     } catch (err) {
-      appendLocalNote(`**Autopilot** - could not start the session: ${err instanceof Error ? err.message.slice(0, 160) : 'failed'}`);
+      appendLocalNote(`**Autopilot** — could not start the session: ${err instanceof Error ? err.message.slice(0, 160) : 'failed'}`);
     }
   };
   // Budget field draft: lets the user clear/retype without the committed value snapping back mid-keystroke.
@@ -482,7 +482,7 @@ export default function AgentPage() {
   const stopPendingRef = useRef(false);
   stopPendingRef.current = stopPending;
   // An armed sweep belongs to ONE market's session. Switching markets swaps the session
-  // hook underneath the retry interval - disarm rather than sweep the wrong session.
+  // hook underneath the retry interval — disarm rather than sweep the wrong session.
   // (The original market's LP auto-returns at settlement and parks safely; pressing Stop
   // there once, after switching back, finishes the job.)
   useEffect(() => {
@@ -490,33 +490,33 @@ export default function AgentPage() {
   }, [market.id]);
   const stopSession = async () => {
     // Stop wins the race: entries halt IMMEDIATELY, and if the LP is mid-epoch the sweep
-    // completes by itself right after settlement - no button-mashing contest with the bot.
+    // completes by itself right after settlement — no button-mashing contest with the bot.
     if (autopilotOn) toggleAutopilot();
     const r = await session.stop();
     if (r.swept) {
       appendLocalNote(
         r.moved !== undefined
-          ? `**Autopilot** - session stopped. Returned to your wallet: ${r.moved}. 💰`
-          : '**Autopilot** - session closed. It held no funds, so there was nothing to return. ✅',
+          ? `**Autopilot** — session stopped. Returned to your wallet: ${r.moved}. 💰`
+          : '**Autopilot** — session closed. It held no funds, so there was nothing to return. ✅',
       );
-      setLastEvent({ text: 'Session stopped - everything swept back', at: Date.now() });
+      setLastEvent({ text: 'Session stopped — everything swept back', at: Date.now() });
       setStopPending(false);
     } else if (r.retriable === true) {
       // The one self-resolving case: the LP sits in a live epoch and auto-returns at
-      // settlement - arm the retry loop and say so.
+      // settlement — arm the retry loop and say so.
       appendLocalNote(
-        `**Autopilot** - the LP is mid-epoch, so the sweep is armed: it will complete automatically the moment the epoch settles. Entries are already halted. ⏳`,
+        `**Autopilot** — the LP is mid-epoch, so the sweep is armed: it will complete automatically the moment the epoch settles. Entries are already halted. ⏳`,
       );
-      setLastEvent({ text: 'Sweep armed - completing after settlement', at: Date.now() });
+      setLastEvent({ text: 'Sweep armed — completing after settlement', at: Date.now() });
       setStopPending(true);
     } else {
       // Anything else (gas top-up declined, RPC trouble, a reverted transfer) does NOT
-      // fix itself - retrying it silently every 12s would just fail every 12s (and the
+      // fix itself — retrying it silently every 12s would just fail every 12s (and the
       // old copy blamed "mid-epoch" for all of it, freezing the button on a lie).
       appendLocalNote(
-        `**Autopilot** - the sweep did not complete: ${r.reason ?? 'unknown error'}. Nothing is lost - press "Stop & sweep back" to try again. ⚠️`,
+        `**Autopilot** — the sweep did not complete: ${r.reason ?? 'unknown error'}. Nothing is lost — press "Stop & sweep back" to try again. ⚠️`,
       );
-      setLastEvent({ text: 'Sweep incomplete - press Stop to retry', at: Date.now() });
+      setLastEvent({ text: 'Sweep incomplete — press Stop to retry', at: Date.now() });
       setStopPending(false);
     }
   };
@@ -539,16 +539,16 @@ export default function AgentPage() {
             setStopPending(false);
             appendLocalNote(
               r.moved !== undefined
-                ? `**Autopilot** - sweep completed after settlement. Returned to your wallet: ${r.moved}. 💰`
-                : '**Autopilot** - session closed after settlement; nothing was left to return. ✅',
+                ? `**Autopilot** — sweep completed after settlement. Returned to your wallet: ${r.moved}. 💰`
+                : '**Autopilot** — session closed after settlement; nothing was left to return. ✅',
             );
-            setLastEvent({ text: 'Sweep completed - session closed', at: Date.now() });
+            setLastEvent({ text: 'Sweep completed — session closed', at: Date.now() });
           } else if (r.retriable !== true) {
             // The wait turned into a problem retrying can't fix (e.g. the sweep now needs
             // a wallet-approved gas top-up). Hand control back instead of looping on it.
             setStopPending(false);
             appendLocalNote(
-              `**Autopilot** - the armed sweep stopped: ${r.reason ?? 'unknown error'}. Press "Stop & sweep back" to finish. ⚠️`,
+              `**Autopilot** — the armed sweep stopped: ${r.reason ?? 'unknown error'}. Press "Stop & sweep back" to finish. ⚠️`,
             );
             setLastEvent({ text: 'Sweep needs another press of Stop', at: Date.now() });
           }
@@ -583,8 +583,8 @@ export default function AgentPage() {
       rangeSeen.current = d.inRange;
       appendLocalNote(
         d.inRange
-          ? `**Autopilot** - the price is back INSIDE your liquidity range (${d.label}). The position is earning fees again. ✅`
-          : `**Autopilot** - heads-up: the price moved OUTSIDE your liquidity range (${d.label}). ⚠️ While it stays outside, the LP earns no fees, so epoch entries cannot produce a fee share. It re-activates by itself if the price comes back - or press Stop & Sweep Back and start a fresh session to re-center the range.`,
+          ? `**Autopilot** — the price is back INSIDE your liquidity range (${d.label}). The position is earning fees again. ✅`
+          : `**Autopilot** — heads-up: the price moved OUTSIDE your liquidity range (${d.label}). ⚠️ While it stays outside, the LP earns no fees, so epoch entries cannot produce a fee share. It re-activates by itself if the price comes back — or press Stop & Sweep Back and start a fresh session to re-center the range.`,
       );
       setLastEvent({ text: d.inRange ? 'Price back inside the LP range' : 'Price left the LP range', at: Date.now() });
     }
@@ -599,23 +599,23 @@ export default function AgentPage() {
         void s.claimMany(ids).then(({ claimed, failed, failReason }) => {
           appendLocalNote(
             failed === 0
-              ? `**Autopilot** - claimed ${claimed} settled fee share${claimed > 1 ? 's' : ''} automatically. 💰`
-              : `**Autopilot** - claimed ${claimed}, ${failed} failed (still claimable - they retry at Stop)${failReason !== undefined ? `: ${failReason}` : ''}. ⏳`,
+              ? `**Autopilot** — claimed ${claimed} settled fee share${claimed > 1 ? 's' : ''} automatically. 💰`
+              : `**Autopilot** — claimed ${claimed}, ${failed} failed (still claimable — they retry at Stop)${failReason !== undefined ? `: ${failReason}` : ''}. ⏳`,
           );
           setLastEvent({ text: failed === 0 ? `Claimed ${claimed} fee share${claimed > 1 ? 's' : ''}` : `Claimed ${claimed}, ${failed} pending retry`, at: Date.now() });
         });
         return;
       }
       appendLocalNote(
-        `**Autopilot** - ${ids.length} settled fee share${ids.length > 1 ? 's are' : ' is'} ready to claim (position #${ids.join(', #')}).`,
+        `**Autopilot** — ${ids.length} settled fee share${ids.length > 1 ? 's are' : ' is'} ready to claim (position #${ids.join(', #')}).`,
       );
-      setAutoAction((prev) => prev ?? { type: 'claim', tokenIds: ids, marketId: market.id, note: `You have ${ids.length} settled fee share${ids.length > 1 ? 's' : ''} - claim right here.` });
+      setAutoAction((prev) => prev ?? { type: 'claim', tokenIds: ids, marketId: market.id, note: `You have ${ids.length} settled fee share${ids.length > 1 ? 's' : ''} — claim right here.` });
     },
     [appendLocalNote, market.id],
   );
   const onDiagnostic = useCallback(
     (message: string) => {
-      appendLocalNote(`**Autopilot** - a check failed during this epoch (the loop keeps retrying): ${message} ⏳`);
+      appendLocalNote(`**Autopilot** — a check failed during this epoch (the loop keeps retrying): ${message} ⏳`);
     },
     [appendLocalNote],
   );
@@ -623,15 +623,15 @@ export default function AgentPage() {
     (o: { epochId: string; side: 'UP' | 'DOWN' | 'RANGE'; won: boolean }) => {
       appendLocalNote(
         o.won
-          ? `**Autopilot** - Epoch ${o.epochId}: ${o.side} qualified at settlement - collecting the fee share ✅🎉`
-          : `**Autopilot** - Epoch ${o.epochId}: ${o.side} did not qualify - the settlement price ended outside its zone, so that epoch's fees are forfeited ❌`,
+          ? `**Autopilot** — Epoch ${o.epochId}: ${o.side} qualified at settlement — collecting the fee share ✅🎉`
+          : `**Autopilot** — Epoch ${o.epochId}: ${o.side} did not qualify — the settlement price ended outside its zone, so that epoch's fees are forfeited ❌`,
       );
       setLastEvent({ text: o.won ? `Epoch ${o.epochId} qualified (${o.side}) ✅` : `Epoch ${o.epochId} did not qualify (${o.side}) ❌`, at: Date.now() });
     },
     [appendLocalNote],
   );
   // Hold a Web Lock while the agent works: Chromium exempts lock-holding pages from
-  // intensive background-tab throttling - without it, overnight background sessions
+  // intensive background-tab throttling — without it, overnight background sessions
   // stretched every read to ~60s and missed every entry window.
   useKeepAwake(session.active || autopilotOn);
   const pilot = useAutopilot({
@@ -650,7 +650,7 @@ export default function AgentPage() {
 
   // No-entry HEARTBEAT: a running unattended session that keeps skipping epochs used to be
   // SILENT for hours (each skip either repeated a deduped reason or never reached the feed
-  // at all - sub-floor odds just re-evaluate). Every 10 minutes without a feed note, say
+  // at all — sub-floor odds just re-evaluate). Every 10 minutes without a feed note, say
   // what the autopilot is actually seeing, in its own words (the live status line), so
   // "why isn't it entering?" always has an answer in the feed.
   const pilotRef = useRef(pilot);
@@ -662,7 +662,7 @@ export default function AgentPage() {
       const p = pilotRef.current;
       if (p.state === 'off' || p.detail === '') return;
       lastAutoNoteAt.current = Date.now();
-      appendLocalNote(`**Autopilot** - still watching, no entry in the last 10 minutes. Right now: ${p.detail}`);
+      appendLocalNote(`**Autopilot** — still watching, no entry in the last 10 minutes. Right now: ${p.detail}`);
     }, 60_000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -679,14 +679,14 @@ export default function AgentPage() {
       market: market as Market,
       tokens: { base: base?.address ?? '', quote: quote.address, quoteDecimals: quote.decimals },
       addresses: { npm: ENV.NPM_ADDRESS, router: ENV.SWAP_ROUTER_ADDRESS, pyth: ENV.PYTH_ADDRESS },
-      agentWalletAddress: '<your Circle Agent Wallet address - `circle wallet list`>',
+      agentWalletAddress: '<your Circle Agent Wallet address — `circle wallet list`>',
     });
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2_500);
     } catch {
-      // clipboard blocked - the config is also in the docs
+      // clipboard blocked — the config is also in the docs
     }
   };
 
@@ -740,7 +740,7 @@ export default function AgentPage() {
         const a = l.args as { epochId?: bigint; tokenId?: bigint; side?: number };
         if (a.epochId === undefined || a.tokenId === undefined) continue;
         const won = verdicts.get(`${a.epochId}-${a.tokenId}`);
-        if (won === undefined) continue; // not settled yet - the record lists verdicts only
+        if (won === undefined) continue; // not settled yet — the record lists verdicts only
         mine.push({ epochId: a.epochId.toString(), side: SIDES[Number(a.side ?? 0)] ?? '?', won });
       }
       mine.reverse(); // logs arrive oldest-first; the record reads newest-first
@@ -759,7 +759,7 @@ export default function AgentPage() {
     });
   };
 
-  // Keep the newest message in view while streaming - but only when the user is already
+  // Keep the newest message in view while streaming — but only when the user is already
   // near the bottom, so scrolling up to read history is never yanked away.
   const nearBottom = useRef(true);
   const onThreadScroll = () => {
@@ -777,7 +777,7 @@ export default function AgentPage() {
     setDraft('');
   };
 
-  const modelLabel = model ?? '-';
+  const modelLabel = model ?? '—';
 
   return (
     <div data-testid="agent-page" className="relative mx-auto max-w-none overflow-x-clip px-5 py-7 sm:px-8 lg:px-12">
@@ -817,7 +817,7 @@ export default function AgentPage() {
                 models={models}
                 value={model}
                 onChange={setModel}
-                priceLabel={billing?.enabled ? `$${(Number(billing.priceUsdc6 ?? '10000') / 1e6).toFixed(2)} per message` : 'nothing - this deployment is free'}
+                priceLabel={billing?.enabled ? `$${(Number(billing.priceUsdc6 ?? '10000') / 1e6).toFixed(2)} per message` : 'nothing — this deployment is free'}
               />
             ) : (
               <span data-testid="agent-model" className="rounded-lg border border-line bg-surface-muted px-3 py-1.5 font-mono text-[12.5px] font-semibold text-ink">
@@ -865,7 +865,7 @@ export default function AgentPage() {
                 <BrandMark className="h-7 w-7 opacity-40 grayscale" />
                 <p className="mt-3 max-w-sm text-[14px] leading-relaxed text-ink-muted">
                   The copilot service is not configured on this deployment yet. It comes online the moment the
-                  operator adds the model API key - everything else is ready.
+                  operator adds the model API key — everything else is ready.
                 </p>
               </div>
             ) : messages.length === 0 && !autoAction ? (
@@ -875,7 +875,7 @@ export default function AgentPage() {
                 </span>
                 <h2 className="mt-5 font-display text-2xl font-semibold tracking-tight text-ink">Ask. Understand. Act.</h2>
                 <p className="mt-2 max-w-md text-[14.5px] leading-relaxed text-ink-muted">
-                  I read the live chain, the oracle, and your positions before answering - and when you ask me
+                  I read the live chain, the oracle, and your positions before answering — and when you ask me
                   to act, your wallet confirms every transaction.
                 </p>
               </div>
@@ -893,7 +893,7 @@ export default function AgentPage() {
                     );
                   }
                   if (m.role === 'assistant' && m.content.startsWith('**Autopilot**')) {
-                    const body = m.content.replace(/^\*\*Autopilot\*\*\s*-?\s*/, '');
+                    const body = m.content.replace(/^\*\*Autopilot\*\*\s*—?\s*/, '');
                     return (
                       <div key={i} className="relative flex items-start gap-3.5 border-b border-line/50 py-3">
                         <span className="w-[58px] shrink-0 pt-px font-mono text-[11px] text-ink-faint">{fmtClock(m.at)}</span>
@@ -903,7 +903,7 @@ export default function AgentPage() {
                         <p
                           className={cn(
                             'text-[13px] leading-relaxed',
-                            // Emoji markers double as the feed's tone map - every lifecycle
+                            // Emoji markers double as the feed's tone map — every lifecycle
                             // event gets its own colour so the eye can sort the stream.
                             body.includes('🏆') || body.includes('✅')
                               ? 'font-medium text-side-up'
@@ -1069,7 +1069,7 @@ export default function AgentPage() {
                         <p className="px-2 py-3 text-[12.5px] text-ink-muted">Reading your record from the arena…</p>
                       ) : results.length === 0 ? (
                         <p className="px-2 py-3 text-[12.5px] text-ink-muted">
-                          No settled entries yet{address ? '' : ' - connect a wallet first'}. Results appear here as epochs settle.
+                          No settled entries yet{address ? '' : ' — connect a wallet first'}. Results appear here as epochs settle.
                         </p>
                       ) : (
                         <>
@@ -1099,7 +1099,7 @@ export default function AgentPage() {
                       )
                     ) : history.length === 0 ? (
                       <p className="px-2 py-3 text-[12.5px] text-ink-muted">
-                        Nothing archived yet - clearing a conversation saves it here.
+                        Nothing archived yet — clearing a conversation saves it here.
                       </p>
                     ) : (
                       <ul className="max-h-[340px] overflow-y-auto pr-1">
@@ -1142,7 +1142,7 @@ export default function AgentPage() {
                     ? 'Copilot offline'
                     : !address
                       ? 'Connect your wallet to chat with the agent'
-                      : 'Ask about markets, odds, your positions - or ask me to act…'
+                      : 'Ask about markets, odds, your positions — or ask me to act…'
                 }
                 disabled={status === 'offline' || !address}
                 className="max-h-32 min-h-[52px] flex-1 resize-none rounded-xl border border-line bg-surface-muted/30 px-4 py-3.5 text-[14.5px] text-ink outline-none placeholder:text-ink-faint focus:border-brand/50 disabled:opacity-60"
@@ -1195,11 +1195,11 @@ export default function AgentPage() {
                       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
                         <span className="flex items-center gap-2.5 whitespace-nowrap">
                           <span className={cn('h-3 w-3 rounded-full', TONE_DOT[meta.tone])} aria-hidden="true" />
-                          <span className="font-display text-[24px] font-bold tracking-tight text-ink">{meta.title.replace(/^Running - .*$/, 'Running')}</span>
+                          <span className="font-display text-[24px] font-bold tracking-tight text-ink">{meta.title.replace(/^Running — .*$/, 'Running')}</span>
                         </span>
                         <span className="min-w-0 text-[12.5px] leading-snug text-ink-muted [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">
                           {effState === 'paused'
-                            ? 'Watching is paused - the session still holds its budget.'
+                            ? 'Watching is paused — the session still holds its budget.'
                             : pilot.detail}
                         </span>
                       </div>
@@ -1215,7 +1215,7 @@ export default function AgentPage() {
               <div className="border-b border-line py-3">
                 <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">Epoch</dt>
                 <dd className="mt-1.5 text-[14px] font-semibold text-ink">
-                  {pilot.epochId === null ? '-' : `#${pilot.epochId} · ${pilot.phaseName ?? ''}`}
+                  {pilot.epochId === null ? '—' : `#${pilot.epochId} · ${pilot.phaseName ?? ''}`}
                 </dd>
               </div>
               {(() => {
@@ -1249,7 +1249,7 @@ export default function AgentPage() {
               <div className="py-3">
                 <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">Live odds</dt>
                 <dd className="mt-1.5 text-[14px] font-semibold text-ink">
-                  {pilot.confidence === null ? '-' : `${(pilot.confidence * 100).toFixed(2)}%`}
+                  {pilot.confidence === null ? '—' : `${(pilot.confidence * 100).toFixed(2)}%`}
                 </dd>
                 <dt className="mt-2 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">In epoch</dt>
                 <dd className="mt-1 text-[12px]">
@@ -1263,7 +1263,7 @@ export default function AgentPage() {
                       {lastEvent.txHash.slice(0, 6)}…{lastEvent.txHash.slice(-4)} ↗
                     </a>
                   ) : (
-                    <span className="font-mono text-ink-faint">-</span>
+                    <span className="font-mono text-ink-faint">—</span>
                   )}
                 </dd>
               </div>
@@ -1273,7 +1273,7 @@ export default function AgentPage() {
                   if (!session.active) {
                     return <dd className="mt-1.5 text-[14px] font-semibold text-ink">no session</dd>;
                   }
-                  // Cash + what the LP position holds - cash alone read as "$2 left" the
+                  // Cash + what the LP position holds — cash alone read as "$2 left" the
                   // moment a $100 session minted its LP.
                   const sym = (market.quoteSymbol ?? 'USDC') === 'USDC' ? '$' : `${market.quoteSymbol} `;
                   const cash = Number(formatUnits(session.info?.quoteBal ?? 0n, quoteToken(market.quoteSymbol).decimals));
@@ -1292,7 +1292,7 @@ export default function AgentPage() {
               <div className="py-3">
                 <dt className="font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">Latest activity</dt>
                 <dd className="mt-1.5 truncate text-[13px] font-medium text-ink" title={lastEvent?.text}>
-                  {lastEvent === null ? (pilot.detail === '' ? '-' : 'Nothing yet') : lastEvent.text}
+                  {lastEvent === null ? (pilot.detail === '' ? '—' : 'Nothing yet') : lastEvent.text}
                 </dd>
               </div>
             </dl>
@@ -1312,8 +1312,8 @@ export default function AgentPage() {
                       toggleAutopilot();
                       appendLocalNote(
                         autopilotOn
-                          ? '**Autopilot** - paused. No new epochs will be entered; the session keeps its funds and an already-staked epoch settles normally. Press Resume to continue, or Stop & Sweep Back to bring everything home.'
-                          : '**Autopilot** - resumed. Watching epochs under your mandate again.',
+                          ? '**Autopilot** — paused. No new epochs will be entered; the session keeps its funds and an already-staked epoch settles normally. Press Resume to continue, or Stop & Sweep Back to bring everything home.'
+                          : '**Autopilot** — resumed. Watching epochs under your mandate again.',
                       );
                     }}
                     disabled={stopPending}
@@ -1337,7 +1337,7 @@ export default function AgentPage() {
                       const k = session.exportKey();
                       if (k !== null) {
                         void navigator.clipboard.writeText(k).then(() => {
-                          appendLocalNote('**Autopilot** - session key copied to your clipboard. Store it somewhere safe: it is the only way to recover the session\'s funds if this browser\'s storage is cleared.');
+                          appendLocalNote('**Autopilot** — session key copied to your clipboard. Store it somewhere safe: it is the only way to recover the session\'s funds if this browser\'s storage is cleared.');
                           setLastEvent({ text: 'Session key backed up to clipboard', at: Date.now() });
                         });
                       }
@@ -1363,7 +1363,7 @@ export default function AgentPage() {
                     onClick={toggleAutopilot}
                     className="w-full rounded-xl border border-line px-4 py-2.5 text-[13px] font-semibold text-ink-soft transition-colors hover:border-brand/50 hover:text-ink"
                   >
-                    {autopilotOn ? 'Pause watch-only mode' : 'Watch & propose only - you confirm each entry'}
+                    {autopilotOn ? 'Pause watch-only mode' : 'Watch & propose only — you confirm each entry'}
                   </button>
                   <p className="text-center font-mono text-[10.5px] leading-relaxed text-ink-faint">
                     {!address ? 'Connect a wallet to start.' : 'Unattended funds a dedicated signer once (two approvals), then acts with zero prompts.'}
@@ -1378,7 +1378,7 @@ export default function AgentPage() {
                 <span className="font-bold text-ink">
                   {parkedSessions.map((id) => MARKETS.find((m) => m.id === id)?.label ?? id).join(' · ')}
                 </span>{' '}
-                - its funds are parked safely under its own signer. Switch markets (top right) to manage it; entries run
+                — its funds are parked safely under its own signer. Switch markets (top right) to manage it; entries run
                 for the market you are viewing.
               </p>
             )}
@@ -1462,7 +1462,7 @@ export default function AgentPage() {
                   <span className="font-mono text-[11.5px] uppercase tracking-[0.14em] text-ink-faint">Budget cap per entry</span>
                   {/* Full-width, spinner-free amount field: type="text" + numeric keyboard kills
                       the fiddly stepper arrows, and the DRAFT state lets the user clear/retype
-                      freely - the mandate only commits values in range, and blur snaps the
+                      freely — the mandate only commits values in range, and blur snaps the
                       display back to the last committed number. */}
                   <span className="flex h-11 items-center gap-2 rounded-xl border border-line bg-surface-muted px-3.5 transition-colors focus-within:border-brand/60">
                     <span className="font-mono text-[16px] font-semibold text-ink-muted">$</span>
@@ -1480,13 +1480,13 @@ export default function AgentPage() {
                       }}
                       onBlur={() => setBudgetDraft(null)}
                       className="w-full bg-transparent font-mono text-[16px] font-semibold text-ink outline-none placeholder:text-ink-faint"
-                      placeholder="1 - 1000"
+                      placeholder="1 – 1000"
                       aria-label="Budget cap per entry in USDC"
                     />
                     <span className="shrink-0 font-mono text-[10.5px] uppercase tracking-wide text-ink-faint">max 1000</span>
                   </span>
                   <span className="font-mono text-[10.5px] leading-relaxed normal-case tracking-normal text-ink-faint">
-                    This is the {market.quoteSymbol ?? 'USDC'} half of the LP pair - starting an unattended session also sends a matching
+                    This is the {market.quoteSymbol ?? 'USDC'} half of the LP pair — starting an unattended session also sends a matching
                     value of {market.baseSymbol} from your wallet (a pool position needs both halves)
                     {(market.quoteSymbol ?? 'USDC') === 'USDC' ? '' : ', plus ~$1.5 USDC for gas'}.
                   </span>
@@ -1495,7 +1495,7 @@ export default function AgentPage() {
                   <div>
                     <div className="font-mono text-[11.5px] uppercase tracking-[0.14em] text-ink-faint">Auto-enter / unattended</div>
                     <div className="mt-1.5 font-mono text-[11px] leading-relaxed text-ink-faint">
-                      {session.active ? 'Session signer · zero prompts' : 'Skips the card - wallet still signs'}
+                      {session.active ? 'Session signer · zero prompts' : 'Skips the card — wallet still signs'}
                     </div>
                   </div>
                   <button
@@ -1556,7 +1556,7 @@ export default function AgentPage() {
             <h2 className="mt-1.5 font-display text-[27px] font-bold tracking-tight text-ink">Run your own agent, around the clock</h2>
             <p className="mt-2 max-w-2xl text-[12.5px] leading-relaxed text-ink-soft">
               The autopilot above only works while this page is open. To enter epochs around the clock, run the
-              same agent yourself - on your computer or any server. It is the exact program that powers Limen&apos;s
+              same agent yourself — on your computer or any server. It is the exact program that powers Limen&apos;s
               own agent, and it obeys the mandate you set above as hard rules. Never a view you disallowed, never
               below your odds floor, never more than <span className="font-semibold text-ink">${mandate.maxStakeUsdc}</span> per
               entry, and it shuts itself off when the mandate expires.

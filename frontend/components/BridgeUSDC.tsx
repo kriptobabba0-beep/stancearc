@@ -1,6 +1,6 @@
 'use client';
 
-// components/BridgeUSDC.tsx - "Bridge USDC to Arc" panel.
+// components/BridgeUSDC.tsx — "Bridge USDC to Arc" panel.
 // CCTP V2 onboarding: source testnet (Base / Ethereum Sepolia) -> Arc, via burn -> Iris attestation -> mint.
 //   Step 1  Approve & Burn on {source}: switchChain -> approve(USDC -> source TokenMessengerV2) ->
 //           depositForBurn(destinationDomain=26, mintRecipient=bytes32(you)); capture burn tx + MessageSent message.
@@ -159,7 +159,7 @@ export function BridgeUSDC() {
         maxFee,
         minFinalityThreshold: FINALITY_FAST,
       });
-      // Circle CCTP V2 burn - call TokenMessengerV2.depositForBurn (0x8FE6B999…2542DAA, deterministic across
+      // Circle CCTP V2 burn — call TokenMessengerV2.depositForBurn (0x8FE6B999…2542DAA, deterministic across
       // testnets) to burn USDC on the source chain; destinationDomain=26 routes the cross-chain mint to Arc.
       const burn = await writeContractAsync({
         chainId: source.chainId,
@@ -177,7 +177,7 @@ export function BridgeUSDC() {
       const msg = messageFromReceipt(receipt.logs);
       setMessage(msg);
       setBurnState('done');
-      // Auto-advance into attestation polling (pass the fresh hash - state may not be flushed yet).
+      // Auto-advance into attestation polling (pass the fresh hash — state may not be flushed yet).
       void runAttest(burn);
     } catch (e) {
       setError(friendlyError(e));

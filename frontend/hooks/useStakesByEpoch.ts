@@ -1,4 +1,4 @@
-// hooks/useStakesByEpoch.ts - polled getStakesByEpoch(id) -> StakeView[]; per-side bars source.
+// hooks/useStakesByEpoch.ts — polled getStakesByEpoch(id) -> StakeView[]; per-side bars source.
 //
 // VERSION-AWARE READ SURFACE: v2 moved getStakesByEpoch OFF the arena onto the FeeArenaV2Lens (the v2
 // arena has no getStakesByEpoch). useReadSurface() resolves to the Lens for v2 and the arena for v1;

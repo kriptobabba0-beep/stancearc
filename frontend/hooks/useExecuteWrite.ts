@@ -1,11 +1,11 @@
 'use client';
 
-// hooks/useExecuteWrite.ts - the dual-wallet write abstraction.
+// hooks/useExecuteWrite.ts — the dual-wallet write abstraction.
 //
-// useActiveWallet() - the connected address + which kind of wallet (injected MetaMask vs embedded Circle).
-// useExecuteWrite() - write({address,abi,functionName,args,value?}) that routes to wagmi (MetaMask) or
+// useActiveWallet() — the connected address + which kind of wallet (injected MetaMask vs embedded Circle).
+// useExecuteWrite() — write({address,abi,functionName,args,value?}) that routes to wagmi (MetaMask) or
 //   Circle's contractExecution (embedded; we viem-encode the call to tuple-safe callData). One call site,
-//   either wallet - so the same action (approve, swap, claim, …) works for both.
+//   either wallet — so the same action (approve, swap, claim, …) works for both.
 
 import { useCallback } from 'react';
 import { useAccount } from 'wagmi';
@@ -53,7 +53,7 @@ export function useExecuteWrite(): { write: (w: WriteArgs) => Promise<WriteResul
       if (mode === 'embedded') {
         // Embedded V0 supports value-less calls (approve/swap/claim/transfer). Native msg.value via
         // Circle's `amount` field has unverified unit semantics on Arc (native 18-dp vs the 6-dp facade),
-        // so we refuse it here rather than risk sending a wrong amount - wire it explicitly + verified
+        // so we refuse it here rather than risk sending a wrong amount — wire it explicitly + verified
         // when an arena call (e.g. a payable Pyth-fee stake) actually needs it.
         if (w.value != null && w.value !== 0n) {
           throw new Error('Sending native value is not yet supported for the embedded wallet.');
@@ -63,7 +63,7 @@ export function useExecuteWrite(): { write: (w: WriteArgs) => Promise<WriteResul
         await circle.executeContract({ contractAddress: w.address, callData });
         return { kind: 'embedded' };
       }
-      // Injected (MetaMask) - the existing wagmi path, with the Arc gas floor.
+      // Injected (MetaMask) — the existing wagmi path, with the Arc gas floor.
       const hash = await writeContractAsync({
         chainId: arcTestnet.id,
         address: w.address,

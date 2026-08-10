@@ -1,6 +1,6 @@
 'use client';
 
-// components/pool/PoolBrowser.tsx - the tabbed Pool browser (reference: Synthra's "Pools / My Positions"
+// components/pool/PoolBrowser.tsx — the tabbed Pool browser (reference: Synthra's "Pools / My Positions"
 // tabs). A tab bar on the left + a shared search + Create toolbar on the right; the panel below swaps
 // between the pool table (PoolTable) and the wallet's positions (MyPositions). The search query and the
 // Create modal are shared across both tabs. Proper ARIA tablist with roving tabindex + arrow-key nav.
@@ -39,8 +39,8 @@ export function PoolBrowser() {
     tabRefs.current[nextIdx]?.focus();
   };
 
-  // The shared search filters the ACTIVE panel - pools on the Pools tab, positions on the My Positions
-  // tab - so the label must follow the tab (the no-match copy already does).
+  // The shared search filters the ACTIVE panel — pools on the Pools tab, positions on the My Positions
+  // tab — so the label must follow the tab (the no-match copy already does).
   const searchLabel = tab === 'pools' ? 'Search pools' : 'Search positions';
 
   return (

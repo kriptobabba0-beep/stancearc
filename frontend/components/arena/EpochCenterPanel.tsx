@@ -1,6 +1,6 @@
 'use client';
 
-// components/arena/EpochCenterPanel.tsx - the Arena CENTER column (the hero). Phase pill, a large split
+// components/arena/EpochCenterPanel.tsx — the Arena CENTER column (the hero). Phase pill, a large split
 // countdown, the live pot at stake, and the oracle price with its change-since-epoch-start + a sparkline
 // of recent oracle reads. All REAL: epoch/phase/countdown from EpochView, pot from potUsd6, price from
 // the Pyth-backed oracle. The "+2.1%" is the change vs the epoch's start price (honest, labelled), and
@@ -30,15 +30,15 @@ const PHASE_META: Record<PhaseView, { text: string; live: boolean }> = {
 
 /**
  * The next phase boundary the countdown targets, plus the honest "stall" label shown when that
- * boundary has PASSED but the phase hasn't advanced yet (the keeper crank is pending - e.g. an Arc
+ * boundary has PASSED but the phase hasn't advanced yet (the keeper crank is pending — e.g. an Arc
  * base-fee spike). A frozen 00:00:00 reads like a bug; "Settling round…" tells the truth.
  *
  * Idle deliberately has NO countdown (target: null): the entry clock starts ticking on-chain at
- * createEpoch, a few seconds BEFORE openEntry flips the phase - so a countdown under "Starting
+ * createEpoch, a few seconds BEFORE openEntry flips the phase — so a countdown under "Starting
  * soon" reads as "the epoch starts in 3:00" when it is really the entry window that is about to
  * be open. Idle lasts only a few seconds; in the v3 lifecycle an Idle epoch N exists ONLY because
  * epoch N-1 just settled (createEpoch requires it), so the honest render names that outcome:
- * "Epoch N-1 settled - opening entry…".
+ * "Epoch N-1 settled — opening entry…".
  */
 function boundaryFor(epoch: {
   epochId: bigint;
@@ -55,7 +55,7 @@ function boundaryFor(epoch: {
     case PhaseView.Idle:
       return {
         target: null,
-        stall: epoch.epochId > 1n ? `Epoch #${(epoch.epochId - 1n).toString()} settled - opening entry…` : 'Opening entry…',
+        stall: epoch.epochId > 1n ? `Epoch #${(epoch.epochId - 1n).toString()} settled — opening entry…` : 'Opening entry…',
       };
     default:
       return null;
@@ -67,8 +67,8 @@ function pad2(n: number): string {
 }
 
 /** The big HRS:MINS:SECS countdown (chain-time based), each pair stacked over a small label.
- *  When the boundary has passed (phase advance pending on the keeper) - or the phase has no
- *  countdown at all (target: null, e.g. Idle) - shows `stallLabel` instead of a dead 00:00:00. */
+ *  When the boundary has passed (phase advance pending on the keeper) — or the phase has no
+ *  countdown at all (target: null, e.g. Idle) — shows `stallLabel` instead of a dead 00:00:00. */
 function BigCountdown({ target, stallLabel }: { target: bigint | null; stallLabel: string }) {
   const { now } = useChainTime();
   const remaining = target === null ? 0 : Math.max(0, Number(target) - Number(now));
@@ -119,7 +119,7 @@ export function EpochCenterPanel() {
 
   // SETTLED HANDOFF NOTICE. The settlement pipeline rolls Settled -> CREATE -> OPEN in seconds,
   // so polling often jumps straight from the old epoch to the new one's EntryOpen without ever
-  // rendering Idle - and the "settled" outcome would flash past unseen. When the epochId advances,
+  // rendering Idle — and the "settled" outcome would flash past unseen. When the epochId advances,
   // remember the just-settled epoch for a few seconds and confirm it under the new countdown.
   const prevEpochIdRef = useRef<bigint | undefined>(undefined);
   const [settledNotice, setSettledNotice] = useState<{ epochId: bigint; until: number } | undefined>(undefined);
@@ -150,7 +150,7 @@ export function EpochCenterPanel() {
 
   const oraclePrice18 = oracle?.price18 ?? 0n;
   // FEES SETTLED: cumulative TOTAL trading fees the arena has collected across every settled epoch
-  // (PositionProcessed.feeBase/feeUSDC - winner-KEPT fees included, not just the small losers' forfeited
+  // (PositionProcessed.feeBase/feeUSDC — winner-KEPT fees included, not just the small losers' forfeited
   // pot). The honest "real fee activity" figure: it grows in visible cents as swaps generate fees. The
   // live epoch's fees aren't collected until settlement, so this is a settled-to-date total.
   const feesSettledUsd6 = potUsd6({
@@ -198,7 +198,7 @@ export function EpochCenterPanel() {
         )}
       </div>
 
-      {/* Settled handoff - confirms the previous epoch's settlement for a few seconds after the
+      {/* Settled handoff — confirms the previous epoch's settlement for a few seconds after the
           new round opens (the on-chain Settled/Idle phases roll over too fast to render). */}
       {epoch.phase === PhaseView.EntryOpen && settledNotice !== undefined && Date.now() < settledNotice.until && (
         <div
@@ -206,7 +206,7 @@ export function EpochCenterPanel() {
           className="mt-3 inline-flex items-center gap-1.5 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-ink-muted"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-side-up" aria-hidden="true" />
-          Epoch #{settledNotice.epochId.toString()} settled - new round open
+          Epoch #{settledNotice.epochId.toString()} settled — new round open
         </div>
       )}
 
@@ -220,7 +220,7 @@ export function EpochCenterPanel() {
         <span className="h-px flex-1 bg-line" />
       </div>
 
-      {/* Fees settled - cumulative TOTAL trading fees collected across this market's epochs (winner-kept
+      {/* Fees settled — cumulative TOTAL trading fees collected across this market's epochs (winner-kept
           included), not just the live pot (which is 0 until settlement). */}
       <div className="mt-6">
         <div className="font-mono text-[11px] font-medium uppercase tracking-[0.16em] text-ink-muted">Fees settled</div>
@@ -235,7 +235,7 @@ export function EpochCenterPanel() {
       {/* Grow spacer */}
       <div aria-hidden="true" className="min-h-6 w-full flex-1" />
 
-      {/* Crimson divider - DASHED red lines with the small glowing brand mark (reference ornament). */}
+      {/* Crimson divider — DASHED red lines with the small glowing brand mark (reference ornament). */}
       <div className="flex w-full items-center gap-2.5" aria-hidden="true">
         <span className="h-0 flex-1 border-t border-dashed border-brand/45" />
         <Logo className="h-3 w-3 text-brand drop-shadow-[0_0_4px_rgb(229_72_77/0.65)]" />
@@ -248,7 +248,7 @@ export function EpochCenterPanel() {
           Oracle price ({quoteLabel})
         </div>
         <div className="mt-1.5 font-mono text-4xl font-semibold tnum leading-none text-ink">
-          {oraclePrice18 > 0n ? formatUsdPrice18(oraclePrice18, quoteCcy) : '-'}
+          {oraclePrice18 > 0n ? formatUsdPrice18(oraclePrice18, quoteCcy) : '—'}
         </div>
         {change !== undefined && (
           <div

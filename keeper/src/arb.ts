@@ -1,10 +1,10 @@
-// arb.ts - the price-keeper ARBITRAGE bot. A SEPARATE process with a SEPARATE key from
+// arb.ts — the price-keeper ARBITRAGE bot. A SEPARATE process with a SEPARATE key from
 // the lifecycle keeper. Each poll it reads the market's Uniswap-V3 pool (slot0 +
-// liquidity), reads the live Pyth reference from Hermes (READ-ONLY - it never posts Pyth
+// liquidity), reads the live Pyth reference from Hermes (READ-ONLY — it never posts Pyth
 // updates on-chain), decides via the PURE decideArb() whether the pool has drifted far
 // enough from the reference to trade, and on SWAP executes a single exactInputSingle that
 // nudges the pool back toward the oracle. The AMM's real 0.3% fee on that swap accrues to
-// LPs / the pot - which is the whole point: REAL fees fund the arena.
+// LPs / the pot — which is the whole point: REAL fees fund the arena.
 //
 // Reuses the keeper skeleton:
 //   - viem fallback([http...]) transport over KEEPER_RPC_URLS (one RPC outage != stall).
@@ -15,7 +15,7 @@
 //     repeated failure OR a non-shrinking divergence.
 //
 // SAFETY: the swap's sqrtPriceLimitX96 is PINNED to the ref-target tick, so the AMM bounds
-// the trade - it can fill UP TO the oracle price and no further; it can never overshoot and
+// the trade — it can fill UP TO the oracle price and no further; it can never overshoot and
 // push the pool past the reference. amountOutMinimum is set at slippageBps so a sandwich /
 // adverse fill reverts instead of executing at a bad price.
 import {
@@ -83,7 +83,7 @@ export interface ArbTickLog {
   ref18?: string;
   divBps?: number;
   /**
-   * |divergence| (bps) measured AFTER a successful swap settles - the pool is re-read
+   * |divergence| (bps) measured AFTER a successful swap settles — the pool is re-read
    * post-receipt and compared against the SAME ref18 used to size the trade, so the
    * shrink-watchdog (in main()) judges whether OUR swap moved the pool, not whether the
    * Pyth ref drifted between ticks. Present only after a successful SWAP. (LOW fix:
@@ -111,7 +111,7 @@ export function divergenceBps(poolPrice18: bigint, ref18: bigint): number {
 /**
  * Resolve the arb's peg REFERENCE for a market. A single-feed market reads `feedId` directly
  * (base/USD). A CROSS-quoted market (quoteFeedId set, e.g. cirBTC/EURC) reads the cross rate
- * `feedId ÷ quoteFeedId` (BTC/USD ÷ EUR/USD = BTC/EUR) - the SAME math the on-chain
+ * `feedId ÷ quoteFeedId` (BTC/USD ÷ EUR/USD = BTC/EUR) — the SAME math the on-chain
  * CompositePythOracle uses, so the keeper's peg target agrees with what the arena settles on.
  * GATED on quoteFeedId: a market WITHOUT it takes the EXACT pre-existing single-feed path, so the
  * cirBTC/USDC arb is byte-for-byte unchanged. This is the ONLY market-type branch in the engine.
@@ -140,9 +140,9 @@ export interface WatchdogEval {
 }
 
 /**
- * LOW fix - PURE shrink-watchdog decision. The OLD watchdog compared the PRE-trade divBps
+ * LOW fix — PURE shrink-watchdog decision. The OLD watchdog compared the PRE-trade divBps
  * across ticks, so it false-positived whenever the live Pyth ref moved between ticks
- * (normal during volatility). This judges the POST-SWAP divergence instead - the pool is
+ * (normal during volatility). This judges the POST-SWAP divergence instead — the pool is
  * re-read AFTER the receipt and compared against the SAME ref used to size the trade
  * (rec.postSwapDivBps), isolating the effect of OUR swap.
  *
@@ -154,17 +154,17 @@ export interface WatchdogEval {
  *   - anything else (NONE/SKIP/ALERT, or a swap whose post-read failed) -> NOT a watchdog
  *       failure and the baseline is UNCHANGED (so the next comparison stays swap-to-swap).
  *
- * The first attributable swap (prevBaseline === null) can never non-shrink - there is
- * nothing to compare against - so it only SEEDS the baseline.
+ * The first attributable swap (prevBaseline === null) can never non-shrink — there is
+ * nothing to compare against — so it only SEEDS the baseline.
  */
 export function evaluateWatchdog(rec: ArbTickLog, prevBaseline: number | null): WatchdogEval {
   if (rec.error !== undefined) {
     return { fail: true, nextBaseline: prevBaseline, reason: 'error' };
   }
-  // TASK 3 - ONLY a price-convergence arb is judged by the shrink-watchdog. A rebalance or
+  // TASK 3 — ONLY a price-convergence arb is judged by the shrink-watchdog. A rebalance or
   // heartbeat swap is NOT trying to close a price gap (a heartbeat at ~0 divergence may even
   // nudge it slightly), so judging it for "shrink" would false-positive a WEDGE. Its success
-  // is judged by the receipt (a revert sets rec.error -> the FAIL path above) - not here.
+  // is judged by the receipt (a revert sets rec.error -> the FAIL path above) — not here.
   const isArbSwap = rec.kind === 'SWAP' && (rec.purpose === undefined || rec.purpose === 'arb');
   const attributable = isArbSwap && rec.postSwapDivBps !== undefined;
   if (!attributable) {
@@ -177,7 +177,7 @@ export function evaluateWatchdog(rec: ArbTickLog, prevBaseline: number | null): 
   return { fail: false, nextBaseline: postAbs, reason: 'shrinking' };
 }
 
-/** Build the viem clients + account for the arb config. Pure construction - no I/O. */
+/** Build the viem clients + account for the arb config. Pure construction — no I/O. */
 export function buildArbClients(cfg: ArbConfig, chainId: number) {
   const account = privateKeyToAccount(cfg.privateKey);
   const chain: Chain = defineChain({
@@ -236,7 +236,7 @@ async function readInventory(
   return { inventoryBase, inventoryUsdc };
 }
 
-/** Max uint256 - the allowance we set so the router is approved once, not per-swap. */
+/** Max uint256 — the allowance we set so the router is approved once, not per-swap. */
 const MAX_UINT256 = (1n << 256n) - 1n;
 /**
  * Approve the router for a token if its allowance is below this threshold. We use half of
@@ -261,11 +261,11 @@ export interface ApprovalResult {
 }
 
 /**
- * MEDIUM fix - router allowance preflight. Without a prior ERC20 approve, EVERY
+ * MEDIUM fix — router allowance preflight. Without a prior ERC20 approve, EVERY
  * exactInputSingle reverts with STF ("SafeTransferFrom failed") and the bot wedges
  * opaquely (the per-market breaker just keeps backing off with an inscrutable revert).
  * At startup we check allowance(owner, router) for BOTH the base AND the quote token
- * (a SELL_BASE spends base, a BUY_BASE spends quote - both must be approved) and, when
+ * (a SELL_BASE spends base, a BUY_BASE spends quote — both must be approved) and, when
  * short, send ONE max-uint256 approval per token, awaiting each receipt so the first real
  * swap can't race an unconfirmed approval. If `autoApprove` is false we DON'T send a tx;
  * the caller can fail fast with an actionable "approve the router" error instead.
@@ -327,13 +327,13 @@ export async function ensureRouterApprovals(
 }
 
 /**
- * FINDING 1 fix - the direction-correct sqrtPriceLimit for a swap.
+ * FINDING 1 fix — the direction-correct sqrtPriceLimit for a swap.
  *
  * The vendored Uniswap-V3 pool's `swap` enforces (the `SPL` require) that the limit be
  * STRICTLY past the CURRENT pool price in the swap direction:
  *   zeroForOne (tokenIn == token0)  -> limit < slot0.sqrtPriceX96
  *   !zeroForOne (tokenIn == token1) -> limit > slot0.sqrtPriceX96
- * A limit on the wrong side (or exactly equal - the pool==ref / in-band case) reverts SPL.
+ * A limit on the wrong side (or exactly equal — the pool==ref / in-band case) reverts SPL.
  *
  * `zeroForOne` is derived from the swap DIRECTION + the pool's token sort:
  *   SELL_BASE spends base  => zeroForOne = baseIsToken0      (base is the token going IN)
@@ -371,13 +371,13 @@ export function splOffsetLimit(
  * Those legs take their DIRECTION from inventory, not from the side of the ref, and they can fire
  * when the pool sits slightly OFF the oracle (in-band but not exactly at ref). A plain offset limit
  * is only bounded relative to the CURRENT pool sqrt, so a fixed-notional leg can walk the pool clean
- * PAST the oracle - the cirBTC/EURC overshoot: a rebalance SELL fired at +49bps and dragged the pool
+ * PAST the oracle — the cirBTC/EURC overshoot: a rebalance SELL fired at +49bps and dragged the pool
  * to ~-658bps. This clamps the offset so a leg can fill TOWARD the peg but never CROSS it:
  *   - start from the usual splOffsetLimit (strictly past current => SPL-valid), then
  *   - if the ref tick is on the same side the swap is heading (strictly past current in the trade
  *     direction), pull the limit back to whichever of {offset, ref} stops FIRST, so the fill halts
  *     at the peg at the latest;
- *   - if the ref is NOT past current (the leg heads AWAY from the ref - a wrong-side restock the
+ *   - if the ref is NOT past current (the leg heads AWAY from the ref — a wrong-side restock the
  *     executability guard should already skip), fall back to the plain offset so the limit stays
  *     strictly past current and the leg can still execute a tiny fill.
  * The result is ALWAYS strictly past current (never reverts SPL) AND never past the ref tick. PURE.
@@ -393,7 +393,7 @@ export function pegBoundedOffsetLimit(
   const zeroForOne = direction === 'SELL_BASE' ? baseIsToken0 : !baseIsToken0;
   if (zeroForOne) {
     // Limit must be strictly BELOW current (sqrt pushed DOWN). Stop at the HIGHER (nearer-current)
-    // of {offset, ref} so the fill can't sink past the peg - but only when ref is genuinely below
+    // of {offset, ref} so the fill can't sink past the peg — but only when ref is genuinely below
     // current (this trade's side). Both bounds are < current => the result stays SPL-valid.
     if (refLimit < currentSqrtPriceX96) return offset > refLimit ? offset : refLimit;
     return offset;
@@ -410,7 +410,7 @@ export function pegBoundedOffsetLimit(
  *   - amountIn: for SELL_BASE it's the base amount directly; for BUY_BASE we convert the
  *     base target into the USDC to spend at the ref price (amountInBase is a base notional).
  *   - sqrtPriceLimitX96: direction-correct + STRICTLY past the current pool price.
- *       * 'arb' (real divergence): pinned to the ref tick - which is past current BY
+ *       * 'arb' (real divergence): pinned to the ref tick — which is past current BY
  *         CONSTRUCTION (the arb only fires when |pool-ref| > band). We still VERIFY the ref
  *         limit lands strictly on the correct side of the supplied current sqrt and fall
  *         back to a bounded offset if a degenerate input ever put it on/over the line.
@@ -419,7 +419,7 @@ export function pegBoundedOffsetLimit(
  *         (the direction comes from INVENTORY, not the side of ref). So these pin to a small
  *         bounded offset strictly PAST the live current pool sqrt instead (FINDING 1 fix).
  *   - amountOutMinimum: the expected out at the ref price, haircut by slippageBps (unchanged
- *     slippage guard - a sandwich/adverse fill still reverts on amountOutMinimum).
+ *     slippage guard — a sandwich/adverse fill still reverts on amountOutMinimum).
  *
  * `currentSqrtPriceX96` is the live pool slot0 sqrt at decision time (read by the executor)
  * and `maxSlippageBps` bounds how far past current the rebalance/heartbeat limit may sit.
@@ -466,7 +466,7 @@ export function buildSwapArgs(
     // Legacy / pure-unit path: no live pool sqrt supplied -> pin to ref (arb-only callers).
     sqrtPriceLimitX96 = refLimit;
   } else if (purpose === 'rebalance' || purpose === 'heartbeat') {
-    // FINDING 1 - these fire inside (or near) the no-trade band (pool ~= ref): a plain ref pin would
+    // FINDING 1 — these fire inside (or near) the no-trade band (pool ~= ref): a plain ref pin would
     // be at/over the current price (revert SPL) OR on the wrong side, so we use a bounded offset
     // STRICTLY past the live current sqrt in the direction this swap actually trades. But that offset
     // alone is only bounded vs CURRENT, so a fixed-notional leg fired slightly off-ref could walk the
@@ -474,7 +474,7 @@ export function buildSwapArgs(
     // clamps it to the ref tick so a restock fills TOWARD the peg but never CROSSES it.
     sqrtPriceLimitX96 = pegBoundedOffsetLimit(currentSqrtPriceX96, refLimit, direction, baseIsToken0, offsetBps);
   } else {
-    // 'arb' - verify the ref pin lands STRICTLY on the correct (SPL-valid) side of current.
+    // 'arb' — verify the ref pin lands STRICTLY on the correct (SPL-valid) side of current.
     // zeroForOne wants limit < current; !zeroForOne wants limit > current. If a degenerate
     // input ever put the ref pin on/over the line, fall back to the bounded offset so the
     // swap can never revert SPL.
@@ -510,19 +510,19 @@ export function buildSwapArgs(
 }
 
 /**
- * TASK 4b - send the swap with BOUNDED gas-tip escalation (mirrors keeper.ts). Attempt 0
+ * TASK 4b — send the swap with BOUNDED gas-tip escalation (mirrors keeper.ts). Attempt 0
  * prices at the Arc floor (unchanged behavior). `buildArgs(gas)` returns the FULL
- * exactInputSingle write request for a given attempt - it's re-invoked per attempt so the
+ * exactInputSingle write request for a given attempt — it's re-invoked per attempt so the
  * swap's `deadline` is refreshed on each re-send (a stuck tx's old deadline may have lapsed).
  * On a receipt-wait TIMEOUT with attempts remaining, the SAME logical swap is re-sent at a
- * higher (capped) tip (viem replaces the still-pending nonce - a speed-up); exhausting the
+ * higher (capped) tip (viem replaces the still-pending nonce — a speed-up); exhausting the
  * attempts rethrows the timeout so runArbOnce's catch records the failure (unchanged path).
- * A mined-but-reverted swap is returned (NOT escalated) - bidding more can't un-revert it.
+ * A mined-but-reverted swap is returned (NOT escalated) — bidding more can't un-revert it.
  *
- * FINDING 2 - `onSent` mirrors keeper.ts's sendWriteWithEscalation: it's invoked with the
+ * FINDING 2 — `onSent` mirrors keeper.ts's sendWriteWithEscalation: it's invoked with the
  * broadcast hash IMMEDIATELY after each writeContract returns, so a receipt-wait TIMEOUT (the
  * helper rethrows after exhausting escalation) still surfaces which tx may be pending via
- * runArbOnce's rec.txHash - instead of leaving rec.txHash undefined on a timeout.
+ * runArbOnce's rec.txHash — instead of leaving rec.txHash undefined on a timeout.
  */
 async function sendSwapWithEscalation(
   client: PublicClient,
@@ -573,7 +573,7 @@ export async function runArbOnce(
   cfg: ArbConfig,
   baseIsToken0: boolean,
   /**
-   * TASK 3b - the injected heartbeat snapshot (the executor's ledger + clock). Omitted =>
+   * TASK 3b — the injected heartbeat snapshot (the executor's ledger + clock). Omitted =>
    * heartbeat mode is OFF for this tick (existing callers/tests are unaffected).
    */
   heartbeat?: HeartbeatState,
@@ -633,7 +633,7 @@ export async function runArbOnce(
       return rec;
     }
 
-    // FINDING 1 - thread the LIVE pool sqrt so buildSwapArgs computes a direction-correct
+    // FINDING 1 — thread the LIVE pool sqrt so buildSwapArgs computes a direction-correct
     // limit that is STRICTLY past the current pool price for the chosen swap (the rebalance/
     // heartbeat legs fire inside the no-trade band where the ref pin would equal/cross the
     // current price and revert SPL). The arb leg keeps pinning toward ref (verified past
@@ -677,7 +677,7 @@ export async function runArbOnce(
         ],
       } as Parameters<WalletClient['writeContract']>[0]),
       cfg,
-      // FINDING 2 - record the broadcast hash immediately so a receipt-wait TIMEOUT (the
+      // FINDING 2 — record the broadcast hash immediately so a receipt-wait TIMEOUT (the
       // helper rethrows after exhausting escalation) still surfaces which tx may be pending
       // via rec.txHash, mirroring keeper.ts's sendWriteWithEscalation onSent callback.
       (h) => {
@@ -689,19 +689,19 @@ export async function runArbOnce(
     if (receipt.status !== 'success') {
       rec.error = `swap reverted: ${decision.purpose ?? 'arb'} ${decision.direction}`;
     } else if (decision.purpose === undefined || decision.purpose === 'arb') {
-      // LOW fix - re-read the pool AFTER the swap settles and recompute the divergence
+      // LOW fix — re-read the pool AFTER the swap settles and recompute the divergence
       // against the SAME ref18 used to size this trade. The shrink-watchdog must judge
       // whether OUR swap actually moved the pool toward the ref; comparing the pre-trade
       // divBps across ticks would false-positive whenever the live Pyth ref drifted
       // between ticks (normal in volatility). Best-effort: a post-read failure leaves
       // postSwapDivBps undefined so the watchdog simply skips this tick rather than
       // firing a spurious WEDGE. ONLY the price-convergence arb is re-read for the
-      // watchdog - a rebalance/heartbeat swap is judged by its receipt alone (TASK 3).
+      // watchdog — a rebalance/heartbeat swap is judged by its receipt alone (TASK 3).
       try {
         const after = await readPool(client, m, baseIsToken0);
         rec.postSwapDivBps = divergenceBps(after.poolPrice18, ref.price18);
       } catch {
-        /* leave postSwapDivBps undefined - watchdog skips an unattributable tick */
+        /* leave postSwapDivBps undefined — watchdog skips an unattributable tick */
       }
     }
   } catch (err) {
@@ -717,7 +717,7 @@ export async function runArbOnce(
 }
 
 /**
- * FINDING 3/4 - PURE ledger-update step applied after each tick (extracted from main() so the
+ * FINDING 3/4 — PURE ledger-update step applied after each tick (extracted from main() so the
  * "stamp the rate-limit regardless of success" wiring is unit-testable). Given the prior
  * ledger + this tick's record:
  *   - a heartbeat/rebalance SWAP stamps its interval + per-day ATTEMPT counter REGARDLESS of
@@ -750,7 +750,7 @@ async function main(): Promise<void> {
   const cfg = loadArbConfig();
   const log = (o: Record<string, unknown>) => console.log(JSON.stringify({ ts: new Date().toISOString(), ...o }));
 
-  // Real alerting (dead-man's-switch) - shares the keeper's alert env vars. OFF unless a URL
+  // Real alerting (dead-man's-switch) — shares the keeper's alert env vars. OFF unless a URL
   // is set (log-only, unchanged). Non-blocking + crash-safe + deduped, like the keeper.
   const alerter = createAlerter(cfg.alert, { log });
 
@@ -794,11 +794,11 @@ async function main(): Promise<void> {
       reserveQuote: cfg.params.reserveQuote.toString(),
       maxRefAgeSec: cfg.params.maxRefAgeSec,
       slippageBps: cfg.params.slippageBps,
-      // TASK 3a - inventory rebalancing (floor 0 => OFF).
+      // TASK 3a — inventory rebalancing (floor 0 => OFF).
       rebalanceFloorBps: cfg.params.rebalanceFloorBps,
       rebalanceTargetBps: cfg.params.rebalanceTargetBps,
       rebalanceMaxBase: cfg.params.rebalanceMaxBase.toString(),
-      // TASK 3b - heartbeat VOLUME (distinct from the alert dead-man's-switch below).
+      // TASK 3b — heartbeat VOLUME (distinct from the alert dead-man's-switch below).
       heartbeatVolume: {
         enabled: cfg.params.heartbeatEnabled,
         intervalMs: cfg.params.heartbeatIntervalMs,
@@ -821,7 +821,7 @@ async function main(): Promise<void> {
   });
 
   // Router allowance + the gas gate are LAZY, inside the loop (the swapbot's proven pattern): a freshly
-  // deployed keeper with an UNFUNDED wallet must IDLE and start on its own the moment it's funded - NOT
+  // deployed keeper with an UNFUNDED wallet must IDLE and start on its own the moment it's funded — NOT
   // crash-loop on the approval (no gas => the approve tx can't even send). `approved` flips true once
   // both legs are approved; an already-approved wallet is a no-op (allowance check only), so a re-deploy
   // never re-approves. Minimum native to operate an approve + a swap; below it the loop idles.
@@ -836,13 +836,13 @@ async function main(): Promise<void> {
   let runtime: MarketRuntime = freshRuntime();
   let lastDivAbs: number | null = null;
 
-  // TASK 3b - the heartbeat-VOLUME budget ledger (distinct from the alert dead-man's-switch).
+  // TASK 3b — the heartbeat-VOLUME budget ledger (distinct from the alert dead-man's-switch).
   // Carries the day's spend + the last-fire timestamp across ticks; the day resets at UTC
   // midnight. OFF unless cfg.params.heartbeatEnabled, in which case a snapshot is injected
   // into decideArb each tick and the spend is recorded after a heartbeat swap settles.
   let hbLedger: HeartbeatLedger = freshHeartbeatLedger(Date.now());
 
-  // FLOW BUDGET ledger - the rolling-window cap on NET cirBTC sold (raw base). Persisted so a
+  // FLOW BUDGET ledger — the rolling-window cap on NET cirBTC sold (raw base). Persisted so a
   // restart can't reset the budget (the worst-case daily bleed stays a known constant). OFF unless
   // a positive budget + window are configured; when ON, a FlowState snapshot is injected each tick
   // and every SETTLED swap is recorded (+sold / −bought) and saved.
@@ -853,7 +853,7 @@ async function main(): Promise<void> {
   // completes; the /health endpoint reports DEGRADED (stalled) while it's stale.
   let lastTickTs: number | null = null;
 
-  // TASK 4a - restart-safe counters for the arb bot, mirroring the lifecycle keeper. SEED the
+  // TASK 4a — restart-safe counters for the arb bot, mirroring the lifecycle keeper. SEED the
   // cumulative counters from KEEPER_ARB_METRICS_STATE_FILE (a SEPARATE file from the keeper's)
   // so a restart/crash-loop doesn't zero the Prometheus series. The shared PersistedMetrics
   // shape is reused: the arb's per-purpose swap counts live in `actionsTotal`, and its scalar
@@ -878,7 +878,7 @@ async function main(): Promise<void> {
   };
 
   // Snapshot the CUMULATIVE-counter slice into the shared PersistedMetrics shape for the
-  // state file (gauges excluded - re-derived each tick). The scalar failuresTotal is stored
+  // state file (gauges excluded — re-derived each tick). The scalar failuresTotal is stored
   // under the single market id so a future multi-market arb stays forward-compatible.
   const persistedSnapshot = (): PersistedMetrics => ({
     ticksTotal: metrics.ticksTotal,
@@ -895,7 +895,7 @@ async function main(): Promise<void> {
   persistMetrics();
   let lastPersistTs = Date.now();
 
-  // TASK 4a - surface the restart-safe metrics status (counters file-backed? prior state
+  // TASK 4a — surface the restart-safe metrics status (counters file-backed? prior state
   // loaded this boot? this boot's restart count + the uptime gauge).
   log({
     msg: 'arb.metrics',
@@ -913,7 +913,7 @@ async function main(): Promise<void> {
   });
   const getMetrics = (): ArbMetricsSnapshot => metrics;
 
-  // Optional /health + /metrics server - OFF unless KEEPER_ARB_HTTP_PORT > 0. Loopback-bound
+  // Optional /health + /metrics server — OFF unless KEEPER_ARB_HTTP_PORT > 0. Loopback-bound
   // by default so it isn't exposed externally. Mirrors the lifecycle keeper's health server.
   const healthServer =
     cfg.httpPort > 0
@@ -947,7 +947,7 @@ async function main(): Promise<void> {
     } catch (err) {
       log({ msg: 'arb.balance.error', error: err instanceof Error ? err.message : String(err) });
     }
-    metrics.balanceWei = balance; // TASK 4a - gauge for /metrics
+    metrics.balanceWei = balance; // TASK 4a — gauge for /metrics
     const low = balance < cfg.lowBalanceWei;
     log({ msg: low ? 'WARN low arb balance' : 'arb.balance', signer: account.address, balanceWei: balance.toString(), floorWei: cfg.lowBalanceWei.toString() });
     // Deduped low-balance page so an operator refills before the arb bot runs dry on gas. Fire-and-forget.
@@ -961,16 +961,16 @@ async function main(): Promise<void> {
       });
     }
 
-    // GAS GATE - idle (don't crash-loop on the approval) until the wallet has enough native to operate;
+    // GAS GATE — idle (don't crash-loop on the approval) until the wallet has enough native to operate;
     // it starts on its own once funded. A freshly deployed keeper waits here for its first top-up.
     if (balance < MIN_OPERATING_WEI) {
-      log({ msg: 'arb.waiting', reason: 'insufficient gas - fund the arb wallet (gas + cirBTC reserve)', balanceWei: balance.toString() });
+      log({ msg: 'arb.waiting', reason: 'insufficient gas — fund the arb wallet (gas + cirBTC reserve)', balanceWei: balance.toString() });
       await sleep(cfg.pollIntervalMs);
       continue;
     }
     // Lazy router allowance for BOTH legs (needs gas; retried each pass until it lands). Already-approved
     // legs are a no-op (allowance read only), so a re-deploy / restart never re-approves. Without this a
-    // swap reverts STF and the bot wedges opaquely - so a failure here just idles + retries, never crashes.
+    // swap reverts STF and the bot wedges opaquely — so a failure here just idles + retries, never crashes.
     if (!approved) {
       try {
         const approvals = await ensureRouterApprovals(
@@ -999,7 +999,7 @@ async function main(): Promise<void> {
       continue;
     }
 
-    // TASK 3b / FINDING 3 - roll the budget day if we've crossed UTC midnight, then snapshot
+    // TASK 3b / FINDING 3 — roll the budget day if we've crossed UTC midnight, then snapshot
     // the ledger for the (pure) decision. Inject the snapshot when heartbeat OR rebalance mode
     // is enabled (both now read the ledger: heartbeat for its interval+cap, rebalance for its
     // FINDING 3 interval + FINDING 4 attempt governors). The decision path is unchanged when
@@ -1009,7 +1009,7 @@ async function main(): Promise<void> {
     const mmActive = cfg.params.heartbeatEnabled || cfg.params.rebalanceFloorBps > 0;
     const hbSnapshot = mmActive ? snapshotHeartbeat(hbLedger, tickNow) : undefined;
 
-    // FLOW BUDGET - prune stale events, then snapshot net-sold + the cap for the (pure) decision.
+    // FLOW BUDGET — prune stale events, then snapshot net-sold + the cap for the (pure) decision.
     let flowSnapshot: FlowState | undefined;
     if (flowEnabled) {
       flowLedger = pruneWindow(flowLedger, tickNow, cfg.flowWindowMs ?? 0);
@@ -1026,7 +1026,7 @@ async function main(): Promise<void> {
       if (cfg.flowLedgerFile) saveFlowLedgerSync(flowLedger, cfg.flowLedgerFile);
     }
 
-    // TASK 4a - count this tick's swap (by purpose) + any mined-but-reverted swap. A SWAP
+    // TASK 4a — count this tick's swap (by purpose) + any mined-but-reverted swap. A SWAP
     // that was broadcast then reverted (rec.txHash set + rec.error set) bumps reverts.
     if (rec.kind === 'SWAP') {
       const purpose = rec.purpose ?? 'arb';
@@ -1034,27 +1034,27 @@ async function main(): Promise<void> {
       if (rec.error !== undefined && rec.txHash !== undefined) metrics.revertsTotal += 1;
     }
 
-    // FINDING 3/4 + TASK 3b - apply the MM ledger update for this tick (PURE, unit-tested):
+    // FINDING 3/4 + TASK 3b — apply the MM ledger update for this tick (PURE, unit-tested):
     // a heartbeat/rebalance swap stamps its interval + per-day ATTEMPT counter REGARDLESS of
     // success (so a reverting leg still advances its governor and can't retry unbounded), and
     // a SUCCESSFUL heartbeat swap additionally charges its notional to the daily cap.
     hbLedger = applyLedgerUpdate(hbLedger, rec, Date.now());
 
     const observedTs = Date.now();
-    // LOW fix - judge the shrink-watchdog on the POST-SWAP divergence (the pool re-read
+    // LOW fix — judge the shrink-watchdog on the POST-SWAP divergence (the pool re-read
     // AFTER the receipt, compared against the same ref used to size the trade), NOT the
     // pre-trade divBps. The pure helper encodes the rules + is unit-tested; the loop just
     // applies its verdict and carries the new baseline forward.
     const wd = evaluateWatchdog(rec, lastDivAbs);
 
     if (wd.fail) {
-      metrics.failuresTotal += 1; // TASK 4a - a failing/reverted/non-shrinking tick
+      metrics.failuresTotal += 1; // TASK 4a — a failing/reverted/non-shrinking tick
       const next = recordFailure(runtime, observedTs, cfg.baseBackoffMs, cfg.maxBackoffMs);
       const wedged = next.consecutiveFailures >= cfg.wedgedAlertThreshold;
       runtime = { ...next, lastAction: rec.kind, lastActionTs: observedTs, wedged };
       metrics.wedged = wedged ? 1 : 0;
       if (wedged) {
-        log({ msg: `ALERT arb market=${cfg.market.id} WEDGED - operator action needed`, market: cfg.market.id, consecutiveFailures: next.consecutiveFailures, lastError: rec.error ?? 'divergence not shrinking', divBps: rec.divBps, postSwapDivBps: rec.postSwapDivBps });
+        log({ msg: `ALERT arb market=${cfg.market.id} WEDGED — operator action needed`, market: cfg.market.id, consecutiveFailures: next.consecutiveFailures, lastError: rec.error ?? 'divergence not shrinking', divBps: rec.divBps, postSwapDivBps: rec.postSwapDivBps });
         // Page a human: arb bot wedged after >= WEDGED_ALERT_THRESHOLD consecutive failures
         // (repeated-failures trigger). Deduped per market so a stuck bot re-alerts at most
         // once per ALERT_DEDUPE_WINDOW_MS. Fire-and-forget + crash-safe.
@@ -1062,7 +1062,7 @@ async function main(): Promise<void> {
           key: `wedged:arb:${cfg.market.id}`,
           severity: 'critical',
           title: 'WEDGED (arb)',
-          message: `arb market=${cfg.market.id} wedged after ${next.consecutiveFailures} consecutive failures - operator action needed`,
+          message: `arb market=${cfg.market.id} wedged after ${next.consecutiveFailures} consecutive failures — operator action needed`,
           context: {
             market: cfg.market.id,
             consecutiveFailures: next.consecutiveFailures,
@@ -1076,13 +1076,13 @@ async function main(): Promise<void> {
       runtime = { ...recordSuccess(runtime), lastAction: rec.kind, lastActionTs: observedTs, wedged: false };
       metrics.wedged = 0;
     }
-    // Carry the watchdog baseline forward - updated only on an attributable swap, otherwise
+    // Carry the watchdog baseline forward — updated only on an attributable swap, otherwise
     // unchanged so the next comparison stays swap-to-swap.
     lastDivAbs = wd.nextBaseline;
 
     // End of this tick: bump the heartbeat so /health can detect a silently-stalled loop.
     lastTickTs = Date.now();
-    // TASK 4a - count the completed tick + stamp the gauge for /metrics.
+    // TASK 4a — count the completed tick + stamp the gauge for /metrics.
     metrics.ticksTotal += 1;
     metrics.lastTickTs = lastTickTs;
 
@@ -1090,7 +1090,7 @@ async function main(): Promise<void> {
     // If the arb bot dies/hangs, the ping stops and the monitor alerts on its absence.
     void alerter.heartbeat();
 
-    // TASK 4a - flush the cumulative counters at most once per persist interval (no-op when
+    // TASK 4a — flush the cumulative counters at most once per persist interval (no-op when
     // persistence is OFF; best-effort, never throws). A crash loses at most one interval.
     if (cfg.metricsStateFile && lastTickTs - lastPersistTs >= cfg.metricsPersistIntervalMs) {
       persistMetrics();

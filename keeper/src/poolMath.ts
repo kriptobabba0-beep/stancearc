@@ -1,9 +1,9 @@
-// poolMath.ts - PURE Uniswap-V3 price math for the arb bot. Converts a pool's
+// poolMath.ts — PURE Uniswap-V3 price math for the arb bot. Converts a pool's
 // sqrtPriceX96 (token1-per-token0 in Q64.96, raw-unit terms) into the human
 // USDC-per-base price in 18dp (poolPrice18) that decideArb compares against the Pyth
 // reference, and converts a target USDC-per-base price back into a sqrtPriceX96 limit
 // the executor pins on exactInputSingle so the AMM can never push the pool past the
-// oracle. No I/O, no chain reads - every input is supplied, so it is fully unit-testable.
+// oracle. No I/O, no chain reads — every input is supplied, so it is fully unit-testable.
 //
 // Conventions:
 //   - token0/token1 are the pool's ADDRESS-SORTED pair. The base token (e.g. cirBTC, 8dp)
@@ -24,7 +24,7 @@ export function isqrt(x: bigint): bigint {
   if (x < 2n) return x;
   let lo = 1n;
   let hi = x;
-  // Binary search for floor(sqrt(x)) - robust and overflow-free for bigint.
+  // Binary search for floor(sqrt(x)) — robust and overflow-free for bigint.
   while (lo < hi) {
     const mid = (lo + hi + 1n) >> 1n;
     if (mid * mid <= x) lo = mid;
@@ -96,7 +96,7 @@ export function price18ToSqrtPriceX96(
 }
 
 /**
- * Δamount0 - the token0 amount that moves a single-tick V3 position between two
+ * Δamount0 — the token0 amount that moves a single-tick V3 position between two
  * sqrt-prices, given constant active liquidity L. Canonical Uniswap-V3 formula:
  *
  *   amount0 = L * 2^96 * (sqrtB - sqrtA) / (sqrtA * sqrtB)
@@ -113,7 +113,7 @@ export function amount0Delta(liquidity: bigint, sqrtA: bigint, sqrtB: bigint): b
 }
 
 /**
- * Δamount1 - the token1 amount that moves a single-tick V3 position between two
+ * Δamount1 — the token1 amount that moves a single-tick V3 position between two
  * sqrt-prices, given constant active liquidity L:
  *
  *   amount1 = L * (sqrtB - sqrtA) / 2^96
@@ -134,7 +134,7 @@ export function amount1Delta(liquidity: bigint, sqrtA: bigint, sqrtB: bigint): b
  * liquidity L. This is the root-cause sizing primitive for the arb bot: it derives the
  * trade size from the pool's OWN depth via the V3 sqrt-price relationship instead of
  * anchoring to a divergence-scaled fraction of maxTradeBase (which produced a dead-zone
- * around the arena band - see decideArb's HIGH-1 fix).
+ * around the arena band — see decideArb's HIGH-1 fix).
  *
  * Token orientation matters: the BASE token is token0 of the pool when baseIsToken0, else
  * token1. We compute the delta of whichever pool token IS the base:
@@ -144,7 +144,7 @@ export function amount1Delta(liquidity: bigint, sqrtA: bigint, sqrtB: bigint): b
  * The result is the base amount the swap consumes/produces on the base leg, which is
  * exactly `amountInBase` for a SELL_BASE and the base TARGET for a BUY_BASE (the executor
  * converts that target into the USDC to spend at the ref price). Returns 0 when the two
- * prices are equal (zero-width move) or liquidity is non-positive. PURE - no chain reads.
+ * prices are equal (zero-width move) or liquidity is non-positive. PURE — no chain reads.
  */
 export function baseAmountToMovePrice(
   liquidity: bigint,
@@ -162,14 +162,14 @@ export function baseAmountToMovePrice(
     : amount1Delta(liquidity, sqrtFrom, sqrtTo);
 }
 
-// ─── DELIVERABILITY caps - size a leg to what the pool can PHYSICALLY pay ───────────────────────
+// ─── DELIVERABILITY caps — size a leg to what the pool can PHYSICALLY pay ───────────────────────
 // The constant-L sizing above (baseAmountToMovePrice) UNDER-counts across a tick crossing: it
 // assumes liquidity stays in range, so at the range edge it can size a SELL the pool can't actually
-// pay - the swap then fills far below its ref-priced amountOutMinimum and reverts "Too little
+// pay — the swap then fills far below its ref-priced amountOutMinimum and reverts "Too little
 // received" (the exact one-sided-pool wedge that drained the keepers). The pool's RAW token
 // balanceOf is the true hard ceiling on what a single swap can extract, and it's one cheap view
 // call (the repo has no on-chain Quoter). We cap every leg at a safety fraction of that real
-// balance so the realized fill - which moves price against us as it consumes the reserve - still
+// balance so the realized fill — which moves price against us as it consumes the reserve — still
 // clears the ref-priced min-out. Belt-and-suspenders: callers take min(pegMoveSize, deliverableCap).
 
 /**
@@ -194,7 +194,7 @@ export function poolDeliverableBase(poolBaseBal: bigint, safetyBps: number): big
 
 /**
  * Convert a deliverable-USDC ceiling (raw at quoteDecimals) into the LARGEST base SELL whose
- * ref-priced proceeds fit under it - the inverse of usdcBudgetToBase:
+ * ref-priced proceeds fit under it — the inverse of usdcBudgetToBase:
  *   baseRaw = deliverableUsdcRaw * 1e18 * 10^baseDec / (ref18 * 10^quoteDec)
  * So a SELL sized at this (or less) asks the pool for at most `deliverableQuoteRaw` USDC, which the
  * pool can pay. Decimals-generic (cirBTC 8dp / USDC 6dp). PURE.

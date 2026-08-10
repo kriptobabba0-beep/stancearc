@@ -1,17 +1,17 @@
-// lib/markets.ts - the per-market config list (id, label, base token, and arena/oracle/pool/feed
+// lib/markets.ts — the per-market config list (id, label, base token, and arena/oracle/pool/feed
 // addresses). Sourced from the optional NEXT_PUBLIC_MARKETS JSON blob; falls back to a single ETH
 // market built from the existing single-market env so the app behaves EXACTLY as today when unset.
 // Shared infra (USDC, router, NPM, multicall, Pyth contract, Hermes) stays GLOBAL in lib/contracts.ts.
 import { ENV, parseAddress, parseBytes32, type AppEnv } from '@/lib/env';
 
 // How a user acquires this market's base token on the on-ramp (see baseAcquireMode below).
-//   - 'faucet': base is a REAL token with NO wrap and NO public mint (e.g. Circle's cirBTC) - the user
+//   - 'faucet': base is a REAL token with NO wrap and NO public mint (e.g. Circle's cirBTC) — the user
 //               must fund from an external faucet. This is the ONLY supported mode: the live arena runs
 //               on a faucet-only Circle token, so the on-ramp renders a faucet CTA and never a
 //               wrap/mint button (which would REVERT against a real token).
 //
 // The legacy 'wrap' (WETH9.deposit) and 'mint' (open-mint mock) modes were removed with the mock
-// tokens - see the deleted useWrapNative / useMintTestToken hooks. acquireMode is now optional config
+// tokens — see the deleted useWrapNative / useMintTestToken hooks. acquireMode is now optional config
 // that, when present, MUST be 'faucet'; baseAcquireMode() always resolves to 'faucet'.
 export type BaseAcquireMode = 'faucet';
 
@@ -49,10 +49,10 @@ export type Market = {
    * cross price for the entry anchor. Absent → single-feed market (unchanged).
    */
   quoteFeedId?: `0x${string}`;
-  /** Optional FeeArena deploy block - the lower bound for event getLogs (history/leaderboard). 0n if unset. */
+  /** Optional FeeArena deploy block — the lower bound for event getLogs (history/leaderboard). 0n if unset. */
   fromBlock: bigint;
   /**
-   * Optional on-ramp acquisition mode for the base token. Only 'faucet' is supported - the base is a
+   * Optional on-ramp acquisition mode for the base token. Only 'faucet' is supported — the base is a
    * REAL Circle token (cirBTC) with no wrap and no public mint, so the on-ramp shows a faucet CTA.
    * baseAcquireMode() always resolves to 'faucet' whether this is set or omitted.
    */
@@ -291,26 +291,26 @@ function placeholderMarkets(): Market[] {
 }
 
 // Built at module load from the live ENV. We must distinguish two cases that both surface as throws:
-//   1. ENV itself is unreadable - in test environments NEXT_PUBLIC_* are unset and lib/env exports a
+//   1. ENV itself is unreadable — in test environments NEXT_PUBLIC_* are unset and lib/env exports a
 //      Proxy that throws on ANY property access. That's the only case where we may safely fall back
 //      to the all-zero placeholder, so component tests can import this module (they mock live values).
 //   2. ENV is readable but NEXT_PUBLIC_MARKETS is present-but-invalid (typo'd address, dup id, bad
-//      shape - valid JSON, wrong contents). This is a REAL misconfig and MUST surface: we let
+//      shape — valid JSON, wrong contents). This is a REAL misconfig and MUST surface: we let
 //      buildMarkets throw so the boot gate shows a FatalBanner instead of a silent zero-address app.
 // We probe ENV accessibility by reading one field; if THAT throws we're in case (1). Otherwise we
 // call buildMarkets and let any validation error propagate (case 2).
 export const MARKETS: Market[] = (() => {
   let envReadable = false;
   try {
-    // Touch a single field - the test Proxy throws here; a real env returns the string.
+    // Touch a single field — the test Proxy throws here; a real env returns the string.
     void ENV.MARKETS;
     envReadable = true;
   } catch {
     envReadable = false;
   }
   if (!envReadable) return placeholderMarkets();
-  // ENV is real: a bad MARKETS blob throws out of here (do NOT swallow) - surfaced by BootGate.
-  // The v2 conviction arena is SHELVED - never expose it as a selectable market (selectableMarkets).
+  // ENV is real: a bad MARKETS blob throws out of here (do NOT swallow) — surfaced by BootGate.
+  // The v2 conviction arena is SHELVED — never expose it as a selectable market (selectableMarkets).
   return selectableMarkets(buildMarkets(ENV));
 })();
 
@@ -333,7 +333,7 @@ export function baseAcquireMode(_market: Market): BaseAcquireMode {
 
 // ── FeeArena generation helpers ─────────────────────────────────────────────────
 
-/** The FeeArena generation for a market - absent/legacy entries resolve to 'v1'. */
+/** The FeeArena generation for a market — absent/legacy entries resolve to 'v1'. */
 export function marketVersion(market: Market): MarketVersion {
   return market.version ?? 'v1';
 }
@@ -345,7 +345,7 @@ export function isV2Market(market: Market): boolean {
 
 /**
  * The user-SELECTABLE markets. The v2 conviction arena is shelved (we no longer run it), so it
- * must never appear as a choice in the market switcher - drop it from the live list. Doing this at
+ * must never appear as a choice in the market switcher — drop it from the live list. Doing this at
  * the MARKETS source (not just in the selector UI) also means a stale persisted v2 selection in
  * localStorage can't strand the dashboard on v2: it's no longer a known market, so MarketProvider
  * falls back to the default. Guarded so an all-v2 env never empties the list (the app stays bootable).
@@ -355,7 +355,7 @@ export function selectableMarkets(markets: Market[]): Market[] {
   return live.length > 0 ? live : markets;
 }
 
-/** True when the market is the ENTRY-ANCHORED arena (FeeArenaV3 - per-position entry prices). */
+/** True when the market is the ENTRY-ANCHORED arena (FeeArenaV3 — per-position entry prices). */
 export function isV3Market(market: Market): boolean {
   return marketVersion(market) === 'v3';
 }

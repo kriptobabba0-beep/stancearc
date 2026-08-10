@@ -1,12 +1,12 @@
 'use client';
 
-// components/circle/CircleWalletProvider.tsx - the embedded (user-controlled Circle) wallet state.
+// components/circle/CircleWalletProvider.tsx — the embedded (user-controlled Circle) wallet state.
 //
 // Three onboarding methods, all non-custodial (the user's MPC keyshare + PIN/OAuth stay on-device):
-//   • createOrRestoreWallet() - PIN method. userId lives in an HttpOnly cookie; the session is re-minted
+//   • createOrRestoreWallet() — PIN method. userId lives in an HttpOnly cookie; the session is re-minted
 //       on demand (so the user can transact after a reload). Browser-bound (no portable recovery).
-//   • loginWithEmail(email)   - Email OTP. PORTABLE: same email -> same Circle user -> same wallet.
-//   • loginWithGoogle()       - Google. PORTABLE: same Google account -> same wallet.
+//   • loginWithEmail(email)   — Email OTP. PORTABLE: same email -> same Circle user -> same wallet.
+//   • loginWithGoogle()       — Google. PORTABLE: same Google account -> same wallet.
 // Email/Google get userToken+encryptionKey from the SDK login callback (no userId tracked); that session
 // is kept in memory for the tab, so transacting after a reload requires re-login (the wallet still shows).
 // executeContract() creates a contractExecution challenge then signs it with the user (PIN/biometric).
@@ -32,9 +32,9 @@ import {
 const LS_WALLET = 'feearena.circle.walletId';
 const LS_ADDR = 'feearena.circle.address';
 const LS_CREATED = 'feearena.circle.created'; // PIN-only: marks a created user for interrupted-flow recovery
-const LS_KIND = 'feearena.circle.kind'; // 'pin' | 'email' | 'google' - drives the executeContract session path
+const LS_KIND = 'feearena.circle.kind'; // 'pin' | 'email' | 'google' — drives the executeContract session path
 const LS_GOOGLE_PENDING = 'feearena.circle.googlePending'; // device token persisted across a Google OAuth redirect
-// Email/Google session ({userToken,encryptionKey}) - persisted so transacting survives reloads/navigation
+// Email/Google session ({userToken,encryptionKey}) — persisted so transacting survives reloads/navigation
 // (PIN re-mints via the HttpOnly cookie instead; only email/Google need this). Short-lived (~1h Circle TTL);
 // it's a testnet wallet. Cleared on sign-out. Lets the embedded wallet work across the whole app, not just
 // the tab where the user logged in.
@@ -56,7 +56,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 // "Contract Interaction" confirm + PIN entry). Themes Circle's secure iframe so it reads as a native
 // Limen Finance modal instead of a foreign white screen. Values mirror the app's dark tokens (globals.css).
 const CIRCLE_THEME = {
-  // Translucent backdrop so the dimmed Limen Finance page shows THROUGH behind the modal - making Circle's
+  // Translucent backdrop so the dimmed Limen Finance page shows THROUGH behind the modal — making Circle's
   // (full-screen, by design) secure iframe read as an in-app overlay rather than a separate screen.
   backdrop: '#0A0A0C',
   backdropOpacity: 0.5,
@@ -114,7 +114,7 @@ async function fetchArcWallet(userToken: string): Promise<{ id: string; address:
   return wallets.find((w) => w.blockchain === 'ARC-TESTNET') ?? wallets[0] ?? null;
 }
 
-/** Poll for the wallet - Circle provisions it asynchronously after the INITIALIZE challenge. */
+/** Poll for the wallet — Circle provisions it asynchronously after the INITIALIZE challenge. */
 async function pollArcWallet(userToken: string, tries = 6, delayMs = 1500): Promise<{ id: string; address: string } | null> {
   for (let i = 0; i < tries; i++) {
     const w = await fetchArcWallet(userToken).catch(() => null);
@@ -206,7 +206,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
     try {
       sdkRef.current.setThemeColor(CIRCLE_THEME);
     } catch {
-      /* older SDKs may lack setThemeColor - non-fatal */
+      /* older SDKs may lack setThemeColor — non-fatal */
     }
     return sdkRef.current;
   }, [getMod]);
@@ -234,7 +234,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
       const { challengeId } = await apiInitialize(userToken);
       await runChallenge(sdk, challengeId);
       const w = await pollArcWallet(userToken);
-      if (!w) throw new Error('Your wallet is still finalizing - please try again in a moment.');
+      if (!w) throw new Error('Your wallet is still finalizing — please try again in a moment.');
       adopt(w);
     },
     [adopt],
@@ -277,7 +277,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
     sessionRef.current = null;
     lsDel(LS_SESSION);
     setStatus('idle');
-    setError('Your sign-in expired - sign in again to continue.');
+    setError('Your sign-in expired — sign in again to continue.');
   }, []);
 
   useEffect(() => {
@@ -303,7 +303,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
         }
         const tok = sessionRef.current?.userToken;
         if (!tok) {
-          // Nothing to transact with - ask for a fresh sign-in instead of a zombie wallet.
+          // Nothing to transact with — ask for a fresh sign-in instead of a zombie wallet.
           setStatus('idle');
           return;
         }
@@ -343,7 +343,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
       const { challengeId } = await apiInitialize(userToken);
       await runChallenge(sdk, challengeId);
       const w = await pollArcWallet(userToken);
-      if (!w) throw new Error('Your wallet is still finalizing - tap “Create wallet” again in a moment.');
+      if (!w) throw new Error('Your wallet is still finalizing — tap “Create wallet” again in a moment.');
       adopt(w);
     } catch (e) {
       setError(msg(e));
@@ -400,7 +400,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
       const deviceId = await sdk.getDeviceId();
       const { deviceToken, deviceEncryptionKey } = await apiSocialToken(deviceId);
       // Persist before performLogin: if the SDK does a full-page redirect (popup blocked / redirect-mode
-      // OAuth client) the page navigates away and this promise is lost - resumeGoogle() recovers on return.
+      // OAuth client) the page navigates away and this promise is lost — resumeGoogle() recovers on return.
       lsSet(LS_GOOGLE_PENDING, JSON.stringify({ deviceToken, deviceEncryptionKey }));
       const result = await new Promise<LoginResult>((resolve, reject) => {
         sdk.updateConfigs(
@@ -414,7 +414,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
           },
           (err, res) => (err || !res ? reject(new Error(err?.message || 'Google login failed or was cancelled.')) : resolve(res)),
         );
-        // The SDK's main entry re-exports only W3SSdk at runtime - the SocialLoginProvider enum is
+        // The SDK's main entry re-exports only W3SSdk at runtime — the SocialLoginProvider enum is
         // type-only there, so `mod.SocialLoginProvider` is undefined in the browser. Its value for Google
         // is the literal 'Google' (verified in the SDK source); performLogin compares against that string.
         void sdk.performLogin('Google'); // SDK opens Google; result via the callback
@@ -426,7 +426,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
       setError(msg(e));
       setStatus('error');
     } finally {
-      // Reached only on the in-page (popup) path - clear the pending marker so the next mount won't
+      // Reached only on the in-page (popup) path — clear the pending marker so the next mount won't
       // try to resume. On a full-page redirect this never runs, so the marker survives for resumeGoogle().
       lsDel(LS_GOOGLE_PENDING);
       busyRef.current = false;
@@ -437,7 +437,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
   const resumeGoogle = useCallback(async () => {
     const raw = lsGet(LS_GOOGLE_PENDING);
     if (!raw) return;
-    lsDel(LS_GOOGLE_PENDING); // one-shot - never loop on a stale device token
+    lsDel(LS_GOOGLE_PENDING); // one-shot — never loop on a stale device token
     let deviceToken = '';
     let deviceEncryptionKey = '';
     try {
@@ -462,7 +462,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
         if (handled) return;
         handled = true;
         if (err || !res) {
-          setStatus('idle'); // came back without completing - show the sign-in screen, not a spinner
+          setStatus('idle'); // came back without completing — show the sign-in screen, not a spinner
           return;
         }
         lsSet(LS_KIND, 'google');
@@ -493,14 +493,14 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
       try {
         let sdk: MinimalSdk;
         let userToken: string;
-        // Route by the auth method (React state, not localStorage - avoids a sign-out race where the
+        // Route by the auth method (React state, not localStorage — avoids a sign-out race where the
         // LS key is cleared a tick before this reads it and an email/Google call wrongly takes the PIN path).
         if (kind === 'pin' || kind === null) {
-          ({ sdk, userToken } = await authedSdk()); // cookie re-mint - works after a reload
+          ({ sdk, userToken } = await authedSdk()); // cookie re-mint — works after a reload
         } else {
           if (!sessionRef.current) {
             expireSession();
-            throw new Error('Your sign-in expired - sign in again to continue.');
+            throw new Error('Your sign-in expired — sign in again to continue.');
           }
           userToken = sessionRef.current.userToken;
           sdk = await getSdk();
@@ -513,10 +513,10 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
         return { challengeId };
       } catch (e) {
         // An expired email/Google token means EVERY call will fail until the user signs in
-        // again - flip to signed-out with a plain reason instead of a cryptic tx error.
+        // again — flip to signed-out with a plain reason instead of a cryptic tx error.
         if ((kind === 'email' || kind === 'google') && isAuthDead(e)) {
           expireSession();
-          throw new Error('Your sign-in expired - sign in again to continue.');
+          throw new Error('Your sign-in expired — sign in again to continue.');
         }
         setError(msg(e));
         setStatus('ready');
@@ -535,7 +535,7 @@ export function CircleWalletProvider({ children }: { children: ReactNode }) {
     if (kind === 'pin' || kind === null) {
       userToken = (await apiToken()).userToken;
     } else {
-      if (!sessionRef.current) throw new Error('Your sign-in expired - sign in again to continue.');
+      if (!sessionRef.current) throw new Error('Your sign-in expired — sign in again to continue.');
       userToken = sessionRef.current.userToken;
     }
     const { transactions } = await apiTransactions(userToken).catch((e: unknown) => {

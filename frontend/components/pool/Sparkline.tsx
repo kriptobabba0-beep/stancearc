@@ -1,9 +1,9 @@
 'use client';
 
-// components/pool/Sparkline.tsx - a tiny area+line sparkline for the Pool stat cards. Pure SVG, no deps.
+// components/pool/Sparkline.tsx — a tiny area+line sparkline for the Pool stat cards. Pure SVG, no deps.
 // Colour comes from the wrapper's `currentColor` (set a text-* class on it), so the three header cards
 // read as crimson (TVL) / green (volume) / blue (fees) using the app's own semantic palette. Decorative
-// (aria-hidden) - the headline figure is announced separately. preserveAspectRatio="none" stretches the
+// (aria-hidden) — the headline figure is announced separately. preserveAspectRatio="none" stretches the
 // 0..100 viewBox to the card width.
 import { useId } from 'react';
 import { cn } from '@/lib/cn';

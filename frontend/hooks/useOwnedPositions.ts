@@ -1,4 +1,4 @@
-// hooks/useOwnedPositions.ts - enumerate the connected wallet's V3 position NFTs and filter to the
+// hooks/useOwnedPositions.ts — enumerate the connected wallet's V3 position NFTs and filter to the
 // Arena WETH/USDC pool, excluding already-staked tokenIds. Provides `OwnedPosition[]` to PositionPicker.
 //
 // Wiring: NPM.balanceOf -> NPM.tokenOfOwnerByIndex(0..n-1) (batched) -> NPM.positions(tokenId)
@@ -19,7 +19,7 @@ import type { PoolInfo } from '@/lib/pools';
 /**
  * NPM.positions() is a FLAT multi-output function (nonce, operator, token0, token1, fee, tickLower,
  * tickUpper, liquidity, ...), which viem 2.19.4 decodes POSITIONALLY (an array), NOT as a named
- * object - so p.token0 is undefined. We read by index ([2]=token0, [3]=token1, [4]=fee,
+ * object — so p.token0 is undefined. We read by index ([2]=token0, [3]=token1, [4]=fee,
  * [5]=tickLower, [6]=tickUpper, [7]=liquidity) with named fallbacks, so the hook is robust to
  * either decode shape.
  */
@@ -54,7 +54,7 @@ export function useOwnedPositions(opts?: { pool?: PoolInfo }): {
   // The active market's pool token pair (token0/token1) is the Arena-membership identity. For the
   // default ETH market this resolves to {WETH, USDC}; for BTC it resolves to {WBTC, USDC}. The base
   // leg = whichever of token0/token1 is NOT the global USDC. While the pool tokens are still loading
-  // `address` is undefined and `baseLoading` is true - we MUST NOT substitute the default ETH base
+  // `address` is undefined and `baseLoading` is true — we MUST NOT substitute the default ETH base
   // here (that would transiently filter a non-ETH market against {WETH, USDC}); instead we stay
   // loading until the real base resolves (Fix E).
   const { address: activeBaseToken, isLoading: activeBaseLoading } = useActiveBaseToken();
@@ -83,7 +83,7 @@ export function useOwnedPositions(opts?: { pool?: PoolInfo }): {
 
   const count = balance !== undefined ? Number(balance) : 0;
 
-  // 2) tokenOfOwnerByIndex(owner, i) for i in 0..count-1 - one Multicall3 batch.
+  // 2) tokenOfOwnerByIndex(owner, i) for i in 0..count-1 — one Multicall3 batch.
   const indexCalls = useMemo(
     () =>
       address && count > 0
@@ -113,7 +113,7 @@ export function useOwnedPositions(opts?: { pool?: PoolInfo }): {
       .map((r) => r.result as bigint);
   }, [tokenIdResults]);
 
-  // 3) positions(tokenId) for each enumerated tokenId - one Multicall3 batch.
+  // 3) positions(tokenId) for each enumerated tokenId — one Multicall3 batch.
   const positionCalls = useMemo(
     () =>
       tokenIds.map((tokenId) => ({
@@ -134,13 +134,13 @@ export function useOwnedPositions(opts?: { pool?: PoolInfo }): {
     query: { enabled: enabled && tokenIds.length > 0, refetchInterval: interval },
   });
 
-  // Already-staked tokenIds for this user - version-aware useUserStakes (v1 arena getUserStakes /
+  // Already-staked tokenIds for this user — version-aware useUserStakes (v1 arena getUserStakes /
   // v2 Lens getStakesByEpoch window) -> StakeView[].
   const { data: stakes } = useUserStakes(address);
 
   const data = useMemo<OwnedPosition[] | undefined>(() => {
     if (!enabled) return undefined;
-    // Don't classify positions until the active pool's base leg resolves - otherwise a non-ETH
+    // Don't classify positions until the active pool's base leg resolves — otherwise a non-ETH
     // market would briefly filter against the wrong (default ETH) pair (Fix E).
     if (!baseToken) return undefined;
     if (count === 0) return [];

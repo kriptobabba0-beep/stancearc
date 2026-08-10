@@ -1,15 +1,15 @@
-// agentFunding.ts - the agent's budget line to its Circle Agent Wallet treasury.
+// agentFunding.ts — the agent's budget line to its Circle Agent Wallet treasury.
 //
 // The treasury is a 2-of-2 MPC wallet operated through the Circle CLI. Findings from the
 // live encoding survey (docs/AGENT.md): `circle wallet execute` only encodes FLAT scalar
 // params today, so the recurring on-chain actions (NPM mint takes a struct, stakeWithSide
 // takes bytes[]) cannot be MPC-signed directly. What IS first-class is `circle wallet
-// transfer` - so the treasury rail is a funding rail: when the execution signer is short,
+// transfer` — so the treasury rail is a funding rail: when the execution signer is short,
 // the agent draws the shortfall (never more than one mandate-capped stake plus a gas
 // margin) from the Agent Wallet, waits for the balance to land, and proceeds. On Arc the
 // native token IS USDC, so one native transfer covers both gas and the LP quote leg.
 //
-// planTopUp / planTokenTopUp are pure and fail closed; the CLI wrapper never sees keys -
+// planTopUp / planTokenTopUp are pure and fail closed; the CLI wrapper never sees keys —
 // signing happens inside Circle's MPC, the keeper only shells out the transfer request.
 import { spawn } from 'node:child_process';
 
@@ -31,7 +31,7 @@ export function formatUnits(amount: bigint, decimals: number): string {
 /**
  * How much native USDC (18dp) to draw from the treasury so the signer can cover one
  * mandate-capped stake plus gas. Never proposes more than that same bound in a single
- * transfer - a runaway loop cannot drain the treasury faster than the mandate allows.
+ * transfer — a runaway loop cannot drain the treasury faster than the mandate allows.
  */
 export function planTopUp(input: {
   balanceWei: bigint;
@@ -62,7 +62,7 @@ export function planTokenTopUp(input: {
   return { fund: true, amountWei: shortfall, amount: formatUnits(shortfall, decimals) };
 }
 
-/** The exact argv for `circle wallet transfer` - pure so tests can pin it. */
+/** The exact argv for `circle wallet transfer` — pure so tests can pin it. */
 export function buildTransferArgs(input: {
   to: string;
   amount: string;
@@ -83,7 +83,7 @@ export interface CircleTransferResult {
 
 /**
  * Shell out to the Circle CLI (the MPC co-signer lives behind it; no key material here).
- * The CLI session is device+email bound - if it is missing or expired this rejects and
+ * The CLI session is device+email bound — if it is missing or expired this rejects and
  * the agent skips the epoch rather than guessing.
  */
 export function runCircleTransfer(args: string[], timeoutMs: number): Promise<CircleTransferResult> {

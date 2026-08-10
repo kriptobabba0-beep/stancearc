@@ -1,8 +1,8 @@
 'use client';
 
-// components/pool/PoolTable.tsx - the pool rows for the "Pools" tab: every registry pool SORTED BY
+// components/pool/PoolTable.tsx — the pool rows for the "Pools" tab: every registry pool SORTED BY
 // LIQUIDITY (TVL) desc, filtered by the shared search `query`, each a clickable link to /pool/[id] with
-// a clear hover affordance. Stats come from usePoolStats (real on-chain) - TVL drives the sort + lands
+// a clear hover affordance. Stats come from usePoolStats (real on-chain) — TVL drives the sort + lands
 // first; the 24h figures fill in after the event scan. (Extracted from the old PoolList so the tabbed
 // PoolBrowser can swap it with the positions panel.)
 import { useMemo } from 'react';
@@ -30,7 +30,7 @@ function NumCell({ label, children, className }: { label: string; children: Reac
 /** A loading dash that becomes the formatted value once the (slower) flow query resolves. */
 function flowCell(value: number | undefined, fmt: (n: number) => string, loading: boolean) {
   if (value !== undefined) return fmt(value);
-  return loading ? <Skeleton className="h-4 w-16 rounded" /> : <span className="text-ink-faint">-</span>;
+  return loading ? <Skeleton className="h-4 w-16 rounded" /> : <span className="text-ink-faint">—</span>;
 }
 
 function PoolRow({ pool, stat, loadingFlow }: { pool: PoolInfo; stat: PoolStatRow | undefined; loadingFlow: boolean }) {

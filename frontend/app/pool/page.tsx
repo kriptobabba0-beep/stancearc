@@ -1,7 +1,7 @@
-// app/pool/page.tsx - POOLS surface (reference image #1): a TVL / 24h Volume / 24h Fees stats header with
-// real sparklines, then a tabbed browser (PoolBrowser) - a "Pools / My Positions" tab bar with a shared
+// app/pool/page.tsx — POOLS surface (reference image #1): a TVL / 24h Volume / 24h Fees stats header with
+// real sparklines, then a tabbed browser (PoolBrowser) — a "Pools / My Positions" tab bar with a shared
 // search + Create toolbar. The Pools tab lists every registry pool SORTED BY LIQUIDITY (each row links to
-// /pool/[id]); the My Positions tab lists the connected wallet's LP positions. No version selector - the
+// /pool/[id]); the My Positions tab lists the connected wallet's LP positions. No version selector — the
 // app is single-version. Pure assembly: all data + interaction live in the client components below.
 import { PoolStatHeader } from '@/components/pool/PoolStatHeader';
 import { PoolBrowser } from '@/components/pool/PoolBrowser';

@@ -1,6 +1,6 @@
 'use client';
 
-// hooks/useEpochHistory.ts - past-epoch table for the ACTIVE market, built purely from FeeArena
+// hooks/useEpochHistory.ts — past-epoch table for the ACTIVE market, built purely from FeeArena
 // event logs (no backend indexer). Reads EpochStarted + EpochSettled + EmptyWinnerRollover via
 // chunked getLogs from the market's deploy block, joins by epochId, and caches with react-query.
 // Re-keyed by market id + chainId so switching market (or chain) refetches a fresh history.
@@ -24,7 +24,7 @@ export interface EpochHistoryRow {
   startPrice18: bigint;
   /** Settle price from EpochResolved (v1) or the single settlement price (v3). */
   settlePrice18?: bigint;
-  /** Signed Δbps from EpochResolved (1e4 = 100%), when available (v1 only - v3 is per-position). */
+  /** Signed Δbps from EpochResolved (1e4 = 100%), when available (v1 only — v3 is per-position). */
   deltaBps?: bigint;
   winningSide: Side;
   potBase: bigint; // base-leg pot (WETH/WBTC/cirBTC) at the market's base decimals
@@ -33,7 +33,7 @@ export interface EpochHistoryRow {
   winnerCount?: number;
   rolledOver: boolean;
   /**
-   * ENTRY-ANCHORED (v3) row: there is NO global winning side - each position resolved against its
+   * ENTRY-ANCHORED (v3) row: there is NO global winning side — each position resolved against its
    * own entry price. The UI renders "per-position" + the count of correct positions instead of a
    * winning-side badge, and shows only the settlement price (no global start price).
    */
@@ -135,7 +135,7 @@ export function buildEpochRows(
  * v3 (ENTRY-ANCHORED) row builder. Each settled epoch emits EpochSettled with the single settlement
  * price + the count of correct positions; an empty-winner epoch additionally emits EmptyWinnerRollover.
  * There is no global winning side (per-position outcomes), so `winningSide` stays NONE and
- * `perPosition` is set. Pure - unit-testable with mocked logs.
+ * `perPosition` is set. Pure — unit-testable with mocked logs.
  */
 export function buildEpochRowsV3(settled: DecodedLog[], rollovers: DecodedLog[]): EpochHistoryRow[] {
   const rows = new Map<string, EpochHistoryRow>();

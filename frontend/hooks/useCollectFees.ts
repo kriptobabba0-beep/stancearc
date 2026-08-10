@@ -1,9 +1,9 @@
-// hooks/useCollectFees.ts - collect a liquidity position's accrued TRADING FEES to the wallet
+// hooks/useCollectFees.ts — collect a liquidity position's accrued TRADING FEES to the wallet
 // WITHOUT removing any liquidity. This is the "claim" for liquidity-only providers (those who
 // added liquidity but did not stake into an epoch): the swap bot generates continuous volume,
 // each swap pays the pool's 0.3% fee to in-range LPs, and this sweeps those fees out.
 //
-// Unlike useRemoveLiquidity (which decreaseLiquidity+collects 100% - burning the position), this
+// Unlike useRemoveLiquidity (which decreaseLiquidity+collects 100% — burning the position), this
 // calls ONLY NPM.collect({ tokenId, recipient: owner, amount0Max: max, amount1Max: max }). On a
 // position that still has liquidity the NPM pokes the pool (burn 0) to realize the latest fees and
 // then sweeps just those owed fees, leaving the principal in place.
@@ -37,7 +37,7 @@ export interface PositionFees {
 }
 
 /**
- * Polled STATIC simulate of NPM.collect(max,max) for a position - returns the fees that WOULD be
+ * Polled STATIC simulate of NPM.collect(max,max) for a position — returns the fees that WOULD be
  * collected right now (eth_call pokes the pool so it reflects live accrued fees). Used to show the
  * unclaimed amount + gate the Collect button. Enabled only when connected. Best-effort: a revert
  * (e.g. transiently not-owner during a re-org) just yields undefined and the UI falls back.
@@ -83,7 +83,7 @@ export function useCollectFees() {
         if (!publicClient) throw new Error('No RPC client available.');
 
         setIsSimulating(true);
-        // MANDATORY preflight - also returns the would-be (amount0, amount1) so we can refuse a
+        // MANDATORY preflight — also returns the would-be (amount0, amount1) so we can refuse a
         // pointless 0-fee collect with a clear message instead of a wasted tx.
         const { request, result } = await publicClient.simulateContract({
           account: address,
@@ -95,7 +95,7 @@ export function useCollectFees() {
         setIsSimulating(false);
         const [a0, a1] = result as readonly [bigint, bigint];
         if (a0 === 0n && a1 === 0n) {
-          throw new Error('No fees to collect yet - this position hasn’t earned any fees since your last collect.');
+          throw new Error('No fees to collect yet — this position hasn’t earned any fees since your last collect.');
         }
 
         const tx = await writeContractAsync(
@@ -118,7 +118,7 @@ export function useCollectFees() {
             toast.success('Fees collected to your wallet', { id });
           }
         } catch {
-          toast.error('Sent - couldn’t confirm yet; your balance will update shortly (or refresh).', { id });
+          toast.error('Sent — couldn’t confirm yet; your balance will update shortly (or refresh).', { id });
         } finally {
           setIsConfirming(false);
           void qc.refetchQueries({ type: 'active' });

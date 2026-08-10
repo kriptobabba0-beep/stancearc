@@ -1,4 +1,4 @@
-// Fee Arena Keeper - pm2 ecosystem config (non-Docker alternative to Docker Compose).
+// Fee Arena Keeper — pm2 ecosystem config (non-Docker alternative to Docker Compose).
 //
 // Usage (from the keeper/ directory):
 //   pm2 start ecosystem.config.cjs
@@ -19,7 +19,7 @@ module.exports = {
       script: 'pnpm',
       args: 'start',
 
-      // Working directory - adjust if running pm2 from a different cwd.
+      // Working directory — adjust if running pm2 from a different cwd.
       cwd: __dirname,
 
       // Restart policy.
@@ -34,18 +34,18 @@ module.exports = {
       merge_logs: true,          // stdout + stderr into a single log stream
       log_date_format: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
 
-      // Single instance - the keeper is deliberately single-process (one key, no nonce races).
+      // Single instance — the keeper is deliberately single-process (one key, no nonce races).
       instances: 1,
       exec_mode: 'fork',
 
-      // Environment - dotenv inside config.ts loads .env; you can also set vars here.
+      // Environment — dotenv inside config.ts loads .env; you can also set vars here.
       env: {
         NODE_ENV: 'production',
       },
     },
 
     {
-      // The price-keeper ARB bot - a SEPARATE process (separate key, separate nonces) that
+      // The price-keeper ARB bot — a SEPARATE process (separate key, separate nonces) that
       // trades the pool toward the live Pyth price. The AMM's real 0.3% fee on each swap
       // funds every pot, so it gets the SAME restart/supervision as the lifecycle keeper.
       name: 'fee-arena-arb',
@@ -54,7 +54,7 @@ module.exports = {
       script: 'pnpm',
       args: 'arb',
 
-      // Working directory - adjust if running pm2 from a different cwd.
+      // Working directory — adjust if running pm2 from a different cwd.
       cwd: __dirname,
 
       // Restart policy (mirrors the keeper app).
@@ -69,11 +69,11 @@ module.exports = {
       merge_logs: true,          // stdout + stderr into a single log stream
       log_date_format: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
 
-      // Single instance - the arb bot is deliberately single-process (one key, no nonce races).
+      // Single instance — the arb bot is deliberately single-process (one key, no nonce races).
       instances: 1,
       exec_mode: 'fork',
 
-      // Environment - dotenv inside config.ts loads .env; you can also set vars here.
+      // Environment — dotenv inside config.ts loads .env; you can also set vars here.
       env: {
         NODE_ENV: 'production',
       },

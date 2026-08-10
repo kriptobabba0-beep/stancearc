@@ -1,4 +1,4 @@
-// abis/erc20.ts - ERC-20: decimals (boot read), balanceOf, allowance, approve (exact-amount only), symbol.
+// abis/erc20.ts — ERC-20: decimals (boot read), balanceOf, allowance, approve (exact-amount only), symbol.
 export const erc20Abi = [
   { type: 'function', name: 'decimals', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint8' }] },
   { type: 'function', name: 'balanceOf', stateMutability: 'view',

@@ -1,10 +1,10 @@
-// lib/poolStats.ts - PURE, display-grade pool analytics for the Pool list page (no React, no chain
-// reads, no hardcoded decimals). The hook (hooks/usePoolStats) feeds these the raw on-chain inputs -
-// pool token reserves, the live slot0 price, and decoded 24h Swap events - and everything here is
+// lib/poolStats.ts — PURE, display-grade pool analytics for the Pool list page (no React, no chain
+// reads, no hardcoded decimals). The hook (hooks/usePoolStats) feeds these the raw on-chain inputs —
+// pool token reserves, the live slot0 price, and decoded 24h Swap events — and everything here is
 // float arithmetic on already-derived quantities, used for DISPLAY ONLY. It NEVER sizes a transaction
 // (those stay bigint-exact in lib/rangeMath / lib/swapQuote).
 //
-// HONEST framing: every number is a restatement of real on-chain data -
+// HONEST framing: every number is a restatement of real on-chain data —
 //   TVL    = pool reserves valued at the pool's OWN price,
 //   Volume = summed real Swap notionals over the window,
 //   Fees   = volume × the pool's fee tier,
@@ -104,7 +104,7 @@ export function bucketSeries(
 }
 
 /**
- * "$40,726,958" - whole-dollar grouped for ≥ $1; "$0.42" cents for sub-$1; "$0" for 0/negatives.
+ * "$40,726,958" — whole-dollar grouped for ≥ $1; "$0.42" cents for sub-$1; "$0" for 0/negatives.
  * Display-grade grouping (Intl). Used for every USD figure on the Pool surfaces.
  */
 export function formatUsd(n: number): string {
@@ -114,11 +114,11 @@ export function formatUsd(n: number): string {
 }
 
 /**
- * "166.62%" / "0.58%" - 2dp percent. Non-finite → "-"; an absurd APR (thin pool, momentary spike) is
+ * "166.62%" / "0.58%" — 2dp percent. Non-finite → "—"; an absurd APR (thin pool, momentary spike) is
  * capped to ">9,999%" so a row never renders a 12-digit number.
  */
 export function formatPct(n: number): string {
-  if (!Number.isFinite(n)) return '-';
+  if (!Number.isFinite(n)) return '—';
   if (n >= 10_000) return '>9,999%';
   return `${n.toFixed(2)}%`;
 }

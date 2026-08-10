@@ -1,4 +1,4 @@
-// POST /api/circle/signout - clear the HttpOnly uid cookie (PIN session). Email/Google keep no cookie.
+// POST /api/circle/signout — clear the HttpOnly uid cookie (PIN session). Email/Google keep no cookie.
 import { NextResponse } from 'next/server';
 import { UID_COOKIE } from '../_lib';
 

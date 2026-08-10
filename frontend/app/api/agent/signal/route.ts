@@ -1,4 +1,4 @@
-// app/api/agent/signal/route.ts - the Limen Agent's per-epoch stance signal.
+// app/api/agent/signal/route.ts — the Limen Agent's per-epoch stance signal.
 //
 // GET /api/agent/signal?market=<id>  ->  { signal, rationale, rationaleSource, epoch, generatedAt }
 //
@@ -8,7 +8,7 @@
 // time to settlement, plus a plain-language rationale. The rationale is template-rendered
 // by default; when ANTHROPIC_API_KEY is configured the agent asks Claude to write it from
 // the same numbers (never to change them) and falls back to the template on any failure.
-// Advisory only - the response carries the disclaimer the UI must show.
+// Advisory only — the response carries the disclaimer the UI must show.
 import { NextResponse } from 'next/server';
 import { createPublicClient, fallback, http } from 'viem';
 import { arcTestnet } from '@/lib/chain';
@@ -118,7 +118,7 @@ export async function GET(req: Request): Promise<NextResponse> {
     if (horizonSec <= 0 || epoch.bandBps <= 0) {
       const body = {
         signal: null,
-        reason: 'epoch is past its settlement moment - a fresh signal arrives with the next epoch',
+        reason: 'epoch is past its settlement moment — a fresh signal arrives with the next epoch',
         epoch,
         generatedAt: nowSec,
       };
@@ -140,7 +140,7 @@ export async function GET(req: Request): Promise<NextResponse> {
       rationale: llm ?? renderRationale(signal),
       rationaleSource: llm !== null ? 'model' : 'template',
       disclaimer:
-        'Statistical estimate from recent oracle prices - not financial advice. The agent can be wrong; stance only reallocates epoch fees, never LP principal.',
+        'Statistical estimate from recent oracle prices — not financial advice. The agent can be wrong; stance only reallocates epoch fees, never LP principal.',
       epoch,
       generatedAt: nowSec,
     };

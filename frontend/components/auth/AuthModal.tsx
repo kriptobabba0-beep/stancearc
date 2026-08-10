@@ -1,15 +1,15 @@
 'use client';
 
-// components/auth/AuthModal.tsx - the single, premium "Sign in" modal.
+// components/auth/AuthModal.tsx — the single, premium "Sign in" modal.
 //   • Browser wallets (primary, top) → wagmi injected connectors. EIP-6963-discovered
 //     wallets (MetaMask, Rabby, OKX, …) are listed by their REAL name + icon; when only a
-//     generic provider exists the row says "Connect browser wallet" - we support any EVM
+//     generic provider exists the row says "Connect browser wallet" — we support any EVM
 //     extension, and the copy must never pretend MetaMask is the only door.
 //   • or
 //   • Continue with Google                  → Circle embedded (portable)
 //   • Continue with Email                   → Circle embedded (portable)
 // On a successful embedded login the modal closes and routes to /wallet (the My Wallet experience).
-// On a wallet connect it just closes. Dark, immersive, frosted-glass - on-brand with the HUD theme.
+// On a wallet connect it just closes. Dark, immersive, frosted-glass — on-brand with the HUD theme.
 
 import { useEffect, useRef, useState } from 'react';
 import { useAccount, useConnect } from 'wagmi';
@@ -21,7 +21,7 @@ import { BrandMark } from '@/components/ui/BrandMark';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // The install link still points at MetaMask (the most common first wallet) but the copy
-// stays generic - any EVM extension works once installed.
+// stays generic — any EVM extension works once installed.
 const METAMASK_URL = 'https://metamask.io/download/';
 const CONIC = 'conic-gradient(from 0deg, #e5484d, #f0883e, #38bdf8, #a855f7, #e5484d)';
 const MAX_WALLET_ROWS = 4;
@@ -97,7 +97,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
 
   const [email, setEmail] = useState('');
   const [mounted, setMounted] = useState(false);
-  // Which wallet row is mid-connect (uid) - only that row shows the spinner.
+  // Which wallet row is mid-connect (uid) — only that row shows the spinner.
   const [pendingUid, setPendingUid] = useState<string | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
 
@@ -193,13 +193,13 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
         <div className="relative px-7 pb-7 pt-9 sm:px-8">
           {/* Header */}
           <div className="mb-7 text-center">
-            {/* The mark stands on its own - bigger, no framing box (its own rounded corners carry it). */}
+            {/* The mark stands on its own — bigger, no framing box (its own rounded corners carry it). */}
             <BrandMark className="mx-auto mb-4 h-14 w-14" label="Limen Finance" />
             <h2 className="font-display text-[26px] font-semibold tracking-tight text-ink">Sign in to Limen Finance</h2>
             <p className="mt-1.5 text-sm text-ink-muted">Connect a wallet, or create one in seconds.</p>
           </div>
 
-          {/* Browser wallets - primary. One row per discovered wallet (real name + icon),
+          {/* Browser wallets — primary. One row per discovered wallet (real name + icon),
               or one honest generic row; never a MetaMask-only claim. */}
           {noWallet ? (
             <a
@@ -214,7 +214,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
               </span>
               <span className="flex-1">
                 <span className="block text-sm font-semibold text-ink">Install a browser wallet</span>
-                <span className="block text-xs text-ink-muted">MetaMask, Rabby, OKX - any EVM wallet works</span>
+                <span className="block text-xs text-ink-muted">MetaMask, Rabby, OKX — any EVM wallet works</span>
               </span>
               <ArrowRight className="h-4 w-4 text-ink-faint transition-all group-hover:translate-x-0.5 group-hover:text-ink" />
             </a>
@@ -248,7 +248,7 @@ export function AuthModal({ open, onClose }: { open: boolean; onClose: () => voi
                         {named ? `Connect with ${c.name}` : 'Connect browser wallet'}
                       </span>
                       <span className="block text-xs text-ink-muted">
-                        {named ? 'Browser extension wallet' : 'MetaMask, Rabby, OKX - any EVM extension'}
+                        {named ? 'Browser extension wallet' : 'MetaMask, Rabby, OKX — any EVM extension'}
                       </span>
                     </span>
                     {rowPending ? (

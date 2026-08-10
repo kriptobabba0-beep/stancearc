@@ -1,5 +1,5 @@
-// lib/seo.ts - the public-facing site metadata used for link previews (OpenGraph / Twitter cards)
-// and the document <title>/<meta description>. Kept ORIGINAL and specific to Limen Finance - it must
+// lib/seo.ts — the public-facing site metadata used for link previews (OpenGraph / Twitter cards)
+// and the document <title>/<meta description>. Kept ORIGINAL and specific to Limen Finance — it must
 // never name another protocol. This is the single source of truth the root layout reads.
 export const SITE_URL = 'https://limen.finance';
 export const SITE_NAME = 'Limen Finance';

@@ -1,12 +1,12 @@
 'use client';
 
-// components/arena/EnterArenaRail.tsx - the Arena RIGHT column. Renders one of three states driven by
+// components/arena/EnterArenaRail.tsx — the Arena RIGHT column. Renders one of three states driven by
 // useArenaFlow, matching the mockups:
-//   • add-liquidity (1) - "How to enter the Stance": the 3-step tracker, step 1 active, CTA opens the
+//   • add-liquidity (1) — "How to enter the Stance": the 3-step tracker, step 1 active, CTA opens the
 //                          Add-liquidity modal (or connects the wallet first).
-//   • choose-side  (3) - "Enter the Stance": the available position + the side preview, CTA opens the
+//   • choose-side  (3) — "Enter the Stance": the available position + the side preview, CTA opens the
 //                          Choose-side modal.
-//   • staked       (6) - "Your Stance position": the locked stake, side, an estimated claim-if-wins, and
+//   • staked       (6) — "Your Stance position": the locked stake, side, an estimated claim-if-wins, and
 //                          a provisional live status.
 // All values are real (positions/stakes/epoch/oracle); the estimate + live status are clearly labelled.
 import { useConnect } from 'wagmi';
@@ -67,7 +67,7 @@ type StepState = 'active' | 'done' | 'todo';
 
 /**
  * One step in the tracker: a numbered/check circle on a connector rail (left), then a rounded card
- * with an ICON TILE (droplet/lock/layers - red filled when active, muted otherwise), the title +
+ * with an ICON TILE (droplet/lock/layers — red filled when active, muted otherwise), the title +
  * badge, a one-line description, and optional right-hand extras (token pair on step 1). Matches the
  * mockup: the inner cards are rounded-rect (only the outer column is the chamfered HUD frame).
  */
@@ -118,7 +118,7 @@ function StepRow({
         )}
       >
         <div className="flex items-start gap-3">
-          {/* Outlined icon tile - red-bordered with a red glyph when active (reference style). */}
+          {/* Outlined icon tile — red-bordered with a red glyph when active (reference style). */}
           <span
             className={cn(
               'grid h-9 w-9 shrink-0 place-items-center rounded-lg border',
@@ -252,7 +252,7 @@ function ChooseSideState({ flow, baseSymbol, quoteSymbol }: { flow: ArenaFlow; b
               {baseSymbol} / {quoteSymbol}
             </span>
             <span className="block truncate font-mono text-[11px] text-ink-faint">
-              #{flow.selectedPosition?.tokenId.toString() ?? '-'} · {range?.label ?? '…'}
+              #{flow.selectedPosition?.tokenId.toString() ?? '—'} · {range?.label ?? '…'}
             </span>
           </span>
         </span>
@@ -261,9 +261,9 @@ function ChooseSideState({ flow, baseSymbol, quoteSymbol }: { flow: ArenaFlow; b
         </span>
       </div>
 
-      {/* Step list (1 done · 2 active+side cards · 3 upcoming) - mockup #3. */}
+      {/* Step list (1 done · 2 active+side cards · 3 upcoming) — mockup #3. */}
       <div className="mt-4 space-y-2">
-        {/* Step 1 - completed */}
+        {/* Step 1 — completed */}
         <div className="flex items-center gap-3 rounded-xl border border-line bg-surface-muted px-3.5 py-2.5">
           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-side-up bg-side-up/15 text-side-up">
             <Check className="h-3.5 w-3.5" />
@@ -272,7 +272,7 @@ function ChooseSideState({ flow, baseSymbol, quoteSymbol }: { flow: ArenaFlow; b
           <span className="text-[11px] font-medium text-side-up">Completed</span>
         </div>
 
-        {/* Step 2 - active, with the three side cards */}
+        {/* Step 2 — active, with the three side cards */}
         <div className="rounded-xl border border-brand bg-brand-soft/40 px-3.5 py-3">
           <div className="flex items-center gap-3">
             <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-brand bg-brand/15 text-[12px] font-semibold text-brand">
@@ -297,7 +297,7 @@ function ChooseSideState({ flow, baseSymbol, quoteSymbol }: { flow: ArenaFlow; b
           </div>
         </div>
 
-        {/* Step 3 - upcoming */}
+        {/* Step 3 — upcoming */}
         <div className="flex items-center gap-3 rounded-xl border border-line bg-surface-muted px-3.5 py-2.5 opacity-70">
           <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full border border-line text-[12px] font-semibold text-ink-faint">
             3
@@ -360,7 +360,7 @@ function StakedState({
   const sideLabel = SIDE_LABELS[stake.side];
 
   // Estimated claim-if-this-side-wins-now: your share of your side's depth × the live pot (USD). Honest
-  // estimate - labelled as such; "-" when the side has no depth yet or this position is out of range.
+  // estimate — labelled as such; "—" when the side has no depth yet or this position is out of range.
   const sideDepth = epoch?.sideContribution6[stake.side] ?? 0n;
   const potUsdValue6 = epoch
     ? potUsd6({
@@ -433,7 +433,7 @@ function StakedState({
                 ? formatUsdPrice18(v3Thresholds.upAt)
                 : stake.side === Side.DOWN
                   ? formatUsdPrice18(v3Thresholds.downAt)
-                  : `${formatUsdPrice18(v3Thresholds.downAt)} - ${formatUsdPrice18(v3Thresholds.upAt)}`
+                  : `${formatUsdPrice18(v3Thresholds.downAt)} — ${formatUsdPrice18(v3Thresholds.upAt)}`
             }
           />
         )}
@@ -455,7 +455,7 @@ function StakedState({
             estClaim6 !== undefined ? (
               <span className="text-side-up">{formatUsd6(estClaim6)}</span>
             ) : (
-              <span className="text-ink-faint">-</span>
+              <span className="text-ink-faint">—</span>
             )
           }
         />
@@ -486,7 +486,7 @@ function StakedState({
 
       <p className="mt-3 text-[11px] leading-snug text-ink-faint">
         Estimates update in real time from the oracle price. Final settlement uses the Pyth price at
-        settlement time. When the round settles, your LP is returned to your wallet automatically -
+        settlement time. When the round settles, your LP is returned to your wallet automatically —
         winners claim their share from below.
       </p>
 
@@ -522,7 +522,7 @@ function StakedState({
 export function EnterArenaRail({ flow }: { flow: ArenaFlow }) {
   const market = useActiveMarket();
   const baseSymbol = market.baseSymbol;
-  // The market's real quote (EURC on the EURC market) - never assume USDC.
+  // The market's real quote (EURC on the EURC market) — never assume USDC.
   const quoteSymbol = market.quoteSymbol ?? 'USDC';
 
   if (flow.step === 'staked' && flow.currentStake) {

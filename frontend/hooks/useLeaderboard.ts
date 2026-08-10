@@ -1,9 +1,9 @@
 'use client';
 
-// hooks/useLeaderboard.ts - per-address aggregates for the ACTIVE market. Rows now come from
+// hooks/useLeaderboard.ts — per-address aggregates for the ACTIVE market. Rows now come from
 // /api/leaderboard (the server-side incremental event index): one JSON fetch per visitor
 // instead of the old client-side FULL-HISTORY getLogs sweep (hundreds of RPC calls per page
-// view - a real contributor to Arc's "request limit reached"). The pure `buildLeaderboard`
+// view — a real contributor to Arc's "request limit reached"). The pure `buildLeaderboard`
 // aggregation is kept below for its unit tests and as the reference for the old semantics.
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useChainId } from 'wagmi';

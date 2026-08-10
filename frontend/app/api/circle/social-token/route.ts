@@ -1,4 +1,4 @@
-// POST /api/circle/social-token { deviceId } - mint a social-login (Google) device token.
+// POST /api/circle/social-token { deviceId } — mint a social-login (Google) device token.
 import { NextResponse } from 'next/server';
 import { createSocialDeviceToken } from '@/lib/server/circleServer';
 import { readJson, errorJson, badRequest, reqStr } from '../_lib';

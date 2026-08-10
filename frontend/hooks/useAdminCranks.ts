@@ -110,7 +110,7 @@ function usePostPriceCrank(functionName: 'startEpoch' | 'endEpoch'): CrankSlot<v
       setIsPreparing(true);
       void (async () => {
         try {
-          // (a) signed price update from Hermes - for THIS market's Pyth feed (ETH or BTC, etc.)
+          // (a) signed price update from Hermes — for THIS market's Pyth feed (ETH or BTC, etc.)
           const { updateData } = await fetchPythUpdate(ENV.HERMES_URL, market.feedId);
           // (b) Pyth update fee for that update (paid as msg.value, refunded if excess)
           const client = getPublicClient(wagmiConfig, { chainId: arcTestnet.id });
@@ -202,7 +202,7 @@ export function useAdminCranks(): AdminCranks {
     useCallback(() => ({ address: arenaAddr, abi: arenaAbi, functionName: 'openEntry' }), [arenaAddr, arenaAbi]),
   );
   // startEpoch(bytes[]) / endEpoch(bytes[]) are payable: post a signed Hermes update
-  // and pay the Pyth update fee (V1 trustless oracle - no admin setPrice).
+  // and pay the Pyth update fee (V1 trustless oracle — no admin setPrice).
   const startEpoch = usePostPriceCrank('startEpoch');
   const endEpoch = usePostPriceCrank('endEpoch');
   const sweep = useCrank<{ maxCount: bigint }>(
@@ -286,7 +286,7 @@ export function useAdminCranks(): AdminCranks {
   }>(
     useCallback(
       ({ direction, baseToken, feeTier, recipient, amountIn }) => {
-        // Swap the ACTIVE market's base leg (passed in) against the global USDC - NOT the global
+        // Swap the ACTIVE market's base leg (passed in) against the global USDC — NOT the global
         // WETH (which is wrong on a BTC market). Fee tier comes from the caller (the pool fee).
         const [tokenIn, tokenOut] =
           direction === 'BASE_TO_USDC'
@@ -333,7 +333,7 @@ export function useAdminCranks(): AdminCranks {
   };
 }
 
-/** Exact-amount ERC-20 approval for the swap router (NEVER MAX) - used by the swap runner. */
+/** Exact-amount ERC-20 approval for the swap router (NEVER MAX) — used by the swap runner. */
 export function useApproveExact(): CrankSlot<{
   token: `0x${string}`;
   amount: bigint;
@@ -356,7 +356,7 @@ function useCrankApprove(): CrankSlot<{ token: `0x${string}`; amount: bigint }> 
 }
 
 /** Read the router allowance for a token, to decide whether an exact approve is needed first.
- * `token` may be undefined while the active pool's base leg is still resolving - the read is gated
+ * `token` may be undefined while the active pool's base leg is still resolving — the read is gated
  * off until both the token and owner are known. */
 export function useRouterAllowance(token: `0x${string}` | undefined, ownerAddr?: `0x${string}`) {
   return useReadContract({

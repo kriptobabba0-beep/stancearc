@@ -1,12 +1,12 @@
 'use client';
 
-// ui/Card.tsx - the app-wide card primitives, in the ARENA design language: every card is the
+// ui/Card.tsx — the app-wide card primitives, in the ARENA design language: every card is the
 // chamfered "HUD" octagon frame (globals.css `.hud-panel`) rather than a plain rounded rectangle.
 //
 // Implementation notes:
 //  • `--hud-ext:0px` pulls the frame's paint pseudos back inside the element box (the ±12px extension
 //    exists only for the Arena columns' interlocking joint tabs), and the element-level
-//    `clip-path: var(--hud-clip)` clips CHILDREN to the octagon too - full-bleed header/footer strips
+//    `clip-path: var(--hud-clip)` clips CHILDREN to the octagon too — full-bleed header/footer strips
 //    can't square out the cut corners.
 //  • Each card wraps itself in `.hud-col` (a container-query scope) so the chamfer size tracks the
 //    CARD's own width (~5.2%, clamped), exactly like the Arena columns.
@@ -71,7 +71,7 @@ export function SectionCard({
         <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
           <div className="flex items-center gap-3">
             {icon && (
-              // Outlined square tile (the Arena's icon-chip language - no filled brand tiles).
+              // Outlined square tile (the Arena's icon-chip language — no filled brand tiles).
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-line bg-surface-muted/40 text-ink-muted">
                 {icon}
               </span>

@@ -1,4 +1,4 @@
-// lib/chain.ts - viem/wagmi Arc Testnet Chain definition (env-overridable; nothing mainnet-hardcoded).
+// lib/chain.ts — viem/wagmi Arc Testnet Chain definition (env-overridable; nothing mainnet-hardcoded).
 import { defineChain } from 'viem';
 import { ENV } from '@/lib/env';
 
@@ -20,18 +20,18 @@ export const MAX_PRIORITY_FEE_WEI = 1_000_000_000n; // 1 Gwei
  * `chainId` is here because leaving it off sent real transactions to whatever network the wallet
  * happened to be on. wagmi's `writeContract` destructures `chainId` from its parameters, resolves
  * the connector client with `parameters.chainId ?? connection.chainId`, and then calls viem with
- * `chain: chainId ? { id: chainId } : null` - and `chain: null` tells viem to SKIP the chain check
+ * `chain: chainId ? { id: chainId } : null` — and `chain: null` tells viem to SKIP the chain check
  * entirely. A viem `simulateContract` request carries `chain`, not `chainId`, so passing it through
  * left both the client and the assertion on the wallet's current network.
  *
  * On 2026-08-05 that put two `approve` calls on Ethereum MAINNET, addressed to Arc token contracts.
  * Those addresses hold no code on mainnet, and a call to a codeless address succeeds silently and
- * emits nothing - so it cost gas, produced a green transaction, and did nothing. Both simulations
+ * emits nothing — so it cost gas, produced a green transaction, and did nothing. Both simulations
  * passed for the same reason. With `chainId` set, viem asserts the wallet's chain and throws
  * instead of signing.
  *
  * An explicit `chainId` on the incoming request still wins, so the multi-chain bridge/gateway flows
- * (which target CCTP source chains on purpose) are unaffected - they never route through here.
+ * (which target CCTP source chains on purpose) are unaffected — they never route through here.
  */
 export function withGasFloor<T>(request: T): T & {
   chainId: number;
@@ -49,7 +49,7 @@ export function withGasFloor<T>(request: T): T & {
 export const arcTestnet = defineChain({
   id: ARC_CHAIN_ID,
   name: 'Arc Testnet',
-  // NATIVE TOKEN IS GAS-ONLY. 18 decimals. Shown solely as a labeled "USDC (gas)" balance -
+  // NATIVE TOKEN IS GAS-ONLY. 18 decimals. Shown solely as a labeled "USDC (gas)" balance —
   // NEVER used in fee/contribution/payout math (that is the 6-dp ERC-20 USDC at 0x3600...).
   nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
   rpcUrls: {
@@ -62,7 +62,7 @@ export const arcTestnet = defineChain({
     default: { name: 'ArcScan', url: ENV.EXPLORER_URL }, // https://testnet.arcscan.app
   },
   contracts: {
-    // Canonical Multicall3 (same address every chain) - batches per-position reads.
+    // Canonical Multicall3 (same address every chain) — batches per-position reads.
     multicall3: { address: ENV.MULTICALL3_ADDRESS },
   },
   testnet: true,

@@ -1,5 +1,5 @@
-// abis/feeArena.ts - FULL FeeArena ABI generated VERBATIM from the compiled Foundry artifact
-// (out/FeeArena.sol/FeeArena.json) via forge build. DO NOT hand-edit - regenerate from the artifact.
+// abis/feeArena.ts — FULL FeeArena ABI generated VERBATIM from the compiled Foundry artifact
+// (out/FeeArena.sol/FeeArena.json) via forge build. DO NOT hand-edit — regenerate from the artifact.
 // `as const` is REQUIRED for viem type inference. All on-chain numerics decode to bigint.
 // EpochView/StakeView/ClaimPreview tuple shapes mirror src/interfaces/IFeeArena.sol exactly.
 export const feeArenaAbi = [

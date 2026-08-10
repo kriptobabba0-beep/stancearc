@@ -1,4 +1,4 @@
-// index.ts - keeper entry point. Loads + validates config, builds a viem public +
+// index.ts — keeper entry point. Loads + validates config, builds a viem public +
 // wallet client (account from KEEPER_PRIVATE_KEY, chain derived from the RPC's
 // chainId so it works on Arc testnet AND mainnet with no hardcoded id), then runs a
 // poll loop: every POLL_INTERVAL_MS, for EACH market SEQUENTIALLY (one keeper key ->
@@ -42,7 +42,7 @@ import {
 } from './metricsState.js';
 import { createAlerter } from './alert.js';
 
-/** Build the viem clients + account for a config. Pure construction - no I/O at call. */
+/** Build the viem clients + account for a config. Pure construction — no I/O at call. */
 export function buildClients(cfg: KeeperConfig, chainId: number) {
   const account = privateKeyToAccount(cfg.privateKey);
   const chain: Chain = defineChain({
@@ -60,8 +60,8 @@ export function buildClients(cfg: KeeperConfig, chainId: number) {
 
   // OPTIONAL owner signer for wedge auto-recovery (KEEPER_OWNER_PRIVATE_KEY). Built as a
   // SEPARATE account + wallet client so the owner key is used SOLELY for emergencySettle
-  // recovery - every normal lifecycle crank still signs with the restricted keeper key.
-  // undefined when no owner key is configured (recovery OFF - behavior unchanged).
+  // recovery — every normal lifecycle crank still signs with the restricted keeper key.
+  // undefined when no owner key is configured (recovery OFF — behavior unchanged).
   const owner = cfg.ownerPrivateKey
     ? (() => {
         const ownerAccount = privateKeyToAccount(cfg.ownerPrivateKey!);
@@ -77,7 +77,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 /**
  * Race a promise against a hard deadline. If `p` doesn't settle within `ms`, REJECT with a timeout
- * error so the caller can treat it as a failed tick and move on - the orphaned `p` is abandoned (it
+ * error so the caller can treat it as a failed tick and move on — the orphaned `p` is abandoned (it
  * may still settle later into the void). This is the only defense against an await that neither
  * resolves nor rejects (a black-holed socket, a proxy that accepts but never answers): viem's
  * transport timeout doesn't cover every such case, so we bound it here at the call site.
@@ -101,7 +101,7 @@ async function main(): Promise<void> {
   const alerter = createAlerter(cfg.alert, { log });
 
   // Detect the chain id by probing the RPCs in order so we never hardcode testnet vs
-  // mainnet - and so a dead first RPC at boot doesn't block startup.
+  // mainnet — and so a dead first RPC at boot doesn't block startup.
   let chainId: number | undefined;
   let probeErr: unknown;
   for (const url of cfg.rpcUrls) {
@@ -127,12 +127,12 @@ async function main(): Promise<void> {
   const hasV2Market = cfg.markets.some((m) => m.version === 'v2');
   const effectivePollMs = hasV2Market ? Math.min(cfg.pollIntervalMs, cfg.v2PollIntervalMs) : cfg.pollIntervalMs;
 
-  // TASK 4a - restart-safe counters. SEED the cumulative counters from the persisted state
+  // TASK 4a — restart-safe counters. SEED the cumulative counters from the persisted state
   // file (if KEEPER_METRICS_STATE_FILE is set) so a restart/crash-loop doesn't zero the
   // Prometheus series and break rate()/increase() alerts. recordRestart has already bumped
   // restartsTotal for THIS boot inside loadMetricsState. processStartTimeSec is the standard
   // uptime gauge (it RESETS on each restart, which is the documented bounce signal). When no
-  // path is set, `seed` is a fresh set with restartsTotal=1 - counters are in-memory only.
+  // path is set, `seed` is a fresh set with restartsTotal=1 — counters are in-memory only.
   const processStartTimeSec = Math.floor(Date.now() / 1000);
   const { metrics: seed, loaded: metricsLoaded } = cfg.metricsStateFile
     ? loadMetricsState(cfg.metricsStateFile, log)
@@ -143,7 +143,7 @@ async function main(): Promise<void> {
     signer: account.address,
     chainId,
     // OPTIONAL owner-key wedge auto-recovery: report whether it's armed and, if so, the
-    // owner signer address. TESTNET convenience - on mainnet keep the owner key cold.
+    // owner signer address. TESTNET convenience — on mainnet keep the owner key cold.
     recovery: owner ? { enabled: true, ownerSigner: owner.account.address } : { enabled: false },
     rpc: cfg.rpcUrl,
     rpcUrls: cfg.rpcUrls,
@@ -165,7 +165,7 @@ async function main(): Promise<void> {
     httpPort: cfg.httpPort,
     httpHost: cfg.httpHost,
     stallFactor: cfg.stallFactor,
-    // Report whether external alerting is wired (URLs themselves are NOT logged - they may
+    // Report whether external alerting is wired (URLs themselves are NOT logged — they may
     // embed a Slack/Telegram token). Off => unchanged log-only behavior.
     alerting: {
       enabled: alerter.enabled,
@@ -174,7 +174,7 @@ async function main(): Promise<void> {
       dedupeWindowMs: cfg.alert.dedupeWindowMs,
       heartbeatIntervalMs: cfg.alert.heartbeatIntervalMs,
     },
-    // TASK 4a - restart-safe metrics. Report whether the counters are file-backed, whether
+    // TASK 4a — restart-safe metrics. Report whether the counters are file-backed, whether
     // prior state was loaded this boot, this boot's restart count, and the uptime gauge.
     metrics: {
       stateFile: cfg.metricsStateFile !== undefined,
@@ -225,14 +225,14 @@ async function main(): Promise<void> {
   // operator clears the ledger. Sticky in-process; the on-disk ledger keeps it sticky across boots.
   let keeperStopped = false;
   let stoppedReason: string | null = null;
-  // Per-market StalePrice / freshness-defer streak - a DISTINCT diagnosis from a generic wedge
+  // Per-market StalePrice / freshness-defer streak — a DISTINCT diagnosis from a generic wedge
   // (it means the price window is too tight vs mine latency, not an RPC/contract fault). A
   // persistent streak still rides the normal failure/backoff path, so a silent stall can't hide.
   const staleStreak = new Map<string, number>();
 
   // refill-safe sentinel: a tiny file the gas-watchdog reads to decide whether it's safe to refill
   // the keeper signer from the owner reserve. We REwrite it every pass with a fresh timestamp; the
-  // watchdog refills ONLY when the sentinel is fresh AND refillSafe - so a crash-looping keeper
+  // watchdog refills ONLY when the sentinel is fresh AND refillSafe — so a crash-looping keeper
   // (stale sentinel) or a spend-cap-tripped keeper (refillSafe:false) stops the refill pump cold.
   const refillSafeFile = cfg.refillSafeFile;
   const writeRefillSafe = (refillSafe: boolean, reason: string | null, nowMs: number): void => {
@@ -251,12 +251,12 @@ async function main(): Promise<void> {
     if (boot.tripped) {
       keeperStopped = true;
       stoppedReason = boot.reason;
-      log({ msg: 'ALERT keeper STOPPED on boot - spend cap latched on disk', reason: boot.reason });
+      log({ msg: 'ALERT keeper STOPPED on boot — spend cap latched on disk', reason: boot.reason });
       void alerter.notify({
         key: 'spendcap',
         severity: 'critical',
         title: 'SPEND CAP TRIPPED',
-        message: `keeper booted with the spend cap LATCHED (${boot.reason}) - cranking halted until the ledger file is cleared by an operator`,
+        message: `keeper booted with the spend cap LATCHED (${boot.reason}) — cranking halted until the ledger file is cleared by an operator`,
         context: { reason: boot.reason },
       });
     }
@@ -279,7 +279,7 @@ async function main(): Promise<void> {
   };
 
   // Snapshot the CUMULATIVE-counter slice of the live metrics for persistence (gauges are
-  // intentionally excluded - they're re-derived each tick and must not be carried forward).
+  // intentionally excluded — they're re-derived each tick and must not be carried forward).
   const persistedSnapshot = (): PersistedMetrics => ({
     ticksTotal: metrics.ticksTotal,
     actionsTotal: metrics.actionsTotal,
@@ -303,7 +303,7 @@ async function main(): Promise<void> {
   });
   const getMetrics = (): MetricsSnapshot => metrics;
 
-  // Optional /health + /metrics server - OFF unless KEEPER_HTTP_PORT > 0.
+  // Optional /health + /metrics server — OFF unless KEEPER_HTTP_PORT > 0.
   const healthServer =
     cfg.httpPort > 0
       ? startHealthServer({
@@ -331,15 +331,15 @@ async function main(): Promise<void> {
   process.on('SIGTERM', () => stop('SIGTERM'));
 
   // HARD LIVENESS BACKSTOP (dead-man's-switch of last resort). lastTickTs advances at the end of
-  // every full pass; if it goes stale beyond stallExitMs - a freeze even the per-tick deadline can't
-  // unblock (e.g. a hung getBalance at the top of the loop, or an event-loop wedge) - exit so the
+  // every full pass; if it goes stale beyond stallExitMs — a freeze even the per-tick deadline can't
+  // unblock (e.g. a hung getBalance at the top of the loop, or an event-loop wedge) — exit so the
   // container supervisor (restart: unless-stopped) restarts a truly frozen process. Seeded from loop
   // start so it has a baseline before the first tick completes. unref so it never holds the process up.
   const loopStartTs = Date.now();
   stallWatch = setInterval(() => {
     const since = Date.now() - (lastTickTs ?? loopStartTs);
     if (since > cfg.stallExitMs) {
-      log({ msg: 'FATAL keeper loop stalled - exiting for supervisor restart', sinceMs: since, stallExitMs: cfg.stallExitMs });
+      log({ msg: 'FATAL keeper loop stalled — exiting for supervisor restart', sinceMs: since, stallExitMs: cfg.stallExitMs });
       try { healthServer?.close(); } catch { /* best effort */ }
       process.exit(1);
     }
@@ -347,7 +347,7 @@ async function main(): Promise<void> {
   stallWatch.unref?.();
 
   while (running) {
-    // SPEND CAP gate: if the persisted breaker is OPEN, do NO cranking this pass - just keep the
+    // SPEND CAP gate: if the persisted breaker is OPEN, do NO cranking this pass — just keep the
     // heartbeat alive, page (deduped), and tell the gas-watchdog it is NOT safe to refill so a
     // tripped keeper can never be fed back into a drain. Sticky until an operator clears the ledger.
     if (keeperStopped || (spendGuard.enabled && spendGuard.status(Date.now()).tripped)) {
@@ -363,7 +363,7 @@ async function main(): Promise<void> {
         key: 'spendcap',
         severity: 'critical',
         title: 'SPEND CAP TRIPPED',
-        message: `keeper halted (${stoppedReason}) - the spend circuit-breaker is latched; clear the spend ledger file to resume`,
+        message: `keeper halted (${stoppedReason}) — the spend circuit-breaker is latched; clear the spend ledger file to resume`,
         context: { reason: stoppedReason },
       });
       void alerter.heartbeat();
@@ -372,7 +372,7 @@ async function main(): Promise<void> {
     }
 
     // Whether the reserve governor wants the loop to slow down (throttle) or pause cranking
-    // entirely (stop) this pass - both set in the reserve block below.
+    // entirely (stop) this pass — both set in the reserve block below.
     let reserveThrottle = false;
     let reserveStop = false;
 
@@ -401,7 +401,7 @@ async function main(): Promise<void> {
 
     // OWNER-RESERVE DRAWDOWN GOVERNOR. The gas-watchdog refills the signer from the owner reserve,
     // so a sustained LEGITIMATE burn that outpaces faucet top-ups bleeds the reserve to empty and
-    // wedges everything - the spend cap (tuned above legit burn) can't see that. So we measure the
+    // wedges everything — the spend cap (tuned above legit burn) can't see that. So we measure the
     // reserve's drawdown RATE and page HOURS before depletion, and throttle/stop near the floor.
     if (reserveCfg?.enabled && owner) {
       try {
@@ -430,9 +430,9 @@ async function main(): Promise<void> {
           const projHrs = d.projectedDryMs !== null ? (d.projectedDryMs / 3_600_000).toFixed(1) : '?';
           const msg =
             d.alert === 'floor'
-              ? `owner reserve ${owner.account.address} at/below the floor - the gas-watchdog can no longer refill the keeper; FUND the reserve from the faucet NOW`
+              ? `owner reserve ${owner.account.address} at/below the floor — the gas-watchdog can no longer refill the keeper; FUND the reserve from the faucet NOW`
               : d.alert === 'projection'
-                ? `owner reserve draining - projected to hit the floor in ~${projHrs}h at the current rate; top up from the faucet`
+                ? `owner reserve draining — projected to hit the floor in ~${projHrs}h at the current rate; top up from the faucet`
                 : `owner reserve draining fast (${d.drawdownWeiPerHour} wei/hour); top up from the faucet before it depletes`;
           void alerter.notify({
             key: `reserve:${d.alert}`,
@@ -448,17 +448,17 @@ async function main(): Promise<void> {
     }
 
     // RESERVE STOP: the owner reserve is at/below its floor, so the gas-watchdog can no longer
-    // refill the keeper signer - every further crank just races the signer to a messy
+    // refill the keeper signer — every further crank just races the signer to a messy
     // insufficient-funds wedge. Pause cranking THIS pass (keep the heartbeat + page loudly) and
     // re-check next pass: the moment an operator funds the reserve, d.stop clears and cranking
-    // resumes automatically. This is a SOFT, self-recovering halt - distinct from the sticky
+    // resumes automatically. This is a SOFT, self-recovering halt — distinct from the sticky
     // spend-cap trip (which stays latched until the ledger is cleared).
     if (reserveStop) {
-      log({ msg: 'ALERT keeper PAUSED - owner reserve at floor, gas refill impossible; FUND the reserve to resume', reserveStop: true });
+      log({ msg: 'ALERT keeper PAUSED — owner reserve at floor, gas refill impossible; FUND the reserve to resume', reserveStop: true });
       void alerter.notify({
         key: 'reserve:stop',
         severity: 'critical',
-        title: 'RESERVE AT FLOOR - keeper paused',
+        title: 'RESERVE AT FLOOR — keeper paused',
         message: 'owner reserve at/below the floor: the gas-watchdog cannot refill the keeper signer, so cranking is paused to avoid an insufficient-funds wedge. Fund the reserve from the faucet to auto-resume.',
       });
     }
@@ -484,7 +484,7 @@ async function main(): Promise<void> {
       // contract is identical, so all the breaker/metrics/alerting below is shared.
       // Each market's crank is raced against a hard per-tick deadline: a black-holed RPC/Hermes
       // await can never freeze the whole sequential loop. runMarketOnce* never throws on its own
-      // (it captures errors into rec), so the ONLY way this rejects is the deadline - which we turn
+      // (it captures errors into rec), so the ONLY way this rejects is the deadline — which we turn
       // into a synthetic failure tick so the breaker backs off and the loop proceeds to the next market.
       let rec: TickLog;
       try {
@@ -507,7 +507,7 @@ async function main(): Promise<void> {
         keeperStopped = true;
         stoppedReason = rec.spendCapTripped;
         metrics.marketWedged[market.id] = 1;
-        log({ msg: 'ALERT keeper STOPPING - spend cap tripped', market: market.id, reason: rec.spendCapTripped });
+        log({ msg: 'ALERT keeper STOPPING — spend cap tripped', market: market.id, reason: rec.spendCapTripped });
       }
 
       // Metrics: count the action + any revert this tick produced.
@@ -531,7 +531,7 @@ async function main(): Promise<void> {
       // A tick is a FAILURE iff runMarketOnce set rec.error (RPC error, STUCK/wedged, or
       // a mined-but-reverted crank). On failure: bump the breaker + arm backoff; once the
       // failure streak crosses the threshold, emit one loud WEDGED alert. On success: reset.
-      // v2 liveness observability - a MISSED pinned window is a DISTINCT failure mode from a
+      // v2 liveness observability — a MISSED pinned window is a DISTINCT failure mode from a
       // generic wedge: it specifically means the keeper couldn't land the start/end blob inside
       // the contract's tight [endpoint, endpoint+settleWindow] window before its safe tail. Track
       // the consecutive-MISSED streak so a chronically-too-tight 12s settle window (vs measured
@@ -542,7 +542,7 @@ async function main(): Promise<void> {
         rec.windowState === 'MISSED' ? (state.consecutiveMissedWindows ?? 0) + 1 : 0;
 
       // DISTINCT StalePrice / freshness streak: a settle that's sim-skipped StalePrice or deferred by
-      // the freshness gate means the price window is too tight vs mine latency - a config diagnosis,
+      // the freshness gate means the price window is too tight vs mine latency — a config diagnosis,
       // NOT an RPC/contract wedge. Crucially, ZERO gas is burned (the crank never broadcasts), so this
       // alert tells the operator to widen maxPriceAge rather than hunt a phantom drain. Reset on any
       // non-stale tick. Still rides the normal failure/backoff path so it can't spin silently.
@@ -565,29 +565,29 @@ async function main(): Promise<void> {
         // KEEPER_V2_WINDOW_MARGIN_SEC (or the on-chain settleWindow) accordingly. Threshold reuses
         // wedgedAlertThreshold; deduped per market so a persistent miss doesn't spam the webhook.
         if (consecutiveMissedWindows >= cfg.wedgedAlertThreshold) {
-          log({ msg: `ALERT market=${market.id} PINNED WINDOW repeatedly MISSED - settle window too tight`, market: market.id, consecutiveMissedWindows, lastError: rec.error });
+          log({ msg: `ALERT market=${market.id} PINNED WINDOW repeatedly MISSED — settle window too tight`, market: market.id, consecutiveMissedWindows, lastError: rec.error });
           void alerter.notify({
             key: `missedwindow:${market.id}`,
             severity: 'critical',
             title: 'PINNED WINDOW MISSED',
-            message: `market=${market.id} missed its pinned start/end window ${consecutiveMissedWindows} ticks in a row - settle window likely too tight vs mine latency; widen KEEPER_V2_WINDOW_MARGIN_SEC / settleWindow before it relies on owner emergencySettle`,
+            message: `market=${market.id} missed its pinned start/end window ${consecutiveMissedWindows} ticks in a row — settle window likely too tight vs mine latency; widen KEEPER_V2_WINDOW_MARGIN_SEC / settleWindow before it relies on owner emergencySettle`,
             context: { market: market.id, consecutiveMissedWindows, lastError: rec.error },
           });
         }
 
         if (consecutiveStale >= cfg.wedgedAlertThreshold) {
-          log({ msg: `ALERT market=${market.id} PRICE WINDOW TOO TIGHT - settle keeps going stale before it can mine`, market: market.id, consecutiveStale, lastError: rec.error });
+          log({ msg: `ALERT market=${market.id} PRICE WINDOW TOO TIGHT — settle keeps going stale before it can mine`, market: market.id, consecutiveStale, lastError: rec.error });
           void alerter.notify({
             key: `stale:${market.id}`,
             severity: 'critical',
             title: 'PRICE WINDOW TOO TIGHT',
-            message: `market=${market.id} settle was StalePrice/freshness-deferred ${consecutiveStale} ticks in a row - the on-chain maxPriceAge is too tight vs mine latency. Widen maxPriceAge (or lower KEEPER_MINE_LATENCY_SEC). NO gas is being burned (the crank is sim-blocked), so this is a config fix, not a drain.`,
+            message: `market=${market.id} settle was StalePrice/freshness-deferred ${consecutiveStale} ticks in a row — the on-chain maxPriceAge is too tight vs mine latency. Widen maxPriceAge (or lower KEEPER_MINE_LATENCY_SEC). NO gas is being burned (the crank is sim-blocked), so this is a config fix, not a drain.`,
             context: { market: market.id, consecutiveStale, lastError: rec.error },
           });
         }
 
         if (wedged) {
-          log({ msg: `ALERT market=${market.id} WEDGED - operator action needed`, market: market.id, consecutiveFailures: next.consecutiveFailures, lastError: rec.error });
+          log({ msg: `ALERT market=${market.id} WEDGED — operator action needed`, market: market.id, consecutiveFailures: next.consecutiveFailures, lastError: rec.error });
           // Page a human: market wedged after >= WEDGED_ALERT_THRESHOLD consecutive failures
           // (this IS the repeated-failures trigger). Deduped per market so a stuck market
           // re-alerts at most once per ALERT_DEDUPE_WINDOW_MS instead of every tick.
@@ -595,7 +595,7 @@ async function main(): Promise<void> {
             key: `wedged:${market.id}`,
             severity: 'critical',
             title: 'WEDGED',
-            message: `market=${market.id} wedged after ${next.consecutiveFailures} consecutive failures - operator action needed`,
+            message: `market=${market.id} wedged after ${next.consecutiveFailures} consecutive failures — operator action needed`,
             context: { market: market.id, consecutiveFailures: next.consecutiveFailures, lastError: rec.error },
           });
         }
@@ -622,7 +622,7 @@ async function main(): Promise<void> {
     lastTickTs = Date.now();
     metrics.ticksTotal += 1;
     metrics.lastTickTs = lastTickTs;
-    // Tell the gas-watchdog it's safe to refill the signer - a FRESH timestamp + refillSafe:true.
+    // Tell the gas-watchdog it's safe to refill the signer — a FRESH timestamp + refillSafe:true.
     // (If a crank tripped the cap mid-pass, keeperStopped is now true and we publish refillSafe:false
     // so the watchdog fails closed.) A crash-looping keeper never reaches here, so the sentinel goes
     // stale and the watchdog fails closed on staleness too.
@@ -639,11 +639,11 @@ async function main(): Promise<void> {
 
     // Dead-man's-switch ping: tell the EXTERNAL monitor the loop is alive (rate-limited to
     // ALERT_HEARTBEAT_INTERVAL_MS). If the keeper dies/hangs, the ping stops and the monitor
-    // alerts on its ABSENCE - catching failures the in-process WEDGED alert never could.
+    // alerts on its ABSENCE — catching failures the in-process WEDGED alert never could.
     // Fire-and-forget + crash-safe like every other alert call.
     void alerter.heartbeat();
 
-    // TASK 4a - flush the cumulative counters to the state file at most once per
+    // TASK 4a — flush the cumulative counters to the state file at most once per
     // KEEPER_METRICS_PERSIST_INTERVAL_MS so a crash loses at most one interval. No-op (and no
     // disk I/O) when persistence is OFF; saveMetricsState is best-effort and never throws.
     if (cfg.metricsStateFile && lastTickTs - lastPersistTs >= cfg.metricsPersistIntervalMs) {
@@ -652,7 +652,7 @@ async function main(): Promise<void> {
     }
 
     // Reserve throttle: when the owner reserve is near its floor, slow the cadence so the steady-
-    // state burn drops below the faucet top-up rate (fewer settles/Pyth updates per hour) - buying
+    // state burn drops below the faucet top-up rate (fewer settles/Pyth updates per hour) — buying
     // the operator time to fund the reserve instead of racing it to empty.
     if (reserveThrottle) {
       log({ msg: 'keeper.reserve.throttle', factor: 3, effectivePollMs, throttledPollMs: effectivePollMs * 3 });
@@ -676,7 +676,7 @@ async function main(): Promise<void> {
 }
 
 // Run only when executed directly (so test/DRY imports can construct without looping).
-// pathToFileURL makes the comparison correct cross-platform - on Windows import.meta.url
+// pathToFileURL makes the comparison correct cross-platform — on Windows import.meta.url
 // is file:///C:/... (three slashes), which a hand-built `file://${path}` never matches.
 const invokedDirectly =
   typeof process !== 'undefined' &&

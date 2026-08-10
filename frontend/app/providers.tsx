@@ -24,14 +24,14 @@ type BootState =
   | { status: 'loading' }
   | { status: 'ok' }
   // Transient RPC trouble (rate limit, timeout, network blip) that outlived the quick retries.
-  // The loop keeps retrying underneath - this is a "please hold" card, not a dead end.
+  // The loop keeps retrying underneath — this is a "please hold" card, not a dead end.
   | { status: 'degraded'; message: string }
   | { status: 'fatal'; message: string };
 
 /**
  * Tags the boot checks that prove a real configuration problem (zero/wrong address, bad
  * decimals). ONLY these may end in the fatal banner. Anything untagged is treated as transient
- * RPC trouble and retried forever - Arc's public RPC throttles bursts with "request limit
+ * RPC trouble and retried forever — Arc's public RPC throttles bursts with "request limit
  * reached", and a throttled read must never brick the app behind a permanent error screen.
  */
 class BootConfigError extends Error {}
@@ -91,7 +91,7 @@ function DegradedBanner({ message, onRetry }: { message: string; onRetry: () => 
         <h1 className="font-display text-lg font-semibold text-ink">Arc Testnet is busy right now</h1>
         <p className="mt-2 text-sm text-ink-soft">
           The public Arc RPC is throttling requests, so Limen can&apos;t finish its startup checks
-          yet. This clears by itself - the app keeps retrying until it gets through.
+          yet. This clears by itself — the app keeps retrying until it gets through.
         </p>
         <p className="mt-3 break-words font-mono text-xs text-ink-muted">{message}</p>
         <div className="mt-4 flex items-center gap-4">
@@ -114,8 +114,8 @@ function DegradedBanner({ message, onRetry }: { message: string; onRetry: () => 
 
 /**
  * One-time boot gate: reads USDC decimals + asserts FeeArena bytecode/owner() answer.
- * Genuine misconfiguration (BootConfigError) is fatal; everything else - including Arc's
- * "request limit reached" throttle - is retried on a backoff until the chain answers.
+ * Genuine misconfiguration (BootConfigError) is fatal; everything else — including Arc's
+ * "request limit reached" throttle — is retried on a backoff until the chain answers.
  */
 export function BootGate({ children }: { children: ReactNode }) {
   const [state, setState] = useState<BootState>(() =>
@@ -149,16 +149,16 @@ export function BootGate({ children }: { children: ReactNode }) {
 
       // 0) Active/default market must have a real (non-zero) FeeArena. A malformed
       // NEXT_PUBLIC_MARKETS blob (typo'd address / dup id) would otherwise boot the all-zero
-      // placeholder silently - surface it as a fatal here instead (Fix D).
+      // placeholder silently — surface it as a fatal here instead (Fix D).
       // The boot gate runs once at first paint, where the active market is always the default
-      // (MARKETS[0]) - MarketProvider initializes to DEFAULT_MARKET_ID for a stable SSR/first
+      // (MARKETS[0]) — MarketProvider initializes to DEFAULT_MARKET_ID for a stable SSR/first
       // paint and only hydrates from localStorage after mount. So MARKETS[0].feeArena IS the
       // contract the app uses here; validate THAT (not the legacy global ENV.FEE_ARENA_ADDRESS,
       // which is the stale single-market/ETH value once NEXT_PUBLIC_MARKETS targets cirBTC).
       const ZERO = '0x0000000000000000000000000000000000000000';
       if (!MARKETS[0] || MARKETS[0].feeArena.toLowerCase() === ZERO) {
         throw new BootConfigError(
-          'Active market has no FeeArena address (zero address). Check NEXT_PUBLIC_MARKETS - it is likely malformed (typo, duplicate id, or wrong shape).',
+          'Active market has no FeeArena address (zero address). Check NEXT_PUBLIC_MARKETS — it is likely malformed (typo, duplicate id, or wrong shape).',
         );
       }
       const feeArenaAddress = MARKETS[0].feeArena;
@@ -172,10 +172,10 @@ export function BootGate({ children }: { children: ReactNode }) {
         throw new BootConfigError(`No contract bytecode at FeeArena address ${feeArenaAddress}.`);
       }
 
-      // 2) Boot decimals read + hard-fail assert (mirrors BadDecimals - USDC===6 only). The base
+      // 2) Boot decimals read + hard-fail assert (mirrors BadDecimals — USDC===6 only). The base
       // leg is decimals-agnostic on-chain, so we no longer require/assert base===18 (cirBTC is 8dp).
       // We read ONLY the USDC decimals on-chain; the base decimals come from the active market config
-      // (MARKETS[0].baseDecimals) - passed through for type-stability but NOT gated. This also drops a
+      // (MARKETS[0].baseDecimals) — passed through for type-stability but NOT gated. This also drops a
       // dependency on a possibly-stale WETH mock address that no live cirBTC market would have.
       const usdcDecimals = await client.readContract({
         address: ENV.USDC_ADDRESS,
@@ -185,12 +185,12 @@ export function BootGate({ children }: { children: ReactNode }) {
       try {
         setBootDecimals(assertBootDecimals(Number(usdcDecimals), MARKETS[0].baseDecimals));
       } catch (err) {
-        // The RPC answered and the VALUE is wrong - that's configuration, not weather.
+        // The RPC answered and the VALUE is wrong — that's configuration, not weather.
         throw new BootConfigError(err instanceof Error ? err.message : String(err));
       }
 
       // 3) Sanity-touch FeeArena owner() so a wrong-ABI/wrong-address surfaces at boot. Same
-      // active-market arena as steps 0-1 (not the legacy global ENV.FEE_ARENA_ADDRESS).
+      // active-market arena as steps 0–1 (not the legacy global ENV.FEE_ARENA_ADDRESS).
       await client.readContract({ ...{ address: feeArenaAddress, abi: feeArenaAbi }, functionName: 'owner' });
     };
 
@@ -258,7 +258,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <WagmiProvider config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
           <MarketProvider>
-            {/* Wallet-mode + embedded (Circle) wallet context - available app-wide alongside wagmi. */}
+            {/* Wallet-mode + embedded (Circle) wallet context — available app-wide alongside wagmi. */}
             <WalletModeProvider>
               <CircleWalletProvider>
                 {/* Bridges the embedded wallet into wagmi so the whole app can use it. */}

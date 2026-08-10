@@ -1,4 +1,4 @@
-// GET /api/circle/activity - the live arena activity feed, powered by Circle SCP event monitors.
+// GET /api/circle/activity — the live arena activity feed, powered by Circle SCP event monitors.
 //
 // Reads Circle's indexed event history (GET /contracts/events) for every live v3 arena, decodes the raw
 // topics+data with the FeeArenaV3 ABI (Circle returns decodedData: null for UNVERIFIED-on-Arc contracts),
@@ -28,7 +28,7 @@ export async function GET(req: Request): Promise<NextResponse> {
   const apiKey = scpApiKey();
   // Optional ?market=<id> scopes the feed to ONE market so a tab shows only its own activity (a busier
   // sibling arena can otherwise fill the MAX_FEED_EVENTS cap and starve the selected market). No param =
-  // the legacy all-markets feed. An unknown id resolves to an empty (not all-markets) feed - never the
+  // the legacy all-markets feed. An unknown id resolves to an empty (not all-markets) feed — never the
   // wrong market's rows.
   const marketId = new URL(req.url).searchParams.get('market');
   const markets = MARKETS.filter(isV3Market).filter((m) => !marketId || m.id === marketId);

@@ -1,5 +1,5 @@
-// app/epoch/[id]/page.tsx - the shareable per-epoch result page. Its OpenGraph/twitter metadata
-// carry the result in the TITLE ("Epoch #N - DOWN won") over the static branded card
+// app/epoch/[id]/page.tsx — the shareable per-epoch result page. Its OpenGraph/twitter metadata
+// carry the result in the TITLE ("Epoch #N — DOWN won") over the static branded card
 // (public/brand/og.png). A dynamic next/og ImageResponse card was tried and removed: that runtime
 // 500s on this deploy stack, and a broken image is worse than a branded static one. The page
 // itself is a thin server component that links back to the live dashboard.
@@ -66,7 +66,7 @@ export default async function EpochSharePage({ params }: PageProps) {
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       {/* Share/summary card (its metadata + OG image drive the social unfurl). The HUD frame is
-          applied via raw classes - this is a server component, so no client ArenaPanel import. */}
+          applied via raw classes — this is a server component, so no client ArenaPanel import. */}
       <div className="hud-col">
         <div className="hud-panel [--hud-ext:0px] [clip-path:var(--hud-clip)] p-8 text-center">
           <span className="kicker">Limen Finance · Arc Testnet</span>

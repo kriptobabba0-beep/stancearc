@@ -1,11 +1,11 @@
-// lib/agent/x402Client.ts - the buyer side of the copilot's x402 nanopayments.
+// lib/agent/x402Client.ts — the buyer side of the copilot's x402 nanopayments.
 //
 // When the chat API answers 402, the user pays from their Circle Gateway balance: they sign
 // an EIP-3009 TransferWithAuthorization via EIP-712 with the GATEWAY WALLET contract as the
-// verifying contract (Circle's "GatewayWalletBatched" scheme - gasless, settled in batches
+// verifying contract (Circle's "GatewayWalletBatched" scheme — gasless, settled in batches
 // by Circle's facilitator), and the request retries with a Payment-Signature header. If the
 // Gateway balance is short, a one-time on-chain deposit (approve + deposit) tops it up.
-// The shapes here mirror Circle's @circle-fin/x402-batching client exactly - hand-rolled so
+// The shapes here mirror Circle's @circle-fin/x402-batching client exactly — hand-rolled so
 // the app bundle stays lean and every byte of the flow is inspectable.
 
 /** Circle Gateway's wallet contract on Arc testnet (deposits + the EIP-712 domain). */
@@ -73,7 +73,7 @@ export interface GatewayAuthorization {
   nonce: string;
 }
 
-/** Gateway batches over days - the authorization must outlive the batch window. */
+/** Gateway batches over days — the authorization must outlive the batch window. */
 const GATEWAY_AUTH_VALIDITY_SECONDS = 7 * 24 * 60 * 60 + 100;
 
 export function randomNonce(): `0x${string}` {

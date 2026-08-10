@@ -1,7 +1,7 @@
-// lib/embedded/connector.ts - a wagmi connector that exposes the embedded (Circle) wallet to the WHOLE
+// lib/embedded/connector.ts — a wagmi connector that exposes the embedded (Circle) wallet to the WHOLE
 // app. Reads (balances, address, gating) and writes (approve/swap/mint/…) then work through the same
-// wagmi APIs every page already uses (useAccount, useReadContract, writeContractAsync) - no per-component
-// changes - while MetaMask stays on its own injected connector.
+// wagmi APIs every page already uses (useAccount, useReadContract, writeContractAsync) — no per-component
+// changes — while MetaMask stays on its own injected connector.
 //
 // How it works: an EIP-1193 provider whose `request` serves the embedded account + chain locally,
 // forwards all reads to the Arc RPC, and routes `eth_sendTransaction` to Circle's contractExecution
@@ -49,7 +49,7 @@ export function createEmbeddedProvider() {
           return embeddedBridge.address ? [embeddedBridge.address] : [];
         case 'wallet_switchEthereumChain':
         case 'wallet_addEthereumChain':
-          return null; // single-chain embedded wallet - treat as success
+          return null; // single-chain embedded wallet — treat as success
         case 'eth_sendTransaction': {
           const tx = (params as Array<{ to?: string; data?: string; value?: string }>)[0] ?? {};
           if (!embeddedBridge.sendTransaction) throw new Error('Embedded wallet is not ready.');
@@ -58,7 +58,7 @@ export function createEmbeddedProvider() {
           return embeddedBridge.sendTransaction({ to: getAddress(tx.to), data: tx.data as Hex | undefined, value });
         }
         // The embedded (Circle MPC) wallet executes contract calls, but cannot produce a raw EIP-712 /
-        // personal signature - without a case here these fall through to the Arc RPC, which has no key and
+        // personal signature — without a case here these fall through to the Arc RPC, which has no key and
         // returns a cryptic "Method not found". The Gateway/CCTP bridges sign a burn intent, so tell the
         // user plainly to use a self-custody wallet rather than letting an unsignable request limp onward.
         case 'eth_signTypedData_v4':

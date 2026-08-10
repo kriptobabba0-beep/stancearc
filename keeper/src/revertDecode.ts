@@ -1,22 +1,22 @@
-// revertDecode.ts - PURE classifier that turns a thrown viem error (from simulateContract
+// revertDecode.ts — PURE classifier that turns a thrown viem error (from simulateContract
 // OR a mined revert) into a STABLE FeeArena revert reason. WHY this exists:
 //
 // The keeper's own ABI only declares ONE custom error (SweepAlreadyDone), so viem can only
 // cleanly decode that one to an errorName. Every OTHER FeeArena v3 custom error arrives on the
-// live Arc RPC in a raw, undecoded shape - as a 4-byte selector buried in `err.data` /
+// live Arc RPC in a raw, undecoded shape — as a 4-byte selector buried in `err.data` /
 // `err.signature` / the innermost `.cause` RPC object, or (worst case) only as a substring in
 // `err.message`. This module recognizes the full set regardless of which shape shows up.
 //
 // The one reason the loop treats specially is StalePrice: it's the simulate -> mine FRESHNESS
 // RACE. The keeper simulates a settle/process with a Pyth price that is fresh AT SIM TIME, but by
 // the time the tx mines a block or two later the contract's staleness check can reject it. That's
-// not a real failure - it just needs its OWN backoff class (retry soon with a fresher price)
+// not a real failure — it just needs its OWN backoff class (retry soon with a fresher price)
 // rather than the generic exponential breaker. `isStale` exposes exactly that signal.
 //
 // Robustness here intentionally MIRRORS isSweepAlreadyDone / rawRevertDataHasSelector in keeper.ts
 // (walk the BaseError chain, then bounded recursion over `.cause` scanning structured data fields,
 // then a conservative message fallback). It is conservative by construction: it only ever matches
-// a KNOWN zero-arg selector or a KNOWN error name as a whole word - never a broad "reverted" match.
+// a KNOWN zero-arg selector or a KNOWN error name as a whole word — never a broad "reverted" match.
 import { BaseError, ContractFunctionRevertedError, toFunctionSelector } from 'viem';
 
 /**
@@ -26,7 +26,7 @@ import { BaseError, ContractFunctionRevertedError, toFunctionSelector } from 'vi
  * - The arena lifecycle errors come from src/interfaces/IFeeArenaV3.sol.
  * - SweepAlreadyDone is declared + reverted by FeeArena.sol (the keeper already special-cases it;
  *   we include it so this classifier reports a consistent name for it too).
- * - EnforcedPause is OpenZeppelin's Pausable revert - any `whenNotPaused` arena fn can throw it.
+ * - EnforcedPause is OpenZeppelin's Pausable revert — any `whenNotPaused` arena fn can throw it.
  */
 const KNOWN_ERROR_NAMES = [
   'WrongPhase',
@@ -61,7 +61,7 @@ export interface RevertInfo {
   name: string;
   /** The matched 4-byte selector (lowercase 0x…) if recognized, else undefined. */
   selector?: string;
-  /** True iff name === 'StalePrice' - the freshness-race revert the loop backs off specifically. */
+  /** True iff name === 'StalePrice' — the freshness-race revert the loop backs off specifically. */
   isStale: boolean;
 }
 
@@ -77,7 +77,7 @@ function infoForName(name: KnownErrorName): RevertInfo {
 
 /**
  * Scan an error and its entire `.cause` chain (including plain non-Error RPC objects that
- * BaseError.walk can't descend into) for a structured hex field - `.data` / `.signature` / `.raw` -
+ * BaseError.walk can't descend into) for a structured hex field — `.data` / `.signature` / `.raw` —
  * whose value startsWith a KNOWN selector. Returns the matched name, or undefined. Bounded depth so
  * a cyclic cause chain can't loop forever. Mirrors rawRevertDataHasSelector in keeper.ts. PURE.
  */
@@ -99,7 +99,7 @@ function scanCauseChainForSelector(err: unknown, depth = 0): KnownErrorName | un
 
 /**
  * Last-resort message fallback: does the text contain a KNOWN error name as a WHOLE WORD? Conservative
- * on purpose - a bare `\bSettleTooEarly\b` can only match an exact known name, never a broad
+ * on purpose — a bare `\bSettleTooEarly\b` can only match an exact known name, never a broad
  * "reverted". Returns the first known name found (in declared order), or undefined.
  */
 function scanMessageForName(message: string): KnownErrorName | undefined {
@@ -112,7 +112,7 @@ function scanMessageForName(message: string): KnownErrorName | undefined {
 }
 
 /**
- * Classify a thrown error (simulate OR mined revert) into a RevertInfo. PURE - no IO.
+ * Classify a thrown error (simulate OR mined revert) into a RevertInfo. PURE — no IO.
  *
  * Detection priority (any one suffices), mirroring isSweepAlreadyDone's robustness:
  *   1. a ContractFunctionRevertedError in the BaseError .walk() chain whose data.errorName is known;
@@ -121,7 +121,7 @@ function scanMessageForName(message: string): KnownErrorName | undefined {
  * Returns { name: 'unknown', isStale: false } when nothing matches.
  */
 export function classifyRevert(err: unknown): RevertInfo {
-  // (1) viem DECODED it - walk the cause chain for a ContractFunctionRevertedError with a known name.
+  // (1) viem DECODED it — walk the cause chain for a ContractFunctionRevertedError with a known name.
   if (err instanceof BaseError) {
     const reverted = err.walk((e) => e instanceof ContractFunctionRevertedError);
     if (reverted instanceof ContractFunctionRevertedError) {

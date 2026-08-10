@@ -1,10 +1,10 @@
-// decideArb.ts - the PURE decision function at the heart of the price-keeper arb bot.
+// decideArb.ts — the PURE decision function at the heart of the price-keeper arb bot.
 //
 // Given a snapshot of one market's pool vs the live Pyth reference, it returns the
 // single next arb action: SKIP (stale ref), ALERT (inert pool), NONE (inside the
 // no-trade band or the trade would be dust), or SWAP (trade the pool back toward the
 // reference so the AMM's REAL 0.3% fee accrues to the pot). It performs NO I/O and
-// reads NO clock - every input (including refAgeSec) is passed in - so it is trivially
+// reads NO clock — every input (including refAgeSec) is passed in — so it is trivially
 // unit-testable across the whole state space and deterministic.
 //
 // Price convention: poolPrice18 and ref18 are BOTH the USDC-per-base price in 18dp
@@ -15,10 +15,10 @@
 // trade inside the round-trip fee cost (the AMM fee would eat the edge).
 //
 // SIZING (the heart of the HIGH-1/HIGH-2 fix): the trade is sized from the POOL'S OWN
-// LIQUIDITY via the Uniswap-V3 sqrt-price relationship - NOT from a divergence-scaled
+// LIQUIDITY via the Uniswap-V3 sqrt-price relationship — NOT from a divergence-scaled
 // fraction of maxTradeBase. We compute the base-token amount that moves the pool price
 // from poolPrice18 to a target that UNDERSHOOTS the reference by closeFraction (so the
-// AMM fully consumes amountIn before reaching the ref tick - no partial fill, so the
+// AMM fully consumes amountIn before reaching the ref tick — no partial fill, so the
 // executor's amountOutMinimum computed from the expected fill stays valid). maxTradeBase
 // is now a hard CAP only (never the anchor), so the bot activates right at the band edge
 // (feeBps+thresholdBps) instead of ~8x it.
@@ -30,7 +30,7 @@ import {
   poolDeliverableBase,
   maxBaseSellForUsdcOut,
 } from './poolMath.js';
-// Type-only import - no runtime dependency on the ledger's IO, so decideArb stays pure.
+// Type-only import — no runtime dependency on the ledger's IO, so decideArb stays pure.
 import type { FlowState } from './flowLedger.js';
 
 /** The pool/reference snapshot decideArb needs. All amounts are raw on-chain units. */
@@ -56,7 +56,7 @@ export interface ArbState {
   inventoryUsdc: bigint;
   /**
    * The POOL's real USDC balance (balanceOf(quote, pool), raw at quoteDecimals). The hard ceiling
-   * on what a SELL_BASE can extract - at the range edge the constant-L estimate over-counts, so a
+   * on what a SELL_BASE can extract — at the range edge the constant-L estimate over-counts, so a
    * SELL is capped at a safety fraction of THIS so it can never revert "Too little received".
    * Optional: omitted => the deliverable cap is OFF (legacy behavior).
    */
@@ -71,7 +71,7 @@ export interface ArbState {
   flow?: FlowState;
   /**
    * INJECTED heartbeat-volume bookkeeping (TASK 3b). Like refAgeSec, decideArb reads NO
-   * clock - the executor passes the current wall-clock + the day's running spend so the
+   * clock — the executor passes the current wall-clock + the day's running spend so the
    * decision stays PURE and deterministic. Omitted (undefined) => heartbeat mode is OFF
    * for this call (behavior unchanged). The executor owns the budget ledger (interval +
    * daily-cap accounting); decideArb only judges whether THIS tick is eligible to emit a
@@ -93,7 +93,7 @@ export interface HeartbeatState {
   /** Base-notional (raw at baseDecimals) already spent on heartbeat volume in the CURRENT day. */
   spentTodayBase: bigint;
   /**
-   * FINDING 4 - heartbeat ATTEMPTS made in the current day (NOT just settled notional). A
+   * FINDING 4 — heartbeat ATTEMPTS made in the current day (NOT just settled notional). A
    * reverting leg (FINDING 1) never charges the notional cap, so without an attempt cap it
    * could retry unbounded; the executor stamps this on EVERY heartbeat attempt regardless of
    * success and decideHeartbeat refuses once it hits heartbeatDailyMaxAttempts. Optional so
@@ -102,13 +102,13 @@ export interface HeartbeatState {
    */
   heartbeatAttemptsToday?: number;
   /**
-   * FINDING 3 - wall-clock (ms) of the last REBALANCE leg, or null if none yet. The rebalance
+   * FINDING 3 — wall-clock (ms) of the last REBALANCE leg, or null if none yet. The rebalance
    * path had NO rate limit (it fired every ~15s poll while a leg was below the floor); this
    * gives it the same interval governor as the heartbeat. Optional for back-compat.
    */
   lastRebalanceMs?: number | null;
   /**
-   * FINDING 3/4 - REBALANCE attempts in the current day, stamped on every attempt regardless
+   * FINDING 3/4 — REBALANCE attempts in the current day, stamped on every attempt regardless
    * of success so a reverting rebalance can't retry unbounded. Optional (=> 0 => uncapped
    * unless rebalanceDailyMaxAttempts is set).
    */
@@ -117,24 +117,24 @@ export interface HeartbeatState {
 
 /** Tunable arb parameters (from config). */
 export interface ArbParams {
-  /** Pool fee in bps (30 for the 0.3% tier) - half the no-trade band. */
+  /** Pool fee in bps (30 for the 0.3% tier) — half the no-trade band. */
   feeBps: number;
   /** Extra edge (bps) required beyond the fee before trading (e.g. 25). */
   thresholdBps: number;
-  /** Fraction (0..1] of the price gap to close per trade - UNDER-shoot, never overshoot. */
+  /** Fraction (0..1] of the price gap to close per trade — UNDER-shoot, never overshoot. */
   closeFraction: number;
   /** Hard CAP on a single trade's base-token notional (raw at baseDecimals). */
   maxTradeBase: bigint;
   /** Floor: a capped size below this is dust -> NONE (gas would dominate). */
   minTradeBase: bigint;
   /**
-   * cirBTC RESERVE (raw base units) the arb will NEVER sell below - so its base leg can't zero out
+   * cirBTC RESERVE (raw base units) the arb will NEVER sell below — so its base leg can't zero out
    * and seize. Omitted/0 => no reserve (legacy behavior). When sitting at the reserve it idles +
    * alerts (no doomed trades) and restocks once the pool dips to/below ref. Optional for back-compat.
    */
   reserveBase?: bigint;
   /**
-   * QUOTE/GAS RESERVE (raw quote units) the arb will NEVER spend below on a BUY_BASE - so it can't
+   * QUOTE/GAS RESERVE (raw quote units) the arb will NEVER spend below on a BUY_BASE — so it can't
    * burn the last of the balance it needs to PAY GAS (on Arc the ERC20 USDC quote is a facade over
    * the native gas balance, so spending quote IS spending gas). A BUY's funding cap is
    * (inventoryUsdc − reserveQuote); at the reserve a BUY collapses to idle/ALERT instead of bricking
@@ -147,18 +147,18 @@ export interface ArbParams {
    * ONLY while cirBTC is HEAVY (share > target) and a BUY_BASE ONLY while cirBTC is LIGHT (share <
    * target); the off-target leg is DECLINED so the peg drifts (the deliberate, cirBTC-conserving
    * release valve) instead of ratcheting the finite battery to a floor. Inventory then oscillates
-   * around the target - sells in a downtrend are matched by buy-backs on the bounce. Omitted/0 => the
+   * around the target — sells in a downtrend are matched by buy-backs on the bounce. Omitted/0 => the
    * gate is OFF (legacy one-directional-until-floor behavior). Independent of the reserveBase floor,
    * which remains the untouchable last resort BELOW this gate.
    */
   targetBaseShareBps?: number;
   /**
    * TWO-SIDED PEG DEFENSE (opt-in). When true, the target-band gate NO LONGER declines a peg-correcting
-   * BUY_BASE while cirBTC is heavy - so the keeper actively defends the DOWNSIDE of the peg (buys base to
+   * BUY_BASE while cirBTC is heavy — so the keeper actively defends the DOWNSIDE of the peg (buys base to
    * lift a pool that is below the oracle) up to its quote reserve, instead of letting the pool sit under
    * peg. This is the SAFE direction to relax: a BUY *refills* the finite, non-mintable cirBTC battery and
    * spends the (refillable) quote leg, which stays bounded by reserveQuote + the deliverability cap. The
-   * SELL gate is deliberately UNCHANGED - selling drains the battery, so it stays conserved (sell only
+   * SELL gate is deliberately UNCHANGED — selling drains the battery, so it stays conserved (sell only
    * while cirBTC-heavy). Omitted/false => legacy one-directional gate (BUY declined while cirBTC-heavy).
    */
   buyDefendsPeg?: boolean;
@@ -169,7 +169,7 @@ export interface ArbParams {
    * more than 70% of what it holds. Omitted/0 (or no poolQuoteBal/poolBaseBal supplied) => OFF.
    */
   poolDeliverableSafetyBps?: number;
-  /** Reject (SKIP) a reference older than this many seconds - never arb on a stale ref. */
+  /** Reject (SKIP) a reference older than this many seconds — never arb on a stale ref. */
   maxRefAgeSec: number;
   /**
    * Base token decimals (cirBTC = 8). Threaded in so the USDC->base inventory conversion
@@ -179,7 +179,7 @@ export interface ArbParams {
   /** Quote token decimals (USDC = 6). */
   quoteDecimals: number;
 
-  // ---- TASK 3a: inventory rebalancing (OPTIONAL - omit/0 => OFF, behavior unchanged) ---
+  // ---- TASK 3a: inventory rebalancing (OPTIONAL — omit/0 => OFF, behavior unchanged) ---
   /**
    * Rebalance trigger floor in bps of total inventory VALUE. When a leg's value falls below
    * this fraction of the bot's total inventory value (so it can no longer arb in the
@@ -191,34 +191,34 @@ export interface ArbParams {
   /**
    * Target inventory split in bps of total value for the leg being topped up (e.g. 5000 =>
    * aim for a 50/50-by-value book). The rebalance trade is sized to move the depleted leg
-   * UP toward this share - never past it (so a rebalance can't itself flip the imbalance).
+   * UP toward this share — never past it (so a rebalance can't itself flip the imbalance).
    */
   rebalanceTargetBps?: number;
   /** Hard CAP on a single rebalancing swap's base notional (raw at baseDecimals). */
   rebalanceMaxBase?: bigint;
   /**
-   * FINDING 3 - minimum spacing (ms) between REBALANCE legs (rate-limit, like the heartbeat).
+   * FINDING 3 — minimum spacing (ms) between REBALANCE legs (rate-limit, like the heartbeat).
    * Omitted/0 => no interval guard (legacy behavior: a rebalance could fire every poll). The
    * executor injects state.heartbeat.lastRebalanceMs so this stays PURE.
    */
   rebalanceIntervalMs?: number;
   /**
-   * FINDING 4 - per-day cap on rebalance ATTEMPTS (not just settled notional). Omitted/0 =>
+   * FINDING 4 — per-day cap on rebalance ATTEMPTS (not just settled notional). Omitted/0 =>
    * uncapped. Bounds retries of a reverting rebalance leg.
    */
   rebalanceDailyMaxAttempts?: number;
 
-  // ---- TASK 3b: heartbeat volume (OPTIONAL - omit/false => OFF, behavior unchanged) ----
+  // ---- TASK 3b: heartbeat volume (OPTIONAL — omit/false => OFF, behavior unchanged) ----
   /** Master switch for heartbeat-volume mode. Omitted/false => OFF (behavior unchanged). */
   heartbeatEnabled?: boolean;
-  /** Minimum spacing (ms) between heartbeat legs - rate-limits baseline volume. */
+  /** Minimum spacing (ms) between heartbeat legs — rate-limits baseline volume. */
   heartbeatIntervalMs?: number;
   /** Per-day budget cap on heartbeat base notional (raw at baseDecimals). */
   heartbeatDailyCapBase?: bigint;
-  /** Base notional (raw at baseDecimals) per heartbeat leg - small + bounded. */
+  /** Base notional (raw at baseDecimals) per heartbeat leg — small + bounded. */
   heartbeatTradeBase?: bigint;
   /**
-   * FINDING 4 - per-day cap on heartbeat ATTEMPTS (not just settled notional). A reverting
+   * FINDING 4 — per-day cap on heartbeat ATTEMPTS (not just settled notional). A reverting
    * heartbeat leg never charges the notional cap, so this bounds its retries. Omitted/0 =>
    * uncapped (the notional cap is still enforced).
    */
@@ -231,7 +231,7 @@ export interface ArbParams {
  * is budgeted baseline volume at zero divergence (TASK 3b). An 'arb' swap is pinned to the ref
  * tick (cannot push the pool past the oracle); 'rebalance'/'heartbeat' fire inside (or near) the
  * band, so they pin to a small bounded offset past the live pool price that is ALSO clamped to the
- * ref tick (pegBoundedOffsetLimit) - so they fill toward the peg but, like 'arb', can never push the
+ * ref tick (pegBoundedOffsetLimit) — so they fill toward the peg but, like 'arb', can never push the
  * pool past the oracle. Their amountOutMinimum (priced at ref) bounds the average realized fill.
  */
 export type ArbPurpose = 'arb' | 'rebalance' | 'heartbeat';
@@ -270,10 +270,10 @@ function scaleByFraction(value: bigint, frac: number): bigint {
 
 /**
  * Decide the single next arb action for a market given its pool-vs-ref snapshot.
- * PURE - total over the state space, no I/O, no clock read, no input mutation.
+ * PURE — total over the state space, no I/O, no clock read, no input mutation.
  */
 export function decideArb(state: ArbState, params: ArbParams): ArbDecision {
-  // 1) Stale reference: NEVER arb toward an old oracle value - the pool may already be
+  // 1) Stale reference: NEVER arb toward an old oracle value — the pool may already be
   //    correct relative to the live market. Skip until a fresh ref arrives.
   if (state.refAgeSec > params.maxRefAgeSec) {
     return {
@@ -285,16 +285,16 @@ export function decideArb(state: ArbState, params: ArbParams): ArbDecision {
   // 2) Inert pool: with zero in-range liquidity there is nothing to trade against, so
   //    we can never move the price back to the ref. Surface loudly for the operator.
   if (state.liquidity <= 0n) {
-    return { kind: 'ALERT', reason: 'pool liquidity is zero - cannot arbitrage (inert pool)' };
+    return { kind: 'ALERT', reason: 'pool liquidity is zero — cannot arbitrage (inert pool)' };
   }
 
-  // Guard against a non-positive reference (shouldn't happen for a live feed) - treat as
+  // Guard against a non-positive reference (shouldn't happen for a live feed) — treat as
   // un-actionable rather than dividing by zero.
   if (state.ref18 <= 0n) {
-    return { kind: 'ALERT', reason: 'reference price is non-positive - cannot compute divergence' };
+    return { kind: 'ALERT', reason: 'reference price is non-positive — cannot compute divergence' };
   }
   if (state.poolPrice18 <= 0n) {
-    return { kind: 'ALERT', reason: 'pool price is non-positive - cannot size a trade' };
+    return { kind: 'ALERT', reason: 'pool price is non-positive — cannot size a trade' };
   }
 
   // 3) Signed divergence in bps: (pool - ref) / ref. Positive => pool too high.
@@ -304,7 +304,7 @@ export function decideArb(state: ArbState, params: ArbParams): ArbDecision {
 
   // Inside the no-trade band (inclusive): the divergence doesn't clear the round-trip
   // fee + required edge, so a price-convergence arb would lose money. But the bot must not
-  // go fully idle - TASK 3 turns a one-way battery into a two-sided MM: first try a bounded
+  // go fully idle — TASK 3 turns a one-way battery into a two-sided MM: first try a bounded
   // inventory REBALANCE (restock a depleted leg so both directions stay tradable), then a
   // budgeted HEARTBEAT round-trip leg (baseline volume -> real fees at zero divergence).
   if (absDivBps <= bandBps) {
@@ -320,11 +320,11 @@ export function decideArb(state: ArbState, params: ArbParams): ArbDecision {
   const direction: 'SELL_BASE' | 'BUY_BASE' = divBps > 0n ? 'SELL_BASE' : 'BUY_BASE';
 
   // 4b) TARGET-BAND INVENTORY GATE (the mean-reversion cure for the cirBTC drain). Only SELL cirBTC
-  //     while cirBTC-HEAVY vs the target, only BUY while cirBTC-LIGHT - so the finite, non-mintable
+  //     while cirBTC-HEAVY vs the target, only BUY while cirBTC-LIGHT — so the finite, non-mintable
   //     battery oscillates around the target instead of ratcheting one-way to a floor in a trend.
   //     The declined leg lets the peg DRIFT (the deliberate, conserving release valve); its buy-back
   //     counterpart fires on the bounce, so over a down->up cycle sells and buys cancel. Falls through
-  //     to a (toward-target) rebalance/heartbeat - which the executability guard turns into idle when
+  //     to a (toward-target) rebalance/heartbeat — which the executability guard turns into idle when
   //     the wrong-direction restock can't fill, so a declined SELL simply lets the pool stay high.
   const targetShare = params.targetBaseShareBps ?? 0;
   if (targetShare > 0) {
@@ -333,18 +333,18 @@ export function decideArb(state: ArbState, params: ArbParams): ArbDecision {
       return decideRebalanceOrHeartbeat(
         state,
         params,
-        `SELL declined: cirBTC share ${shareBps}bps <= target ${targetShare}bps - conserving (peg drifts down)`,
+        `SELL declined: cirBTC share ${shareBps}bps <= target ${targetShare}bps — conserving (peg drifts down)`,
       );
     }
     if (direction === 'BUY_BASE' && shareBps >= BigInt(targetShare) && !params.buyDefendsPeg) {
       // Legacy conserve-the-quote behavior: decline the BUY while cirBTC-heavy and let the peg drift
-      // up. With buyDefendsPeg ON we DON'T decline - the keeper defends the downside (buys base up to
+      // up. With buyDefendsPeg ON we DON'T decline — the keeper defends the downside (buys base up to
       // the ref, bounded by reserveQuote + the deliverable cap) so a pool can't sit under peg. The SELL
       // gate above is never relaxed (selling drains the finite battery), so the relaxation is one-sided.
       return decideRebalanceOrHeartbeat(
         state,
         params,
-        `BUY declined: cirBTC share ${shareBps}bps >= target ${targetShare}bps - conserving USDC (peg drifts up)`,
+        `BUY declined: cirBTC share ${shareBps}bps >= target ${targetShare}bps — conserving USDC (peg drifts up)`,
       );
     }
   }
@@ -356,13 +356,13 @@ export function decideArb(state: ArbState, params: ArbParams): ArbDecision {
   //    liquidity L and the V3 sqrt-price relationship, the BASE-token amount that moves
   //    the pool from poolPrice18 to that target. Because target is short of ref, the swap
   //    FULLY consumes amountIn before reaching the ref-pinned sqrtPriceLimit (no partial
-  //    fill), so the executor's amountOutMinimum - computed from the expected fill - is
+  //    fill), so the executor's amountOutMinimum — computed from the expected fill — is
   //    valid and the swap doesn't revert on a partial-fill mismatch.
   const gap18 = state.ref18 - state.poolPrice18; // signed
   const targetPrice18 = state.poolPrice18 + scaleByFraction(gap18, params.closeFraction);
 
   // Defensive: if rounding collapsed the target back onto the pool price there is nothing
-  // to move - treat as dust rather than computing a zero-width trade.
+  // to move — treat as dust rather than computing a zero-width trade.
   let size = baseAmountToMovePrice(
     state.liquidity,
     state.poolPrice18,
@@ -400,9 +400,9 @@ export function decideArb(state: ArbState, params: ArbParams): ArbDecision {
   if (size > inventoryCapBase) size = inventoryCapBase;
 
   // 5b) DELIVERABILITY + FLOW caps. Cap by what the pool can physically pay (so the fill clears the
-  //     ref-priced min-out - no "Too little received"; on a one-sided pool this drives `size` to ~0
+  //     ref-priced min-out — no "Too little received"; on a one-sided pool this drives `size` to ~0
   //     -> the dust floor idles the bot instead of firing a doomed swap), then a SELL by the rolling-
-  //     window net-sold budget (a BUY is uncapped - recycling is always allowed).
+  //     window net-sold budget (a BUY is uncapped — recycling is always allowed).
   size = deliverableCap(size, direction, state, params);
   size = flowCap(size, direction, state);
 
@@ -419,14 +419,14 @@ export function decideArb(state: ArbState, params: ArbParams): ArbDecision {
     // DEPLETION DETECTION. We're PAST the no-trade band (this is the convergence path), so the bot
     // genuinely WANTS to trade. If neither rebalance nor heartbeat can act AND the funding leg can't
     // even cover a minimum trade, the bot is OUT of the inventory it needs to correct this
-    // divergence - surface LOUDLY (ALERT) so an operator refills, instead of silently idling while
+    // divergence — surface LOUDLY (ALERT) so an operator refills, instead of silently idling while
     // the pool runs away (the exact failure that let the pool drift to +221%). Preserves the
     // rebalance/heartbeat fallthrough whenever it CAN act.
     if (fallback.kind === 'NONE' && inventoryCapBase < params.minTradeBase) {
       const leg = direction === 'SELL_BASE' ? 'base (cirBTC)' : 'quote (USDC)';
       return {
         kind: 'ALERT',
-        reason: `depleted: out of ${leg} inventory - cannot correct ${divBps}bps divergence (${direction}); refill the arb wallet`,
+        reason: `depleted: out of ${leg} inventory — cannot correct ${divBps}bps divergence (${direction}); refill the arb wallet`,
       };
     }
     return fallback;
@@ -451,7 +451,7 @@ export function decideArb(state: ArbState, params: ArbParams): ArbDecision {
  *             = usdcRaw * 1e18 * 10^baseDec / (ref18 * 10^quoteDec)
  *
  * For cirBTC(8dp)/USDC(6dp) this reduces to usdcRaw * 1e20 / ref18 (the old hardcoded
- * value) - proven by the decimals-parameterised test - but it is now correct for any pair.
+ * value) — proven by the decimals-parameterised test — but it is now correct for any pair.
  */
 function usdcBudgetToBase(
   usdcRaw: bigint,
@@ -523,7 +523,7 @@ function deliverableCap(
 
 /**
  * Cap a SELL by the remaining net-cirBTC-sold budget for the rolling window (clamped to [0, max]).
- * A BUY is never flow-capped - recycling cirBTC back is always allowed and credits the budget. No-op
+ * A BUY is never flow-capped — recycling cirBTC back is always allowed and credits the budget. No-op
  * when no flow snapshot is injected (legacy OFF). PURE.
  */
 function flowCap(size: bigint, direction: 'SELL_BASE' | 'BUY_BASE', state: ArbState): bigint {
@@ -536,12 +536,12 @@ function flowCap(size: bigint, direction: 'SELL_BASE' | 'BUY_BASE', state: ArbSt
 }
 
 /**
- * TASK 3a/3b - the in-band fallback. Reached when no price-convergence arb is actionable
+ * TASK 3a/3b — the in-band fallback. Reached when no price-convergence arb is actionable
  * (inside the no-trade band OR the arb size collapsed under the dust floor because a leg is
  * depleted). It keeps the bot a TWO-SIDED MM instead of a one-way battery:
  *   1) REBALANCE: if a leg's value has fallen below rebalanceFloorBps of total inventory
  *      value, emit a bounded swap that restocks it toward rebalanceTargetBps (so both
- *      directions stay tradable). Sized to move the depleted leg UP toward - never past -
+ *      directions stay tradable). Sized to move the depleted leg UP toward — never past —
  *      the target, capped by rebalanceMaxBase + the funding leg's own inventory, and only
  *      if it clears minTradeBase. The executor clamps its sqrtPriceLimit to the ref tick
  *      (pegBoundedOffsetLimit) so the restock fills toward the peg but never overshoots past it.
@@ -552,7 +552,7 @@ function flowCap(size: bigint, direction: 'SELL_BASE' | 'BUY_BASE', state: ArbSt
  *      and the funding leg's inventory.
  *   3) Otherwise NONE (carrying the caller's reason).
  *
- * PURE - uses only injected inputs (incl. state.heartbeat.nowMs); no clock, no I/O.
+ * PURE — uses only injected inputs (incl. state.heartbeat.nowMs); no clock, no I/O.
  */
 function decideRebalanceOrHeartbeat(
   state: ArbState,
@@ -569,14 +569,14 @@ function decideRebalanceOrHeartbeat(
 }
 
 /**
- * TASK 3a - bounded inventory rebalance. Returns a SWAP that restocks the depleted leg, or
+ * TASK 3a — bounded inventory rebalance. Returns a SWAP that restocks the depleted leg, or
  * null when rebalancing is disabled / not needed / not fundable / would be dust.
  *
  * Value-by-leg in USDC terms (so the 8dp base vs 6dp quote scales are comparable):
  *   baseValue = value(inventoryBase) ; usdcValue = inventoryUsdc ; total = baseValue + usdcValue.
  * A leg is "depleted" when its share < rebalanceFloorBps. We then BUY the depleted leg by
  * selling the heavy one, sized so the depleted leg's share rises toward rebalanceTargetBps
- * (half the value gap is moved - the standard 2-sided rebalance step that lands ON target
+ * (half the value gap is moved — the standard 2-sided rebalance step that lands ON target
  * for a 50/50 goal without overshooting), then clamped by rebalanceMaxBase, the funding
  * leg's inventory, and the minTradeBase dust floor.
  */
@@ -585,7 +585,7 @@ function decideRebalance(state: ArbState, params: ArbParams): ArbDecision | null
   if (floorBps <= 0) return null; // disabled (omitted/0)
   if (state.ref18 <= 0n) return null;
 
-  // FINDING 3/4 - rate-limit + daily-attempt governors (mirror the heartbeat). These read
+  // FINDING 3/4 — rate-limit + daily-attempt governors (mirror the heartbeat). These read
   // ONLY the injected snapshot (state.heartbeat) so the decision stays PURE; the executor
   // owns the ledger and stamps lastRebalanceMs + rebalanceAttemptsToday on EVERY attempt
   // (regardless of success) so a reverting rebalance can't retry every poll forever.
@@ -630,12 +630,12 @@ function decideRebalance(state: ArbState, params: ArbParams): ArbDecision | null
     direction = 'SELL_BASE';
     depletedValue = usdcValue;
   } else {
-    return null; // both legs above the floor - balanced enough, no rebalance
+    return null; // both legs above the floor — balanced enough, no rebalance
   }
 
   // EXECUTABILITY GUARD (kills the revert/backoff loop). A rebalance's amountOutMinimum is priced
   // at the REF, so a BUY into a pool trading ABOVE ref (or a SELL into one BELOW ref) by more than
-  // the no-trade band fills worse than the ref haircut and REVERTS - then the executor's
+  // the no-trade band fills worse than the ref haircut and REVERTS — then the executor's
   // consecutive-failure backoff piles up (the exact symptom seen when the arb was out of cirBTC
   // above ref). Outside the band on the wrong side is ARB territory anyway; skip the doomed
   // rebalance (the depleted leg restocks once the pool comes back inside the band). Inside the band
@@ -654,7 +654,7 @@ function decideRebalance(state: ArbState, params: ArbParams): ArbDecision | null
   const moveValue = valueGap / 2n; // USDC-value to shift this step
   if (moveValue <= 0n) return null;
 
-  // Express the move as a BASE notional (raw) - the unit decideArb sizes/caps everything in.
+  // Express the move as a BASE notional (raw) — the unit decideArb sizes/caps everything in.
   let size = usdcBudgetToBase(moveValue, state.ref18, params.baseDecimals, params.quoteDecimals);
 
   // Cap by the rebalance per-trade max.
@@ -679,7 +679,7 @@ function decideRebalance(state: ArbState, params: ArbParams): ArbDecision | null
   size = deliverableCap(size, direction, state, params);
   size = flowCap(size, direction, state);
 
-  // Dust floor - a sub-minTradeBase rebalance isn't worth the gas.
+  // Dust floor — a sub-minTradeBase rebalance isn't worth the gas.
   if (size < params.minTradeBase) return null;
 
   return {
@@ -692,14 +692,14 @@ function decideRebalance(state: ArbState, params: ArbParams): ArbDecision | null
 }
 
 /**
- * TASK 3b - budgeted, rate-limited heartbeat leg. Returns a small SWAP when heartbeat mode
+ * TASK 3b — budgeted, rate-limited heartbeat leg. Returns a small SWAP when heartbeat mode
  * is enabled AND the interval has elapsed AND the daily cap has headroom AND the funding leg
  * can cover it; otherwise null (so the caller falls through to NONE). The direction sells
  * whichever leg is HEAVIER (by value) so the heartbeat also nudges inventory toward balance.
  *
  * Bounded by construction: at most one heartbeatTradeBase leg per heartbeatIntervalMs, and
  * the cumulative day spend (tracked by the executor + injected as spentTodayBase) can never
- * exceed heartbeatDailyCapBase - the size is clamped to the cap remainder, so it can't burn
+ * exceed heartbeatDailyCapBase — the size is clamped to the cap remainder, so it can't burn
  * the budget.
  */
 function decideHeartbeat(state: ArbState, params: ArbParams): ArbDecision | null {
@@ -717,7 +717,7 @@ function decideHeartbeat(state: ArbState, params: ArbParams): ArbDecision | null
     return null;
   }
 
-  // FINDING 4 - per-day ATTEMPT cap (not just settled notional). A reverting heartbeat leg
+  // FINDING 4 — per-day ATTEMPT cap (not just settled notional). A reverting heartbeat leg
   // never charges spentTodayBase, so the notional cap alone can't bound retries; this does.
   // Omitted/0 => uncapped (the notional cap still applies).
   const maxAttempts = params.heartbeatDailyMaxAttempts ?? 0;

@@ -1,4 +1,4 @@
-// lib/activity/merge.ts - pure merge of per-market activity results into the feed response. Lives in
+// lib/activity/merge.ts — pure merge of per-market activity results into the feed response. Lives in
 // lib (not the route file) because Next.js route modules may only export GET/POST/etc., not helpers.
 import type { ActivityEvent, ActivityResponse } from '@/lib/activity/types';
 
@@ -6,7 +6,7 @@ export const MAX_FEED_EVENTS = 50;
 
 /**
  * Merge per-market results. A market that failed is `null`; if EVERY market failed (total Circle/scope
- * outage) the feed is `degraded`. Newest-first, capped at MAX_FEED_EVENTS. Pure + sync - unit-testable
+ * outage) the feed is `degraded`. Newest-first, capped at MAX_FEED_EVENTS. Pure + sync — unit-testable
  * without mocking the network.
  */
 export function mergeActivity(perMarket: (ActivityEvent[] | null)[]): ActivityResponse {

@@ -1,16 +1,16 @@
-// lib/epochV3.ts - adapters that normalize the FeeArenaV3 (ENTRY-ANCHORED) read shapes onto the
+// lib/epochV3.ts — adapters that normalize the FeeArenaV3 (ENTRY-ANCHORED) read shapes onto the
 // app-wide EpochView / StakeView / ClaimPreview types, plus the v3 extras the new UI surfaces
 // need (entry anchors, per-position outcomes, settlement price).
 //
 // Mapping philosophy (mirrors lib/epochV2.ts): every EXISTING component keeps working off the
-// normalized fields -
+// normalized fields —
 //   - the countdown chain: v3 has no start/end pair; the lock period runs entryClose ->
 //     settlementTime, so startTime := entryCloseTime and endTime := settlementTime (the
 //     Running-phase countdown then targets settlement, which is exactly what v3 users watch);
 //   - phase: Idle->Idle, EntryOpen->EntryOpen, Locked/Settling->Running, Settled->Settled
 //     (the app's 4-phase PhaseView). The RAW 5-phase view is preserved in `v3.phaseV3`;
 //   - pots: potWETH := potBase (the app's "WETH" leg IS the base/cirBTC leg everywhere);
-//   - winningSide := NONE always - v3 HAS no global winner; per-position results live on
+//   - winningSide := NONE always — v3 HAS no global winner; per-position results live on
 //     the stake views (won/entryPrice18) and the UI must use per-position language.
 import { PhaseView, Side, type EpochView, type StakeView, type ClaimPreview } from '@/lib/types';
 
@@ -92,7 +92,7 @@ export function adaptEpochV3(raw: RawEpochV3): EpochV3View {
     startPrice18: 0n,
     settlePrice18: raw.finalPrice18,
     deltaBps: 0n,
-    winningSide: Side.NONE, // v3 has NO global winner - use per-position results
+    winningSide: Side.NONE, // v3 has NO global winner — use per-position results
     rolledOver: raw.rolledOver,
     stakedCount: Number(raw.stakedCount),
     sweepCursor: Number(raw.processedCursor),
@@ -168,8 +168,8 @@ export function adaptStakeV3(raw: RawStakeV3): StakeV3View {
  * Collapse `getUserStakes` rows to one per tokenId, keeping the first occurrence.
  *
  * WHY: FeeArenaV3.getUserStakes() walks `userEpochTokenIds[user][ep]` across EVERY epoch
- * 1..current. That mapping is append-only - a tokenId is pushed on each stake and never
- * removed - while `positions` is keyed by tokenId alone. So an LP NFT re-staked across K
+ * 1..current. That mapping is append-only — a tokenId is pushed on each stake and never
+ * removed — while `positions` is keyed by tokenId alone. So an LP NFT re-staked across K
  * epochs (e.g. #26 in epoch 126 AND epoch 219, after auto-return + re-stake) shows up K
  * times, and every copy resolves to the SAME current positions[tokenId] (byte-identical).
  * Without this, "Your positions" rendered the one true position K times. De-duping by
@@ -266,7 +266,7 @@ export interface QualificationTally {
  * Count how many positions are currently QUALIFYING in the entry-anchored model. Each position is
  * judged against ITS OWN entry anchor (not a global start price): it qualifies when the side that
  * would be correct at `currentPrice18` equals the side it staked. One NFT = one vote (count, not
- * depth) - because every position has a different reference price, a UP/DOWN/RANGE split would read
+ * depth) — because every position has a different reference price, a UP/DOWN/RANGE split would read
  * like misleading global sentiment. Returns a 0/0 split (total preserved) when there is no live
  * price, so the caller can show an "awaiting price" state instead of a misclassified bar.
  */

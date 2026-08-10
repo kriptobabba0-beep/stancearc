@@ -1,5 +1,5 @@
-// abis/feeArenaV2Lens.ts - FULL FeeArenaV2Lens ABI generated VERBATIM from the compiled Foundry artifact
-// (out/FeeArenaV2Lens.sol/FeeArenaV2Lens.json) via forge build. DO NOT hand-edit - regenerate from the artifact.
+// abis/feeArenaV2Lens.ts — FULL FeeArenaV2Lens ABI generated VERBATIM from the compiled Foundry artifact
+// (out/FeeArenaV2Lens.sol/FeeArenaV2Lens.json) via forge build. DO NOT hand-edit — regenerate from the artifact.
 // The frontend reads previews/stake-listings FROM THE LENS (not the arena): previewClaim (sqrt pot share),
 // previewRefund (conviction 1:1), getStake / getStakesByEpoch. See docs/spec-feearena-v2.md.
 export const feeArenaV2LensAbi = [

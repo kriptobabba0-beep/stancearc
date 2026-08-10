@@ -1,6 +1,6 @@
-// lib/money.ts - BigInt money math mirroring the FeeArena contract (Math.mulDiv FLOOR).
+// lib/money.ts — BigInt money math mirroring the FeeArena contract (Math.mulDiv FLOOR).
 // Scale derived from cached decimals (NEVER the magic literal 1e30). Format only at render.
-// payWETH/payUSDC = mulDiv(pot, contribution6, winnerDenominator) floor - unit-agnostic ratio stays valid.
+// payWETH/payUSDC = mulDiv(pot, contribution6, winnerDenominator) floor — unit-agnostic ratio stays valid.
 import type { BootDecimals } from '@/lib/types';
 
 /** Floor multiply-divide: floor(a * b / denom). Mirrors OZ Math.mulDiv (floor). */

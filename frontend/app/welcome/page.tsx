@@ -1,20 +1,20 @@
 'use client';
 
-// app/welcome/page.tsx - the LANDING page (first-visit destination; the app routes stay untouched).
+// app/welcome/page.tsx — the LANDING page (first-visit destination; the app routes stay untouched).
 //
 // HERO (mockup 7.png, live-data faithful): "One market. / Three outcomes. / Fees decide." beside the
-// OutcomeDiagram - the live price node branching to UP / RANGE / DOWN with the REAL settlement band -
+// OutcomeDiagram — the live price node branching to UP / RANGE / DOWN with the REAL settlement band —
 // over a live stat band (fee pot · oracle price · next settlement) and the full-width market-depth bar.
 //
 // THE REST (storytelling, all real data, CSS-only motion):
 //   · a live on-chain activity ticker (the arena is already running)
-//   · "How a round works" - three interlocking HUD panels (the Arena's signature joint tabs)
-//   · the fee flywheel - an animated loop diagram with the all-time claimed counter at its center
-//   · "Provably fair" - oracle/band/proof cards + a REAL latest-settlement receipt
+//   · "How a round works" — three interlocking HUD panels (the Arena's signature joint tabs)
+//   · the fee flywheel — an animated loop diagram with the all-time claimed counter at its center
+//   · "Provably fair" — oracle/band/proof cards + a REAL latest-settlement receipt
 //   · count-up arena stats · final CTA
 //
 // New visitors hitting "/" are redirected here once (localStorage flag, set on mount below); the
-// app chrome (NavBar/SiteFooter) is hidden on this route (RouteChrome) - the landing ships its own.
+// app chrome (NavBar/SiteFooter) is hidden on this route (RouteChrome) — the landing ships its own.
 import { useEffect, useId, useMemo } from 'react';
 import Link from 'next/link';
 import { useCurrentEpoch } from '@/hooks/useCurrentEpoch';
@@ -124,7 +124,7 @@ function MarketDepth({ depth }: { depth: readonly [bigint, bigint, bigint, bigin
       </div>
       {!has && (
         <p className="mt-1.5 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
-          No staked depth yet this epoch - distribution updates as positions enter.
+          No staked depth yet this epoch — distribution updates as positions enter.
         </p>
       )}
     </div>
@@ -268,7 +268,7 @@ function Flywheel({ claimedUsd }: { claimedUsd: number }) {
 
 /* ── Page ──────────────────────────────────────────────────────────────────────────────────────── */
 export default function WelcomePage() {
-  // The landing is a fixed teaser for the flagship cirBTC/USDC market - PIN it so the hero price,
+  // The landing is a fixed teaser for the flagship cirBTC/USDC market — PIN it so the hero price,
   // oracle label, band, depth and stats never follow the user's active dashboard selection (which
   // could be cirBTC/EURC, whose BTC/EUR oracle would otherwise render under a "/ USDC" label).
   return (
@@ -286,7 +286,7 @@ function WelcomeBody() {
   const { data: leaders } = useLeaderboard();
   const { data: feesSettled } = useFeesSettled();
 
-  // MARKET DEPTH - per-side distribution of staked liquidity. v1/v2 carry it on the epoch struct
+  // MARKET DEPTH — per-side distribution of staked liquidity. v1/v2 carry it on the epoch struct
   // (sideContribution6); v3 (entry-anchored) does NOT, so rebuild it from the current epoch's stakes:
   // sum each live position's USD contribution by side, falling back to a position COUNT split before
   // fees have accrued so the bar still reflects where liquidity sits. Stakes are only read for v3.
@@ -307,12 +307,12 @@ function WelcomeBody() {
     return total > 0n ? byContribution : byCount;
   }, [v3, epoch?.sideContribution6, epochStakes]);
 
-  // Returning visitors skip straight to the app from "/" - mark this browser as having seen the story.
+  // Returning visitors skip straight to the app from "/" — mark this browser as having seen the story.
   useEffect(() => {
     try {
       window.localStorage.setItem(VISITED_KEY, '1');
     } catch {
-      /* private mode - harmless */
+      /* private mode — harmless */
     }
   }, []);
 
@@ -322,7 +322,7 @@ function WelcomeBody() {
   const refPrice18 = started ? epoch!.startPrice18 : price18;
 
   // FEES SETTLED: the cumulative TOTAL trading fees the arena has collected across every settled epoch
-  // (PositionProcessed.feeBase/feeUSDC) - winner-KEPT fees included, not just the small losers' forfeited
+  // (PositionProcessed.feeBase/feeUSDC) — winner-KEPT fees included, not just the small losers' forfeited
   // pot. This is the honest "real fee activity" figure: it grows in visible cents as swaps generate fees,
   // unlike the loser-pot (which is dust and looks frozen). The live epoch's fees aren't collected until
   // settlement, so this is intentionally a settled-to-date total.
@@ -340,7 +340,7 @@ function WelcomeBody() {
     settlement = <Countdown target={epoch.endTime} />;
   } else if (epoch?.phase === PhaseView.EntryOpen) {
     settlement = <Countdown target={epoch.entryCloseTime} className="text-brand" />;
-    settlementSub = 'Entry window open - closes in';
+    settlementSub = 'Entry window open — closes in';
   }
 
   const stats: StatCellData[] = [
@@ -362,7 +362,7 @@ function WelcomeBody() {
   const latestProof = settled.find((r) => r.winningSide !== Side.NONE && r.settlePrice18 !== undefined);
   const participants = leaders?.length ?? 0;
   // Stance epoch-pool payouts paid to qualifying positions (real on-chain Claimed events). Keep this as
-  // a FLOAT of dollars - the old `/1_000_000n` BigInt divide floored sub-$1 claims to $0; on this dust
+  // a FLOAT of dollars — the old `/1_000_000n` BigInt divide floored sub-$1 claims to $0; on this dust
   // testnet a real Stance claim is cents, so floor it and an actual payout still reads "$0". formatUsd6Precise
   // (below) then renders cents / sub-cent honestly.
   const claimedUsd = Number(totalClaimedUsd6(leaders ?? [], market.baseDecimals, price18)) / 1_000_000;
@@ -562,7 +562,7 @@ function WelcomeBody() {
             </p>
             <ul className="mt-6 space-y-2.5">
               {[
-                'LP principal is not forfeited - only epoch fees are at risk',
+                'LP principal is not forfeited — only epoch fees are at risk',
                 'Out-of-range positions do not earn fees while inactive',
                 'If no positions qualify, the fee pool rolls forward',
               ].map((t) => (
@@ -618,7 +618,7 @@ function WelcomeBody() {
             ))}
           </div>
 
-          {/* A REAL receipt - the latest settled round, straight from chain events. */}
+          {/* A REAL receipt — the latest settled round, straight from chain events. */}
           {latestProof && (
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-surface-muted px-5 py-4">
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-[13px] tnum">

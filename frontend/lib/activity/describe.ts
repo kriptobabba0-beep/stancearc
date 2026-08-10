@@ -1,8 +1,8 @@
-// lib/activity/describe.ts - PURE: turn a decoded ActivityEvent into a human sentence + tone for the
+// lib/activity/describe.ts — PURE: turn a decoded ActivityEvent into a human sentence + tone for the
 // Circle-powered arena activity feed. Mirrors lib/activityText `describeEvent` (the eth_getLogs feed) so
-// both feeds read the same. No React/chain reads - fully unit-testable.
+// both feeds read the same. No React/chain reads — fully unit-testable.
 //
-// Currency is keyed off the market's QUOTE symbol (USDC/EURC), NOT the label - a EURC/USDC market (base
+// Currency is keyed off the market's QUOTE symbol (USDC/EURC), NOT the label — a EURC/USDC market (base
 // EURC, quote USDC) settles in USD even though its label contains "EURC".
 import { Side } from '@/lib/types';
 import { SIDE_LABELS } from '@/lib/side';
@@ -48,16 +48,16 @@ export function describeActivity(ev: ActivityEvent): ActivityDescription {
     }
     case 'priceSubmitted': {
       const price = priceText(ev.finalPrice18, glyph);
-      return { text: `Epoch ${tag} settlement price posted${price ? ` - ${price}` : ''}`, tone: 'brand' };
+      return { text: `Epoch ${tag} settlement price posted${price ? ` — ${price}` : ''}`, tone: 'brand' };
     }
     case 'settled': {
       const n = ev.winnerCount ?? 0;
       const w = `${n} qualifying position${n === 1 ? '' : 's'}`;
       const price = priceText(ev.finalPrice18, glyph);
-      return { text: `Epoch ${tag} settled - ${w}${price ? ` · ${price}` : ''}`, tone: 'brand' };
+      return { text: `Epoch ${tag} settled — ${w}${price ? ` · ${price}` : ''}`, tone: 'brand' };
     }
     case 'emptyRollover':
-      return { text: `Epoch ${tag} had no winner - pot rolled forward`, tone: 'neutral' };
+      return { text: `Epoch ${tag} had no winner — pot rolled forward`, tone: 'neutral' };
     case 'claimed': {
       const amt =
         ev.payUSDC && /^\d+$/.test(ev.payUSDC) && ev.payUSDC !== '0' ? `${formatUSDC(BigInt(ev.payUSDC))} ${quoteToken}` : '';

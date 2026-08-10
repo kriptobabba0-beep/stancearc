@@ -1,10 +1,10 @@
-// stakerbot.ts - THREE auto-staking LP bots. Each of three SEPARATE wallets (UP / DOWN / RANGE)
+// stakerbot.ts — THREE auto-staking LP bots. Each of three SEPARATE wallets (UP / DOWN / RANGE)
 // adds liquidity (mints a full-range cirBTC/USDC LP position) and then automatically stakes that
 // position into the v3 ENTRY-ANCHORED arena every epoch, ALWAYS on its fixed side. So the arena
 // always has a participant calling each of UP, DOWN and RANGE.
 //
 // Lifecycle per wallet (driven each poll tick):
-//   1. Discover its LP NFT (owned OR currently staked) - restart-safe, never double-mints.
+//   1. Discover its LP NFT (owned OR currently staked) — restart-safe, never double-mints.
 //   2. If it has none, MINT a full-range LP (approve cirBTC+USDC -> NPM, then NPM.mint).
 //   3. setApprovalForAll(arena) ONCE (operator approval persists across the post-settlement auto-
 //      return, so re-staking the same NFT each epoch needs no re-approval).
@@ -14,7 +14,7 @@
 //      refunds), call stakeWithSide(tokenId, side, price18, maxDeviationBps, blob).
 //
 // Resilient like the swap bot: each wallet idles until it has gas, and starts on its own once
-// funded - no restart needed after a top-up. Reuses the keeper's installed viem + Hermes helpers.
+// funded — no restart needed after a top-up. Reuses the keeper's installed viem + Hermes helpers.
 import {
   defineChain,
   fallback,
@@ -41,7 +41,7 @@ const log = (o: Record<string, unknown>): void =>
 
 // IFeeArenaV3.PhaseView: 0 Idle, 1 EntryOpen, 2 Locked, 3 Settling, 4 Settled. We stake during EntryOpen.
 const PHASE_ENTRY_OPEN = 1;
-const MIN_OPERATING_WEI = 5_000_000_000_000_000n; // 0.005 native - enough to mint/approve/stake.
+const MIN_OPERATING_WEI = 5_000_000_000_000_000n; // 0.005 native — enough to mint/approve/stake.
 const MAX_UINT256 = (1n << 256n) - 1n;
 const MAX_TICK = 887272;
 
@@ -65,10 +65,10 @@ export type StakerAction = 'MINT' | 'STAKE' | 'WAIT';
 
 /**
  * PURE per-tick decision for one staker. Unit-testable (no I/O).
- *   - MINT  - it has no LP NFT yet (first run) -> mint one.
- *   - STAKE - entry window is open, the wallet currently HOLDS its NFT (auto-returned / freshly
+ *   - MINT  — it has no LP NFT yet (first run) -> mint one.
+ *   - STAKE — entry window is open, the wallet currently HOLDS its NFT (auto-returned / freshly
  *             minted, not escrowed), and it hasn't staked this epoch yet.
- *   - WAIT  - otherwise (between windows, NFT still escrowed, or already staked this epoch).
+ *   - WAIT  — otherwise (between windows, NFT still escrowed, or already staked this epoch).
  */
 export function decideStakerAction(input: {
   phase: number;
@@ -88,7 +88,7 @@ export function decideStakerAction(input: {
  * PURE: does the wallet hold enough of BOTH legs to mint+stake one LP position? The staker
  * gas-gates on native balance separately; this is the TOKEN gate. A wallet that's out of
  * cirBTC and/or USDC must SKIP the tick (not retry-spin / mint a dead position). Inclusive
- * (>=) - exactly the required amount is affordable.
+ * (>=) — exactly the required amount is affordable.
  */
 export function canAffordStake(b: { haveBase: bigint; haveUsdc: bigint; needBase: bigint; needUsdc: bigint }): boolean {
   return b.haveBase >= b.needBase && b.haveUsdc >= b.needUsdc;
@@ -125,7 +125,7 @@ function buildChain(cfg: StakerbotConfig, chainId: number): { chain: Chain; publ
   return { chain, publicClient: createPublicClient({ chain, transport }) };
 }
 
-/** Read-only: find this wallet's LP NFT - one it currently OWNS, else one it has STAKED. null if none. */
+/** Read-only: find this wallet's LP NFT — one it currently OWNS, else one it has STAKED. null if none. */
 async function discoverTokenId(client: PublicClient, cfg: StakerbotConfig, owner: `0x${string}`): Promise<bigint | null> {
   const bal = (await client.readContract({ address: cfg.npm, abi: npmAbi, functionName: 'balanceOf', args: [owner] })) as bigint;
   if (bal > 0n) {
@@ -139,7 +139,7 @@ async function discoverTokenId(client: PublicClient, cfg: StakerbotConfig, owner
 /** Mint a full-range LP for this wallet (approve cirBTC+USDC -> NPM if needed, then NPM.mint). */
 async function mintLp(client: PublicClient, st: StakerRuntime, chain: Chain, cfg: StakerbotConfig): Promise<bigint> {
   const gas = { maxFeePerGas: cfg.gasFloorWei, maxPriorityFeePerGas: cfg.gasFloorWei } as const;
-  // Approve both legs to the NPM (idempotent - only when allowance is short).
+  // Approve both legs to the NPM (idempotent — only when allowance is short).
   for (const [token, need] of [
     [cfg.market.base, cfg.mintBase] as const,
     [cfg.market.quote, cfg.mintUsdc] as const,
@@ -191,7 +191,7 @@ async function ensureApproval(client: PublicClient, st: StakerRuntime, chain: Ch
 /**
  * Place the entry-anchored stake for this wallet's fixed side. Returns true ONLY on a
  * SUCCESSFUL receipt; false on a mined-but-reverted tx so the caller does NOT mark the epoch
- * staked (a revert is retried next tick - the poll cadence throttles it, one attempt per tick).
+ * staked (a revert is retried next tick — the poll cadence throttles it, one attempt per tick).
  */
 async function stakeOnce(client: PublicClient, st: StakerRuntime, chain: Chain, cfg: StakerbotConfig, tokenId: bigint): Promise<boolean> {
   const { updateData, price18 } = await fetchPythUpdateWithPrice(cfg.hermesUrl, cfg.market.feedId, cfg.hermesTimeoutMs);
@@ -226,7 +226,7 @@ export async function tickStaker(client: PublicClient, chain: Chain, cfg: Staker
   st.sinceBalanceLog -= 1;
 
   if (bal < MIN_OPERATING_WEI) {
-    log({ msg: 'stakerbot.waiting', side: st.cfg.sideLabel, signer: st.account.address, reason: 'insufficient gas - fund this wallet (gas + cirBTC + USDC)', balanceWei: bal.toString() });
+    log({ msg: 'stakerbot.waiting', side: st.cfg.sideLabel, signer: st.account.address, reason: 'insufficient gas — fund this wallet (gas + cirBTC + USDC)', balanceWei: bal.toString() });
     return;
   }
 
@@ -245,7 +245,7 @@ export async function tickStaker(client: PublicClient, chain: Chain, cfg: Staker
 
   if (action === 'MINT') {
     // TOKEN gate (separate from the native gas gate above): minting an LP pulls BOTH legs.
-    // A wallet that has gas but is out of cirBTC and/or USDC must SKIP - minting anyway would
+    // A wallet that has gas but is out of cirBTC and/or USDC must SKIP — minting anyway would
     // revert (or mint a dead position) and the bot would retry it every tick forever.
     const [haveBase, haveUsdc] = (await Promise.all([
       client.readContract({ address: cfg.market.base, abi: erc20Abi, functionName: 'balanceOf', args: [st.account.address] }),
@@ -259,7 +259,7 @@ export async function tickStaker(client: PublicClient, chain: Chain, cfg: Staker
   } else if (action === 'STAKE') {
     await ensureApproval(client, st, chain, cfg);
     // Only mark the epoch staked on a SUCCESSFUL receipt. A reverted stake stays unmarked so the
-    // next tick retries it - otherwise this side silently drops out of the epoch for good.
+    // next tick retries it — otherwise this side silently drops out of the epoch for good.
     const staked = await stakeOnce(client, st, chain, cfg, st.tokenId!);
     if (staked) st.lastStakedEpoch = epochId;
   }

@@ -2,7 +2,7 @@
 #
 # Serve the raw markdown guides as UTF-8. Without an explicit charset the browser's
 # built-in text viewer falls back to a legacy encoding (Windows-1252) and renders clean
-# UTF-8 punctuation as mojibake (em-dash - shows as "â€""). The guides are also written in
+# UTF-8 punctuation as mojibake (em-dash — shows as "â€""). The guides are also written in
 # pure ASCII as a belt-and-suspenders guarantee, but declaring the charset is the correct
 # server-side fix and covers any future non-ASCII content.
 /guides/*

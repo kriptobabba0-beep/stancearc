@@ -1,13 +1,13 @@
-// spendGuard.ts - the stateful shell over the PURE spendBreaker, mirroring how index.ts owns
+// spendGuard.ts — the stateful shell over the PURE spendBreaker, mirroring how index.ts owns
 // the mutable runtime while backoff.ts stays pure. It loads the persisted ledger at boot, holds
 // it in memory, and exposes exactly the two operations the send path needs: status() to check
 // the cap BEFORE each broadcast, and book() to record ACTUAL spend AFTER each one. Every book
 // fsync's the ledger to disk (via saveLedgerSync) so the rolling window + the sticky trip survive
-// a crash/restart - which is the whole point: a crash-loop must not be able to reset the breaker.
+// a crash/restart — which is the whole point: a crash-loop must not be able to reset the breaker.
 //
 // When disabled (no cap configured) every method is a cheap no-op so the keeper behaves exactly
 // as before. When ENABLED a ledger path is REQUIRED (config enforces it) so persistence can never
-// be silently off - the failure mode the adversarial review flagged.
+// be silently off — the failure mode the adversarial review flagged.
 import {
   type SpendLedger,
   type SpendCaps,
@@ -19,10 +19,10 @@ import {
   freshLedger,
 } from './spendBreaker.js';
 
-/** Thrown by the send path when the cap is already open - STOP, do not broadcast (zero gas). */
+/** Thrown by the send path when the cap is already open — STOP, do not broadcast (zero gas). */
 export class SpendCapTrippedError extends Error {
   constructor(public readonly reason: string | null) {
-    super(`keeper spend cap tripped (${reason ?? 'unknown'}) - cranking halted until the ledger is cleared`);
+    super(`keeper spend cap tripped (${reason ?? 'unknown'}) — cranking halted until the ledger is cleared`);
     this.name = 'SpendCapTrippedError';
   }
 }
@@ -34,7 +34,7 @@ export interface SpendStatus {
 
 export interface SpendGuard {
   readonly enabled: boolean;
-  /** Cap verdict right now (sticky-aware). Cheap - call before every broadcast. */
+  /** Cap verdict right now (sticky-aware). Cheap — call before every broadcast. */
   status(now: number): SpendStatus;
   /** Record actual gas spent (wei), persist (fsync), latch the trip if a cap is now exceeded. */
   book(now: number, wei: bigint): SpendStatus;
@@ -80,7 +80,7 @@ export function createSpendGuard(opts: {
     if (v.tripped && ledger.trippedAt === null) {
       ledger = markTripped(ledger, now, v.reason ?? 'cap');
     }
-    // fsync the spend (and any fresh latch) to disk BEFORE we return - the loop books right after
+    // fsync the spend (and any fresh latch) to disk BEFORE we return — the loop books right after
     // a broadcast, and this is what makes the window crash-proof.
     saveLedgerSync(path, ledger, log);
     return evaluateCap(ledger, now, caps);

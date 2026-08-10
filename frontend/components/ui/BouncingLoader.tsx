@@ -1,4 +1,4 @@
-// components/ui/BouncingLoader.tsx - the app's loading animation: three dots that bounce in sequence
+// components/ui/BouncingLoader.tsx — the app's loading animation: three dots that bounce in sequence
 // over a soft crimson ground-shadow, tuned for the near-black canvas. Replaces the old spinner pill.
 // The motion lives in globals.css under `.lf-loader` (keyframes lf-bounce / lf-bounce-shadow); the
 // markup order is THREE dots then THREE shadows so the nth-child pairing in the CSS lines each shadow

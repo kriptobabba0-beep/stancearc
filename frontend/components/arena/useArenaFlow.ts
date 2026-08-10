@@ -1,14 +1,14 @@
 'use client';
 
-// components/arena/useArenaFlow.ts - the Arena entry journey's shared state machine. ONE instance is
+// components/arena/useArenaFlow.ts — the Arena entry journey's shared state machine. ONE instance is
 // created by the Arena page and passed to the right-rail + the three modals so selection, side, and
 // which modal is open stay in sync. Derives the current step from live wallet/LP/stake state:
 //
-//   add-liquidity  → connected (or not) but no stakeable LP position yet      (mockups 1-2)
-//   choose-side    → has a stakeable position, not yet staked this epoch      (mockups 3-5)
+//   add-liquidity  → connected (or not) but no stakeable LP position yet      (mockups 1–2)
+//   choose-side    → has a stakeable position, not yet staked this epoch      (mockups 3–5)
 //   staked         → already staked a side this epoch                         (mockup 6)
 //
-// All reads are the existing hooks (useOwnedPositions / useUserStakes / useCurrentEpoch) - no new
+// All reads are the existing hooks (useOwnedPositions / useUserStakes / useCurrentEpoch) — no new
 // contract wiring. The contract's OneSidePerEpoch rule still governs on-chain; this flow models the
 // single-position happy path the mockups show.
 import { useEffect, useMemo, useState } from 'react';
@@ -56,7 +56,7 @@ export function useArenaFlow(): ArenaFlow {
   const stakeable = useMemo(() => positions ?? [], [positions]);
   const hasLiquidity = stakeable.length > 0;
 
-  // The user's stake in the CURRENT epoch (still held - not unstaked) fixes the "staked" state.
+  // The user's stake in the CURRENT epoch (still held — not unstaked) fixes the "staked" state.
   const currentStake = useMemo<StakeView | undefined>(() => {
     if (!epoch) return undefined;
     return (stakes ?? []).find(

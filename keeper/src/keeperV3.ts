@@ -1,11 +1,11 @@
-// keeperV3.ts - the per-market crank for ENTRY-ANCHORED (v3) markets.
+// keeperV3.ts — the per-market crank for ENTRY-ANCHORED (v3) markets.
 //
 // Mirrors keeper.ts's runMarketOnce contract exactly (read -> pure decide -> execute AT
 // MOST ONE action -> TickLog), but against the v3 lifecycle: no startEpoch; instead a
 // SETTLE action that (a) samples the live Pyth price off-chain for a short window
 // (default 60s, the PDF's settlement average), (b) submits the average with the sample
 // window + a keccak hash of the samples for auditability, and (c) posts a FRESH Pyth
-// blob in the same tx - the contract anchors the submitted average against that on-chain
+// blob in the same tx — the contract anchors the submitted average against that on-chain
 // read (settleSanityBps), so this keeper can never write a price Pyth doesn't corroborate.
 import { keccak256, encodePacked, type Abi, type PublicClient, type WalletClient, type Account, type Chain } from 'viem';
 import { feeArenaV3Abi } from './abi.js';
@@ -68,7 +68,7 @@ export function aggregateSamples(prices18: bigint[], startSec: number, endSec: n
 /**
  * Sample Hermes for `sampleSec` seconds (every `intervalMs`) and aggregate. Individual
  * fetch failures are skipped; fewer than 3 good samples is a hard error (the tick fails
- * and retries next pass - never settle on a near-empty average).
+ * and retries next pass — never settle on a near-empty average).
  */
 async function sampleSettlementWindow(
   cfg: KeeperConfig,
@@ -91,7 +91,7 @@ async function sampleSettlementWindow(
       if (first === 0) first = ref.publishTimeSec;
       last = ref.publishTimeSec;
     } catch {
-      // transient Hermes hiccup - skip this sample, keep the window going
+      // transient Hermes hiccup — skip this sample, keep the window going
     }
     const remaining = deadline - Date.now();
     if (remaining <= 0) break;
@@ -102,13 +102,13 @@ async function sampleSettlementWindow(
 }
 
 // ─── Settlement PRE-SAMPLING ─────────────────────────────────────────────────────────────
-// The contract documents the settlement average as "the last 60s of Pyth prices" - the window
+// The contract documents the settlement average as "the last 60s of Pyth prices" — the window
 // ENDING at settlementTime. Sampling it AFTER the moment (the original implementation) both
 // shifted the measured window past the epoch boundary and blocked the tick for the whole
-// v3SampleSec - the single biggest chunk of the "Settlement in progress…" dead time. Instead,
+// v3SampleSec — the single biggest chunk of the "Settlement in progress…" dead time. Instead,
 // a tick that lands inside [settlementTime - v3SampleSec, settlementTime) spawns a background
 // sampler that collects until EXACTLY settlementTime; the SETTLE crank then submits within ~2s
-// of the boundary. The sampler is consumed EXACTLY once - every fallback (keeper restarted
+// of the boundary. The sampler is consumed EXACTLY once — every fallback (keeper restarted
 // mid-window, <3 samples, or a submit the sanity anchor rejected after a violent last-minute
 // move) re-samples with the legacy post-settlement window, so this path is strictly additive:
 // no failure mode exists here that did not exist before.
@@ -168,7 +168,7 @@ function maybeSpawnPreSampler(cfg: KeeperConfig, market: MarketConfig, state: Ke
         if (entry.firstSec === 0) entry.firstSec = ref.publishTimeSec;
         entry.lastSec = ref.publishTimeSec;
       } catch {
-        // transient Hermes hiccup - skip this sample, keep the window going
+        // transient Hermes hiccup — skip this sample, keep the window going
       }
       const remaining = endMs - Date.now();
       if (remaining <= 0) break;
@@ -182,16 +182,16 @@ function maybeSpawnPreSampler(cfg: KeeperConfig, market: MarketConfig, state: Ke
 
 /**
  * PEEK the pre-sampled window for (market, epoch): wait briefly for the tail sample, then
- * aggregate. Returns undefined when absent/stale/sparse - the caller falls back to the legacy
+ * aggregate. Returns undefined when absent/stale/sparse — the caller falls back to the legacy
  * post-settlement window. Deliberately NON-consuming: the [T-window, T] average stays valid
- * across an anchor-too-early retry (SettlePriceTooOld) - only a COMPLETED settle attempt or a
+ * across an anchor-too-early retry (SettlePriceTooOld) — only a COMPLETED settle attempt or a
  * REJECTED average (SettlePriceOutOfBounds) discards it, via discardPreSamples below.
  */
 async function peekPreSamples(marketId: string, epochId: bigint, waitMs: number): Promise<SettlementSamples | undefined> {
   const entry = preSamplers.get(marketId);
   if (entry === undefined) return undefined;
   if (entry.epochId !== epochId) {
-    preSamplers.delete(marketId); // stale epoch - discard
+    preSamplers.delete(marketId); // stale epoch — discard
     return undefined;
   }
   await Promise.race([entry.promise, new Promise((r) => setTimeout(r, waitMs))]);
@@ -223,7 +223,7 @@ export function chainMayContinue(stepsDone: number, elapsedMs: number, budgetMs:
 }
 
 /**
- * PURE: did the on-chain state ADVANCE between two reads? The chain proceeds only when it did -
+ * PURE: did the on-chain state ADVANCE between two reads? The chain proceeds only when it did —
  * so a lagging RPC view (a mined tx whose effect isn't visible yet) can never re-fire the same
  * crank twice; the tick simply ends on its last success and the normal poll resumes.
  */
@@ -238,14 +238,14 @@ export function stateAdvancedV3(prev: KeeperStateV3, next: KeeperStateV3): boole
 }
 
 /**
- * PURE: ms until this market next needs the loop's attention - the pre-sample start (so the
+ * PURE: ms until this market next needs the loop's attention — the pre-sample start (so the
  * window opens on time) or the settlement moment itself (so SETTLE fires within ~2s of the
- * boundary). undefined when no boundary is near - the default poll cadence is fine.
+ * boundary). undefined when no boundary is near — the default poll cadence is fine.
  */
 export function hintNextWakeMs(state: KeeperStateV3, sampleSec: number, preSampleEnabled: boolean): number | undefined {
   if (state.paused) return undefined;
   if (state.phase !== PhaseViewV3.EntryOpen && state.phase !== PhaseViewV3.Locked) return undefined;
-  if (state.nowSec >= state.settlementTime) return undefined; // already due - the action path owns it
+  if (state.nowSec >= state.settlementTime) return undefined; // already due — the action path owns it
   const preStart = state.settlementTime - BigInt(sampleSec);
   const target = preSampleEnabled && state.nowSec < preStart ? preStart : state.settlementTime;
   // +250ms so the wake lands just PAST the boundary, never a hair before it.
@@ -272,7 +272,7 @@ async function readStateV3(
     client.readContract({ address: arena, abi, functionName: 'paused' }) as Promise<boolean>,
   ]);
 
-  // Auto-return backlog (best-effort - a failed read must never fail the lifecycle tick).
+  // Auto-return backlog (best-effort — a failed read must never fail the lifecycle tick).
   let lastSettledEpochId: bigint | undefined;
   let unstakeDone: number | undefined;
   let unstakeTotal: number | undefined;
@@ -315,7 +315,7 @@ async function readStateV3(
  * Size a position-iterating crank (processPositions / unstakeBatch) to fit under the RPC's hard
  * per-tx gas cap and return the explicit gas-limit to submit it with. Probes eth_estimateGas per
  * candidate batch (shrinking on the over-cap signal), so it self-tunes to the actual per-position
- * cost - large batches when positions are cheap, one-at-a-time when a single position approaches
+ * cost — large batches when positions are cheap, one-at-a-time when a single position approaches
  * the cap. A non-gas estimate error (real revert / transport) bubbles to the normal failure path.
  */
 async function fitPositionCrank(
@@ -352,7 +352,7 @@ async function fitPositionCrank(
       cap: cfg.txGasCap.toString(),
       note:
         fit.count === 1 && fit.capped
-          ? 'single position at the RPC gas cap (heaviest case) - submitting one at a time'
+          ? 'single position at the RPC gas cap (heaviest case) — submitting one at a time'
           : 'batch shrunk to fit the RPC gas cap',
     });
   }
@@ -364,7 +364,7 @@ async function fitPositionCrank(
  * Never throws; failures land in rec.error (same breaker/backoff contract as runMarketOnce).
  *
  * PIPELINE CHAINING: with cfg.v3ChainBudgetMs > 0, a successful settlement-path action does NOT
- * end the tick - the state is re-read and the next decided action executes back-to-back
+ * end the tick — the state is re-read and the next decided action executes back-to-back
  * (SETTLE -> PROCESS.. -> FINALIZE -> UNSTAKE.. -> CREATE -> OPEN), eliminating the full poll gap
  * the legacy cadence paid between every step (the bulk of the "Settlement in progress…" dead
  * time). Every chained step keeps the exact lone-action safety rails (simulate gate, spend cap,
@@ -418,7 +418,7 @@ export async function runMarketOnceV3(
       // never freezes. Checked BEFORE the normal action: while WAIT_GRACE we still attempt SETTLE
       // (the oracle may recover); only once grace elapses do we fall to recovery. A v3 market with no
       // owner key behaves exactly as before (the wedge surfaces via the loop's failure/backoff path).
-      // Only ever the FIRST consideration of a tick - a mid-chain state can't be a recovery shape.
+      // Only ever the FIRST consideration of a tick — a mid-chain state can't be a recovery shape.
       if (step === 0) {
         const recovery = decideRecoveryV3(state, owner !== undefined);
         if (recovery === 'RECOVER') {
@@ -465,7 +465,7 @@ export async function runMarketOnceV3(
       }
 
       // Chain gates (the FIRST action of a tick is never gated): stop cleanly on the last
-      // successful step when the re-read state did not advance (lagging view - never re-fire the
+      // successful step when the re-read state did not advance (lagging view — never re-fire the
       // same crank on it) or when the step/wall-clock budget is spent; the next poll resumes.
       if (step > 0) {
         if (prevState !== undefined && !stateAdvancedV3(prevState, state)) return lastExecuted!;
@@ -488,10 +488,10 @@ export async function runMarketOnceV3(
           // 0) PROJECTED-MINE FRESHNESS GATE. The contract's _requireFresh reverts StalePrice when
           // `block.timestamp > updatedAt + maxPriceAge`. The keeper posts a FRESH blob (updatedAt ~=
           // now), so the only way a settle is structurally doomed is when maxPriceAge is too TIGHT to
-          // survive the simulate->mine gap - and because each retry re-fetches a fresh-at-sim blob, a
+          // survive the simulate->mine gap — and because each retry re-fetches a fresh-at-sim blob, a
           // plain simulate is fooled identically every tick and the settle burns gas + the Pyth fee on
           // every mine. So we read the on-chain maxPriceAge and, if it can't cover the worst-case mine
-          // latency, DEFER (don't sample, don't send - zero gas) and let the loop fire a distinct
+          // latency, DEFER (don't sample, don't send — zero gas) and let the loop fire a distinct
           // "maxPriceAge too tight" alert instead of bleeding. A comfortable maxPriceAge never trips.
           const mineLatencySec = cfg.v3MineLatencySec ?? 15;
           let maxPriceAge: number | undefined;
@@ -500,22 +500,22 @@ export async function runMarketOnceV3(
               (await client.readContract({ address: market.arena, abi, functionName: 'maxPriceAge' })) as number | bigint,
             );
           } catch {
-            // Best-effort gate - a failed read must NOT defer a legit settle (the sim gate + spend cap
+            // Best-effort gate — a failed read must NOT defer a legit settle (the sim gate + spend cap
             // are the real backstops); proceed and let those catch any residual.
             maxPriceAge = undefined;
           }
           if (maxPriceAge !== undefined && Number.isFinite(maxPriceAge) && maxPriceAge < mineLatencySec) {
             rec.freshnessDeferred = true;
-            rec.error = `settle deferred: maxPriceAge ${maxPriceAge}s < mine-latency budget ${mineLatencySec}s - a posted price can't survive to the mine block (widen maxPriceAge); not burning gas`;
+            rec.error = `settle deferred: maxPriceAge ${maxPriceAge}s < mine-latency budget ${mineLatencySec}s — a posted price can't survive to the mine block (widen maxPriceAge); not burning gas`;
             logTick(rec);
             return rec;
           }
           // 0b) ANCHOR-FRESHNESS GATE. The contract rejects a settle whose anchor blob is stamped
-          //     BEFORE settlementTime (SettlePriceTooOld) - and the adaptive wake lands this tick
+          //     BEFORE settlementTime (SettlePriceTooOld) — and the adaptive wake lands this tick
           //     essentially AT that moment, when Hermes's freshest aggregate can lag wall-clock by
           //     several seconds. A blind margin guesses that lag; instead, after the bounded floor
           //     wait, POLL Hermes until its blob is PROVABLY stamped >= settlementTime (checked via
-          //     the ref's publishTime - the same value the on-chain oracle records). Bounded at
+          //     the ref's publishTime — the same value the on-chain oracle records). Bounded at
           //     ~12s: past that we proceed and let the sim gate + backoff handle it (a Hermes that
           //     stale is its own incident). The legacy late path (arriving 60s+ after T) passes
           //     both gates instantly.
@@ -529,17 +529,17 @@ export async function runMarketOnceV3(
                 : await fetchPythRef(cfg.hermesUrl, market.feedId, cfg.hermesTimeoutMs);
               if (BigInt(probe.publishTimeSec) >= state.settlementTime) break; // anchor will qualify
             } catch {
-              // transient Hermes hiccup - retry within the bound
+              // transient Hermes hiccup — retry within the bound
             }
             if (Date.now() >= anchorPollDeadline) {
-              logLine({ msg: 'keeper.v3.anchor.stale', market: market.id, epochId: state.currentEpochId, note: 'Hermes still serving a pre-settlement blob after the poll bound - proceeding (sim gate protects)' });
+              logLine({ msg: 'keeper.v3.anchor.stale', market: market.id, epochId: state.currentEpochId, note: 'Hermes still serving a pre-settlement blob after the poll bound — proceeding (sim gate protects)' });
               break;
             }
             await new Promise((r) => setTimeout(r, 500));
           }
           // 1) the settlement average: prefer the PRE-SAMPLED [T - window, T] set (the contract's
           //    documented "last 60s of Pyth prices"), collected in the background while the epoch
-          //    was still locked - so the submit fires within ~2s of the settlement moment. Falls
+          //    was still locked — so the submit fires within ~2s of the settlement moment. Falls
           //    back to the legacy post-settlement window when absent or sparse (keeper restarted
           //    mid-window, or presample disabled). The 6s wait bounds the tail sample; the
           //    sampler's own deadline IS the settlement moment, so it is already (or imminently)
@@ -629,15 +629,15 @@ export async function runMarketOnceV3(
       lastExecuted = rec;
       prevState = state;
       if (chainBudgetMs <= 0) return rec; // legacy: exactly one action per tick
-      // else: chain - re-read the (now advanced) state and execute the next pipeline step.
+      // else: chain — re-read the (now advanced) state and execute the next pipeline step.
     } catch (err) {
       if (err instanceof SpendCapTrippedError) {
-        // Persisted spend cap OPEN - the loop reads spendCapTripped and STOPS all cranking (sticky).
+        // Persisted spend cap OPEN — the loop reads spendCapTripped and STOPS all cranking (sticky).
         rec.error = err.message;
         rec.spendCapTripped = err.reason ?? 'cap';
       } else if (err instanceof WouldRevertError) {
-        // Pre-flight simulation caught a doomed crank - NO tx sent, ZERO gas (the drain we eliminate).
-        rec.error = `would revert: ${err.info.name} (${rec.action}) - skipped before broadcast`;
+        // Pre-flight simulation caught a doomed crank — NO tx sent, ZERO gas (the drain we eliminate).
+        rec.error = `would revert: ${err.info.name} (${rec.action}) — skipped before broadcast`;
         rec.revertReason = err.info.name;
         rec.simSkipped = true;
         // A REJECTED average (outside the sanity anchor after a violent last-minute move) must be

@@ -1,4 +1,4 @@
-// app/api/leaderboard/route.ts - GET ?market=<id> returns the standings.
+// app/api/leaderboard/route.ts — GET ?market=<id> returns the standings.
 //
 // This handler does no chain access and no aggregation. The keeper's indexer maintains the index
 // and pushes a finished payload to KV (see app/api/leaderboard/ingest); serving is a KV read and a
@@ -6,8 +6,8 @@
 // no matter which Cloudflare location they land in.
 //
 // It used to advance an incremental chain scan on the request path, with the snapshot in per-colo
-// cache. That gave each colo its own leaderboard at its own block height - refreshing could swing
-// between current and week-old data - and a visitor who happened to trigger a scan waited about
+// cache. That gave each colo its own leaderboard at its own block height — refreshing could swing
+// between current and week-old data — and a visitor who happened to trigger a scan waited about
 // ten seconds for a web page.
 import { NextResponse } from 'next/server';
 import { MARKETS, isV3Market } from '@/lib/markets';
@@ -46,21 +46,21 @@ export async function GET(req: Request): Promise<NextResponse> {
     return NextResponse.json(warmingUpPayload(market, 'the indexer has not published yet'), { headers: NO_STORE });
   }
 
-  // No viewer asked about themselves: straight passthrough of bytes already validated at ingest -
+  // No viewer asked about themselves: straight passthrough of bytes already validated at ingest —
   // nothing to parse, and identical for everyone, so it can be edge-cached.
   const self = new URL(req.url).searchParams.get('self');
   if (!isAddress(self)) {
     return new NextResponse(stored, { headers: { 'Content-Type': 'application/json', ...EDGE_CACHE } });
   }
 
-  // A viewer already among the published rows needs nothing extra - the badge finds them in place.
+  // A viewer already among the published rows needs nothing extra — the badge finds them in place.
   const addr = self.toLowerCase();
   if (stored.includes(`"address":"${addr}"`)) {
     return new NextResponse(stored, { headers: { 'Content-Type': 'application/json', ...EDGE_CACHE } });
   }
 
   // Outside the published rows: look up that ONE address server-side and attach it. The index this
-  // reads holds every participant and is never sent to a browser, which is the point - it answers
+  // reads holds every participant and is never sent to a browser, which is the point — it answers
   // "where do I stand?" without undoing the cap on what everyone downloads.
   const rows = await readSelfRows(market.id, addr);
   const body = JSON.parse(stored) as Record<string, unknown>;

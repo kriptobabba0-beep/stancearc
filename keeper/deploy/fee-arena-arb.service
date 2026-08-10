@@ -1,8 +1,8 @@
-# Fee Arena ARB bot - systemd unit template (non-Docker alternative to Docker Compose / pm2).
+# Fee Arena ARB bot — systemd unit template (non-Docker alternative to Docker Compose / pm2).
 #
 # The price-keeper ARB bot is a SEPARATE process from the lifecycle keeper (separate key,
 # separate nonces). It trades the pool toward the live Pyth price; the AMM's real 0.3% fee
-# on each swap funds every pot - so it gets the SAME always-restart supervision as the
+# on each swap funds every pot — so it gets the SAME always-restart supervision as the
 # keeper. Install it ALONGSIDE fee-arena-keeper.service (both read the same .env).
 #
 # Installation (adjust paths as needed):
@@ -19,7 +19,7 @@
 #     The arb bot uses the KEEPER_ARB_* vars in that file (separate KEEPER_ARB_PRIVATE_KEY).
 
 [Unit]
-Description=Fee Arena ARB bot - price-keeper that funds the pots
+Description=Fee Arena ARB bot — price-keeper that funds the pots
 After=network-online.target
 Wants=network-online.target
 

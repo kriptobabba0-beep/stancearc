@@ -1,4 +1,4 @@
-// health.ts - keeper observability: a PURE health/degraded computation + a PURE
+// health.ts — keeper observability: a PURE health/degraded computation + a PURE
 // Prometheus text renderer + an optional lightweight node:http server that exposes
 // /health and /metrics. The pure functions hold no clock and no I/O so they're
 // unit-tested without ever opening a socket; the server is a thin shell over them.
@@ -11,7 +11,7 @@ export interface MarketHealthInput {
   runtime: MarketRuntime;
 }
 
-/** The slice of loop state the health computation needs (no clock - `nowMs` is passed). */
+/** The slice of loop state the health computation needs (no clock — `nowMs` is passed). */
 export interface HealthState {
   /** Wall-clock ms of the last completed poll pass; null if the loop hasn't ticked yet. */
   lastTickTs: number | null;
@@ -44,7 +44,7 @@ export interface HealthResult {
 
 /**
  * Compute keeper health. PURE: no clock read (nowMs injected), no I/O. DEGRADED (503)
- * iff (a) any market is wedged, OR (b) the loop is stalled - now - lastTickTs exceeds
+ * iff (a) any market is wedged, OR (b) the loop is stalled — now - lastTickTs exceeds
  * stallFactor * pollIntervalMs (strict >). A null lastTickTs (never ticked) is stalled.
  */
 export function computeHealth(
@@ -92,7 +92,7 @@ export interface MetricsSnapshot {
    * Restart-safe counters (TASK 4a). `restartsTotal` is bumped once per process boot, so a
    * crash-loop shows up as a rising counter even though ticks/actions/failures/reverts now
    * survive restarts (seeded from the persisted state file). `processStartTimeSec` is the
-   * Unix-seconds gauge of THIS process's start - the conventional `process_start_time_seconds`
+   * Unix-seconds gauge of THIS process's start — the conventional `process_start_time_seconds`
    * Prometheus exporters publish, letting an operator compute uptime + see a reset directly.
    */
   restartsTotal: number;
@@ -105,7 +105,7 @@ function escapeLabel(v: string): string {
 }
 
 /**
- * Render a MetricsSnapshot as Prometheus text exposition (v0.0.4). PURE - no I/O.
+ * Render a MetricsSnapshot as Prometheus text exposition (v0.0.4). PURE — no I/O.
  * Counters: keeper_ticks_total, keeper_actions_total{action}, keeper_failures_total{market},
  * keeper_reverts_total. Gauges: keeper_balance_wei, keeper_market_wedged{market},
  * keeper_last_tick_timestamp.
@@ -147,9 +147,9 @@ export function renderMetrics(m: MetricsSnapshot): string {
   lines.push('# TYPE keeper_last_tick_timestamp gauge');
   lines.push(`keeper_last_tick_timestamp ${m.lastTickTs}`);
 
-  // TASK 4a - restart-safe signals. keeper_restarts_total rises once per boot so a crash-loop
+  // TASK 4a — restart-safe signals. keeper_restarts_total rises once per boot so a crash-loop
   // is alertable even though the counters above now survive restarts (seeded from the state
-  // file). process_start_time_seconds is the conventional uptime gauge - it RESETS on each
+  // file). process_start_time_seconds is the conventional uptime gauge — it RESETS on each
   // restart, which is exactly the documented way to detect a process bounce in Prometheus.
   lines.push('# HELP keeper_restarts_total Process boots (incremented once per start).');
   lines.push('# TYPE keeper_restarts_total counter');
@@ -185,7 +185,7 @@ export function startHealthServer(opts: {
   /** Backoff between rebind attempts (ms). Default 1000. */
   bindRetryDelayMs?: number;
   /**
-   * Called when the bind ultimately fails - defaults to process.exit(1) so the container
+   * Called when the bind ultimately fails — defaults to process.exit(1) so the container
    * supervisor restarts the keeper cleanly (running blind, with NO health endpoint, defeats
    * the healthcheck-driven restart). Injectable so tests don't kill the runner.
    */
@@ -228,7 +228,7 @@ export function startHealthServer(opts: {
     res.end('not found\n');
   });
 
-  // A bind failure (esp. EADDRINUSE) means we'd run with NO health endpoint - the worst case,
+  // A bind failure (esp. EADDRINUSE) means we'd run with NO health endpoint — the worst case,
   // since the healthcheck-driven restart can never fire. Retry the bind a bounded number of
   // times, then exit(1) so the supervisor restarts us cleanly rather than running blind.
   server.on('error', (err) => {

@@ -1,9 +1,9 @@
 'use client';
 
-// components/arena/usePositionRange.ts - derive a position's human price band + in/out-of-range status
+// components/arena/usePositionRange.ts — derive a position's human price band + in/out-of-range status
 // from its ticks and the live pool price. Mirrors PositionPicker's range logic so the Arena rail/modals
-// describe a position identically ("Full range" or "min - max USDC", plus whether it's currently in
-// range). Orientation (baseIsToken0) and decimals come from the live pool - never hardcoded.
+// describe a position identically ("Full range" or "min – max USDC", plus whether it's currently in
+// range). Orientation (baseIsToken0) and decimals come from the live pool — never hardcoded.
 import { useReadContract } from 'wagmi';
 import { useActiveBaseToken } from '@/hooks/useActiveBaseToken';
 import { tickSpacingForFee } from '@/hooks/useMintPosition';
@@ -17,7 +17,7 @@ import type { OwnedPosition } from '@/lib/types';
 const USDC_DECIMALS = 6;
 
 export interface PositionRange {
-  /** "Full range" or "min - max USDC". "…" while the band can't be computed yet. */
+  /** "Full range" or "min – max USDC". "…" while the band can't be computed yet. */
   label: string;
   /** 'in-range' | 'below' | 'above' | undefined (slot0 not yet known). */
   status: 'in-range' | 'below' | 'above' | undefined;

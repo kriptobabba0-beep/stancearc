@@ -1,4 +1,4 @@
-// lib/pools.ts - the Uniswap-V3-fork pool registry for the token-pair Swap + pool-selectable LP. Each
+// lib/pools.ts — the Uniswap-V3-fork pool registry for the token-pair Swap + pool-selectable LP. Each
 // pool is the 0.3% fee tier on Arc. The cirBTC/USDC pool comes from ENV (the original market pool); the
 // EURC/USDC and cirBTC/EURC pools are fixed Arc deployments (created by script/DeployV3Market.s.sol).
 //
@@ -17,14 +17,14 @@ export interface PoolInfo {
   token0: TokenInfo;
   token1: TokenInfo;
   /**
-   * Semantic BASE leg - the volatile / primary token, priced as "X quote per base" (cirBTC, or EURC in
+   * Semantic BASE leg — the volatile / primary token, priced as "X quote per base" (cirBTC, or EURC in
    * the EURC/USDC pair). This is a config designation, NOT "the non-USDC leg": cirBTC/EURC has no USDC
    * leg at all, so base/quote must be declared, not inferred. LP UIs read base/quote (never assume USDC).
    */
   base: TokenInfo;
-  /** Semantic QUOTE leg - the stable / secondary token (USDC, or EURC in cirBTC/EURC). */
+  /** Semantic QUOTE leg — the stable / secondary token (USDC, or EURC in cirBTC/EURC). */
   quote: TokenInfo;
-  /** True when `base` sorts as the pool's token0 (address-sorted) - maps (amount0,amount1) ↔ (base,quote). */
+  /** True when `base` sorts as the pool's token0 (address-sorted) — maps (amount0,amount1) ↔ (base,quote). */
   baseIsToken0: boolean;
 }
 

@@ -1,8 +1,8 @@
-// lib/leaderboardIndex.ts - the PURE incremental engine behind /api/leaderboard.
+// lib/leaderboardIndex.ts — the PURE incremental engine behind /api/leaderboard.
 //
-// The standings are built exclusively from on-chain events - the FeeArena (entries, fee
+// The standings are built exclusively from on-chain events — the FeeArena (entries, fee
 // contributions, claims), the market's Uniswap pool (swaps, liquidity mints) and the NPM
-// (position ownership) - folded into a compact snapshot the API route advances one bounded
+// (position ownership) — folded into a compact snapshot the API route advances one bounded
 // block-window at a time. Visitors never pay for a chain scan.
 //
 // Metrics, and why they are honest:
@@ -13,15 +13,15 @@
 //       market's pool (joined against the pool's Mint in the same block with identical
 //       liquidity+amounts), base leg valued at the latest on-chain price. Owner comes from
 //       NPM Transfer logs.
-//     · fees staked: PositionProcessed.contributionUsd6 - the contract's own valuation.
+//     · fees staked: PositionProcessed.contributionUsd6 — the contract's own valuation.
 //   PnL = Σ usd(Claimed payouts) − Σ contributionUsd6 (realized: collected minus put at
 //       stake). A claim's base leg is valued at the claimed epoch's settlement price
-//       (EpochSettled.finalPrice18) - claims can only happen after settlement.
+//       (EpochSettled.finalPrice18) — claims can only happen after settlement.
 //   entered/won are per POSITION (one entry = one processed position).
 //
 // Day buckets power the 7D/30D windows. Arena events bucket by their epoch's settlement
 // time; swap/liquidity events bucket by the running chain clock (the latest EpochCreated's
-// entryOpenTime - epochs open every few minutes, so the skew is minutes at worst).
+// entryOpenTime — epochs open every few minutes, so the skew is minutes at worst).
 
 export interface AddrAgg {
   feeUsd6: bigint; // fees put at stake (contributionUsd6)
@@ -39,7 +39,7 @@ export interface LeaderboardSnapshot {
   version: 2;
   arena: string;
   baseDecimals: number;
-  /** Uniswap sorts the pair by address - whether the BASE token is token0 in this pool. */
+  /** Uniswap sorts the pair by address — whether the BASE token is token0 in this pool. */
   baseIsToken0: boolean;
   fromBlock: bigint;
   /** Next block to scan (everything below is folded in). */
@@ -53,6 +53,16 @@ export interface LeaderboardSnapshot {
   stakeOwner: Map<string, string>;
   /** NPM tokenId -> owner (lowercase), maintained from NPM Transfer logs. */
   npmOwner: Map<string, string>;
+  /**
+   * NPM tokenId -> usd6 credited per unit of liquidity, scaled by 1e18.
+   *
+   * Liquidity provided is netted: adding then removing the same position must come back to zero.
+   * Doing that in USD alone drifts, because the pair's price moves between the two events and a V3
+   * position's contents move with it — remove could subtract more than add ever credited and push a
+   * wallet negative for doing nothing. Pinning each unit of liquidity to the rate it was CREDITED
+   * at makes the two sides cancel exactly, whatever the price did in between.
+   */
+  liqRate: Map<string, bigint>;
   /** Latest quote-per-base price (1e18) seen on-chain (swaps + settlements). */
   lastPrice18: bigint;
   /** Running chain clock (unix sec) from the latest EpochCreated. */
@@ -72,7 +82,7 @@ export interface LeaderboardSnapshot {
 export const RETAIN_DAYS = 45;
 const NPM_OWNER_CAP = 4_000;
 
-// Growth bounds. Epochs open every couple of minutes - roughly 720/day, 260k/year - so any map
+// Growth bounds. Epochs open every couple of minutes — roughly 720/day, 260k/year — so any map
 // keyed by epochId grows without limit unless it is pruned. Left alone, epochPrice + epochTime
 // alone add ~14 MB/year, which eventually makes every save and reload of the snapshot slower
 // than the indexing it protects. These caps make the snapshot's size a function of the retention
@@ -82,7 +92,7 @@ const NPM_OWNER_CAP = 4_000;
 // The retention is the same RETAIN_DAYS the day buckets use: epochPrice only values `Claimed`
 // payouts and epochTime only assigns day buckets, and neither reaches further back than the
 // windows do. A claim older than the window values its base leg at 0, which under-counts rather
-// than invents - the same trade the pre-existing missing-price path already makes.
+// than invents — the same trade the pre-existing missing-price path already makes.
 export const EPOCH_RETAIN_DAYS = RETAIN_DAYS;
 /** Backstop for epoch entries we cannot date (EpochSettled seen without its EpochCreated).
  *  Maps iterate in insertion order, so eviction drops the oldest first. */
@@ -90,6 +100,8 @@ const EPOCH_MAP_CAP = 60_000;
 /** Stakes are consumed by PositionProcessed; one that never is would otherwise leak forever. */
 const STAKE_OWNER_CAP = 10_000;
 
+/** Fixed-point scale for the usd6-per-liquidity-unit rate. */
+const RATE_SCALE = 10n ** 18n;
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000';
 const Q192 = 2n ** 192n;
 
@@ -129,6 +141,7 @@ export function emptySnapshot(
     epochTime: new Map(),
     stakeOwner: new Map(),
     npmOwner: new Map(),
+    liqRate: new Map(),
     lastPrice18: 0n,
     lastTimeSec: 0,
     all: new Map(),
@@ -170,7 +183,7 @@ function dayAgg(snap: LeaderboardSnapshot, day: number | undefined, addr: string
   return aggFor(bucket, addr);
 }
 
-/** The day bucket for an epoch - undefined when the epoch's creation predates the scan. */
+/** The day bucket for an epoch — undefined when the epoch's creation predates the scan. */
 function epochDay(snap: LeaderboardSnapshot, epochId: string): number | undefined {
   const t = snap.epochTime.get(epochId);
   return t === undefined ? undefined : Math.floor(t / 86_400);
@@ -199,7 +212,7 @@ export function sqrtPriceToPrice18(sqrtPriceX96: bigint, baseDecimals: number, b
 const absBig = (v: bigint) => (v < 0n ? -v : v);
 
 /**
- * Fold a batch of decoded logs (any order - sorted internally) into the snapshot, then
+ * Fold a batch of decoded logs (any order — sorted internally) into the snapshot, then
  * advance the cursor to `scannedTo + 1`. Pool Mint ↔ NPM IncreaseLiquidity joins happen
  * within a batch; both logs share a transaction (and therefore a block), and windows never
  * split a block, so the join can never straddle two calls.
@@ -236,7 +249,7 @@ export function applyLogs(snap: LeaderboardSnapshot, logs: IndexLog[], scannedTo
         const joinKey = `${epochId}:${String(a.tokenId)}`;
         const owner = snap.stakeOwner.get(joinKey);
         snap.stakeOwner.delete(joinKey);
-        if (!owner) break; // stake predates the scan window - nothing to attribute
+        if (!owner) break; // stake predates the scan window — nothing to attribute
         const contribution = (a.contributionUsd6 as bigint) ?? 0n;
         const won = a.won === true;
         const day = epochDay(snap, epochId);
@@ -321,7 +334,7 @@ export function applyLogs(snap: LeaderboardSnapshot, logs: IndexLog[], scannedTo
       }
       case 'npm:IncreaseLiquidity': {
         const joinKey = `${log.blockNumber}:${String(a.liquidity)}:${String(a.amount0)}:${String(a.amount1)}`;
-        if (!poolMints.has(joinKey)) break; // a different pool's position - not this market
+        if (!poolMints.has(joinKey)) break; // a different pool's position — not this market
         poolMints.delete(joinKey);
         const owner = snap.npmOwner.get(String(a.tokenId));
         if (!owner) break;
@@ -331,6 +344,17 @@ export function applyLogs(snap: LeaderboardSnapshot, logs: IndexLog[], scannedTo
         const quoteLeg = snap.baseIsToken0 ? amount1 : amount0;
         const usd = payoutUsd6(baseLeg, quoteLeg, snap.lastPrice18, snap.baseDecimals);
         if (usd === 0n) break;
+        // Remember what this liquidity was credited at, so a later withdrawal subtracts the same
+        // amount rather than whatever the price happens to be then. Weighted, since a position can
+        // be topped up more than once.
+        const addedL = (a.liquidity as bigint) ?? 0n;
+        if (addedL > 0n) {
+          const tokenId = String(a.tokenId);
+          const rate = (usd * RATE_SCALE) / addedL;
+          const prev = snap.liqRate.get(tokenId);
+          snap.liqRate.set(tokenId, prev === undefined ? rate : (prev + rate) / 2n);
+          capMap(snap.liqRate as Map<string, unknown>, NPM_OWNER_CAP);
+        }
         const day = clockDay(snap);
         for (const agg of [aggFor(snap.all, owner), dayAgg(snap, day, owner)]) {
           if (!agg) continue;
@@ -339,6 +363,28 @@ export function applyLogs(snap: LeaderboardSnapshot, logs: IndexLog[], scannedTo
         snap.totals.liqUsd6 += usd;
         break;
       }
+      case 'npm:DecreaseLiquidity': {
+        // No pool-Mint join needed here: an unknown tokenId is one whose ADD we never credited
+        // (another pool's position, or one created before the scan), so there is nothing to undo.
+        const tokenId = String(a.tokenId);
+        const rate = snap.liqRate.get(tokenId);
+        const owner = snap.npmOwner.get(tokenId);
+        const removedL = (a.liquidity as bigint) ?? 0n;
+        if (rate === undefined || !owner || removedL <= 0n) break;
+
+        const usd = (removedL * rate) / RATE_SCALE;
+        if (usd === 0n) break;
+        const day = clockDay(snap);
+        for (const agg of [aggFor(snap.all, owner), dayAgg(snap, day, owner)]) {
+          if (!agg) continue;
+          // Floored at zero: a withdrawal from a position added before the scan began would
+          // otherwise drive a wallet negative for liquidity it was never credited for.
+          agg.liqUsd6 = agg.liqUsd6 > usd ? agg.liqUsd6 - usd : 0n;
+        }
+        snap.totals.liqUsd6 = snap.totals.liqUsd6 > usd ? snap.totals.liqUsd6 - usd : 0n;
+        break;
+      }
+
       default:
         break; // keeper/ops events don't affect standings
     }
@@ -367,7 +413,7 @@ function pruneDays(snap: LeaderboardSnapshot, now: number): void {
  * every `Claimed` behind it would lose its settlement price. Against the chain clock the
  * retention window travels with the blocks being read, which is what "45 days of history" is
  * supposed to mean. Before the first EpochCreated arrives there is no chain clock, so pruning
- * waits - the maps are empty then anyway.
+ * waits — the maps are empty then anyway.
  */
 function pruneEpochs(snap: LeaderboardSnapshot): void {
   if (snap.lastTimeSec > 0) {
@@ -467,7 +513,7 @@ export interface PayloadMarketMeta {
  *
  * The payload used to carry every participant, so its size tracked the number of wallets that had
  * ever played: fine at 44, about half a megabyte at a thousand, and past KV's 25 MB ceiling around
- * fifty thousand - sent to every visitor, every poll, to render fifteen rows at a time. Capping it
+ * fifty thousand — sent to every visitor, every poll, to render fifteen rows at a time. Capping it
  * makes the response the same size whether a hundred wallets have played or a hundred thousand.
  *
  * Both metrics are kept because the board sorts by either: a wallet can be top-ten by PnL and
@@ -483,11 +529,11 @@ export interface LeaderboardPayload {
   head: string;
   cursor: string;
   syncing: boolean;
-  /** 0..100 - how much of the arena's history is folded in. */
+  /** 0..100 — how much of the arena's history is folded in. */
   progress: number;
   /** When the indexer last folded logs in (ms). */
   updatedAt: number;
-  /** When this payload was built (ms) - lets a reader see that the indexer itself went quiet. */
+  /** When this payload was built (ms) — lets a reader see that the indexer itself went quiet. */
   generatedAt: number;
   /** How many rows each window was capped at. */
   maxRows: number;
@@ -509,7 +555,7 @@ export interface LeaderboardPayload {
   d7: LeaderRowOut[];
   /**
    * The viewer's own standing, when they asked for it (`?self=0x…`) and fell outside the published
-   * rows. Added by the API, never by the indexer - it is the one part of the response that differs
+   * rows. Added by the API, never by the indexer — it is the one part of the response that differs
    * per reader, which is also why a request carrying it is not edge-cached.
    */
   self?: {
@@ -575,7 +621,7 @@ export function buildLeaderboardPayload(
       liqUsd6: snap.totals.liqUsd6.toString(),
       feeUsd6: snap.totals.feeUsd6.toString(),
       redistributedUsd6: snap.totals.redistributedUsd6.toString(),
-      // The TRUE participant count, not the number of rows published - the board says "top 100 of
+      // The TRUE participant count, not the number of rows published — the board says "top 100 of
       // 3,482" off this, and the trimmed arrays could never tell it that.
       participants: snap.all.size,
     },
@@ -607,7 +653,7 @@ export function buildSelfIndex(snap: LeaderboardSnapshot, now: number): Leaderbo
   };
 }
 
-// ── (De)serialization - Cache API stores JSON ───────────────────────────────────────────
+// ── (De)serialization — Cache API stores JSON ───────────────────────────────────────────
 
 interface AggJson {
   f: string; s: string; l: string; p: string; c: string; cb: string; cq: string; e: number; w: number;
@@ -626,6 +672,7 @@ interface SnapshotJson {
   epochTime: Record<string, number>;
   stakeOwner: Record<string, string>;
   npmOwner: Record<string, string>;
+  liqRate: Record<string, string>;
   all: Record<string, AggJson>;
   days: Record<string, Record<string, AggJson>>;
   totals: { epochsSettled: number; feeUsd6: string; swapUsd6: string; liqUsd6: string; redistributedUsd6: string };
@@ -675,6 +722,7 @@ export function snapshotToJson(snap: LeaderboardSnapshot): string {
     epochTime: Object.fromEntries(snap.epochTime),
     stakeOwner: Object.fromEntries(snap.stakeOwner),
     npmOwner: Object.fromEntries(snap.npmOwner),
+    liqRate: Object.fromEntries([...snap.liqRate].map(([k, v]) => [k, v.toString()])),
     all: Object.fromEntries([...snap.all].map(([k, v]) => [k, aggToJson(v)])),
     days,
     totals: {
@@ -701,6 +749,7 @@ export function snapshotFromJson(raw: string): LeaderboardSnapshot | null {
     snap.epochTime = new Map(Object.entries(j.epochTime));
     snap.stakeOwner = new Map(Object.entries(j.stakeOwner));
     snap.npmOwner = new Map(Object.entries(j.npmOwner));
+    snap.liqRate = new Map(Object.entries(j.liqRate ?? {}).map(([k, v]) => [k, BigInt(v)]));
     snap.all = new Map(Object.entries(j.all).map(([k, v]) => [k, aggFromJson(v)]));
     for (const [day, bucket] of Object.entries(j.days)) {
       snap.days.set(Number(day), new Map(Object.entries(bucket).map(([k, v]) => [k, aggFromJson(v)])));
@@ -716,4 +765,133 @@ export function snapshotFromJson(raw: string): LeaderboardSnapshot | null {
   } catch {
     return null;
   }
+}
+
+// ── Campaign ────────────────────────────────────────────────────────────────────────────
+//
+// A campaign is the same fold over a BLOCK RANGE. Blocks, not day buckets: a campaign that ends at
+// 20:00 UTC cannot be settled with whole-day aggregates without either including or discarding the
+// hours around the deadline, and prizes turn that into an argument. A block range cuts exactly
+// where the announcement says it does.
+//
+// House wallets are excluded from the standings AND from the total that picks the prize tier, so
+// the platform cannot inflate its own campaign into a higher payout.
+
+export interface CampaignPrizeTier {
+  /** Inclusive lower bound of campaign volume, usd6. */
+  minVolumeUsd6: bigint;
+  prizeUsd: number;
+}
+
+export interface CampaignConfig {
+  id: string;
+  /** Display name. Falls back to a readable form of the id when the operator didn't set one. */
+  title?: string;
+  startBlock: bigint;
+  /** 0 while the campaign is still running. */
+  endBlock: bigint;
+  /** Lowercase addresses kept out of the standings and the totals. */
+  excluded: ReadonlySet<string>;
+  tiers: readonly CampaignPrizeTier[];
+  /** How many ranks each board publishes. */
+  topN: number;
+}
+
+export interface CampaignRow extends LeaderRowOut {
+  rank: number;
+}
+
+export interface CampaignPayload {
+  id: string;
+  /** Present only when the operator configured one; the site names the campaign either way. */
+  title?: string;
+  startBlock: string;
+  endBlock: string;
+  cursor: string;
+  live: boolean;
+  generatedAt: number;
+  totals: {
+    /** Campaign volume with house wallets removed — this is what selects the tier. */
+    volumeUsd6: string;
+    participants: number;
+  };
+  prize: { prizeUsd: number; nextTierAtUsd6: string | null };
+  volume: CampaignRow[];
+  pnl: CampaignRow[];
+}
+
+/** The tier the given volume falls in, plus the volume at which the next tier starts. */
+export function prizeForVolume(
+  volumeUsd6: bigint,
+  tiers: readonly CampaignPrizeTier[],
+): { prizeUsd: number; nextTierAtUsd6: bigint | null } {
+  const sorted = [...tiers].sort((a, b) => (a.minVolumeUsd6 < b.minVolumeUsd6 ? -1 : 1));
+  let prizeUsd = 0;
+  let next: bigint | null = null;
+  for (const t of sorted) {
+    if (volumeUsd6 >= t.minVolumeUsd6) prizeUsd = t.prizeUsd;
+    else {
+      next = t.minVolumeUsd6;
+      break;
+    }
+  }
+  return { prizeUsd, nextTierAtUsd6: next };
+}
+
+const rankBy = (rows: LeaderRowOut[], pick: (r: LeaderRowOut) => bigint, topN: number): CampaignRow[] =>
+  [...rows]
+    .sort((a, b) => {
+      const ka = pick(a);
+      const kb = pick(b);
+      if (ka !== kb) return kb > ka ? 1 : -1;
+      // Equal scores are common early in a campaign and after a settlement that paid nothing, and
+      // the tiebreak decides prizes there. Sorting straight to the address put a wallet that had
+      // won both its epochs below two that had won none — measured on a live campaign. Effort
+      // breaks the tie first: epochs won, then epochs entered. Address only settles what is
+      // genuinely identical, so the order is still deterministic rather than Map order.
+      if (a.won !== b.won) return b.won - a.won;
+      if (a.entered !== b.entered) return b.entered - a.entered;
+      return a.address < b.address ? -1 : 1;
+    })
+    .slice(0, topN)
+    .map((r, i) => ({ ...r, rank: i + 1 }));
+
+export function buildCampaignPayload(
+  snap: LeaderboardSnapshot,
+  cfg: CampaignConfig,
+  now: number,
+): CampaignPayload {
+  const rows = rowsAll(snap).filter((r) => !cfg.excluded.has(r.address.toLowerCase()));
+  const volumeUsd6 = rows.reduce((sum, r) => sum + BigInt(r.volumeUsd6), 0n);
+  const { prizeUsd, nextTierAtUsd6 } = prizeForVolume(volumeUsd6, cfg.tiers);
+
+  return {
+    id: cfg.id,
+    ...(cfg.title ? { title: cfg.title } : {}),
+    startBlock: cfg.startBlock.toString(),
+    endBlock: cfg.endBlock.toString(),
+    cursor: snap.cursor.toString(),
+    // Live until the cursor has actually passed the end block: a campaign is not over just because
+    // the clock says so, it is over once the chain up to that block has been folded in.
+    live: cfg.endBlock === 0n || snap.cursor <= cfg.endBlock,
+    generatedAt: now,
+    totals: { volumeUsd6: volumeUsd6.toString(), participants: rows.length },
+    prize: { prizeUsd, nextTierAtUsd6: nextTierAtUsd6 === null ? null : nextTierAtUsd6.toString() },
+    volume: rankBy(rows, (r) => BigInt(r.volumeUsd6), cfg.topN),
+    pnl: rankBy(rows.filter(hasStanceActivity), (r) => BigInt(r.pnlUsd6), cfg.topN),
+  };
+}
+
+/**
+ * Whether this wallet belongs on a REALIZED PNL board at all.
+ *
+ * Someone who only swapped has no realized PnL — not zero, but nothing to report. Ranking them at
+ * zero alongside people who actually took a Stance position is how a prize goes to the wrong
+ * wallet: early in a campaign every participant is still at zero, ties break on address, and a
+ * wallet that never entered an epoch can sit above the one that won every epoch it entered.
+ * Measured on a live campaign, not imagined — two swap-only wallets outranked the wallet that
+ * had won both of its epochs.
+ */
+export function hasStanceActivity(r: LeaderRowOut): boolean {
+  return r.entered > 0 || BigInt(r.pnlUsd6) !== 0n || BigInt(r.claimedUsd6) !== 0n;
 }

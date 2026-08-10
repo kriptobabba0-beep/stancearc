@@ -1,6 +1,6 @@
 'use client';
 
-// components/arena/MiniSparkline.tsx - a tiny price line for the Arena center panel. Pure SVG, no deps.
+// components/arena/MiniSparkline.tsx — a tiny price line for the Arena center panel. Pure SVG, no deps.
 // Plots `values` (recent oracle prices from usePriceSamples) normalized to the viewBox, with a soft
 // area fill and an endpoint dot. Colour follows the trend (green when the last point is >= the first,
 // crimson-red when it has fallen). Needs >= 2 points; fewer renders nothing (caller shows a placeholder).

@@ -1,4 +1,4 @@
-// lib/wallet/groupTxs.ts - turn the embedded wallet's raw Circle transaction legs into ONE meaningful
+// lib/wallet/groupTxs.ts — turn the embedded wallet's raw Circle transaction legs into ONE meaningful
 // activity row per user ACTION, instead of the individual token transfers that happened under the hood.
 //
 // A single action (swap, add/remove liquidity, join arena, claim) is one on-chain tx (one txHash) that
@@ -9,7 +9,7 @@
 // falls back to plain Sent/Received rows (so we never mislabel a simple transfer). Pure + unit-tested.
 import type { CircleTxDto } from '@/lib/circle/client';
 
-/** The role a counterparty address plays - the primary signal for what a transaction actually did. */
+/** The role a counterparty address plays — the primary signal for what a transaction actually did. */
 export type Role = 'router' | 'npm' | 'pool' | 'arena';
 
 /** The user-facing action a transaction represents. */

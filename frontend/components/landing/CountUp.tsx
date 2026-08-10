@@ -1,6 +1,6 @@
 'use client';
 
-// components/landing/CountUp.tsx - a number that counts up from 0 when it scrolls into view.
+// components/landing/CountUp.tsx — a number that counts up from 0 when it scrolls into view.
 // rAF + ease-out cubic, runs ONCE per mount; prefers-reduced-motion (or no IO support) renders the
 // final value instantly. `format` lets callers render currency/grouped figures from the raw number.
 import { useEffect, useRef, useState } from 'react';

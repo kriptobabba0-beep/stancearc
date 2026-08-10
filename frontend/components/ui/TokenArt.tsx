@@ -1,4 +1,4 @@
-// components/ui/TokenArt.tsx - the real brand coin artwork for each token, inlined as SVG so it is
+// components/ui/TokenArt.tsx — the real brand coin artwork for each token, inlined as SVG so it is
 // crisp at any size, theme-neutral, needs no network fetch and passes the app's strict CSP. Each SVG is
 // a complete round coin (its own circular background baked in), so it fills a round container directly.
 // Source art: cirBTC (purple→blue gradient ₿-mark), USDC and EURC (Circle blue coins). Gradient ids are

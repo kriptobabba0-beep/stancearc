@@ -1,5 +1,5 @@
-// POST /api/circle/token - mint a per-user session (userToken + encryptionKey) for the SDK.
-// The userId comes from the HttpOnly cookie set by /api/circle/users - NOT from the request body -
+// POST /api/circle/token — mint a per-user session (userToken + encryptionKey) for the SDK.
+// The userId comes from the HttpOnly cookie set by /api/circle/users — NOT from the request body —
 // so a caller can't mint a session for an arbitrary userId they don't own.
 import { NextResponse } from 'next/server';
 import { createUserToken } from '@/lib/server/circleServer';

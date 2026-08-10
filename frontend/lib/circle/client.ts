@@ -1,6 +1,6 @@
-// lib/circle/client.ts - browser-side helpers for the Circle embedded-wallet flow.
+// lib/circle/client.ts — browser-side helpers for the Circle embedded-wallet flow.
 //
-// These call our OWN /api/circle/* proxy routes (which hold the server-only API key) - the browser never
+// These call our OWN /api/circle/* proxy routes (which hold the server-only API key) — the browser never
 // talks to Circle's REST API with the key. The Web SDK (PIN/challenge UI) is loaded lazily because it is
 // browser-only and must never be evaluated during SSR.
 
@@ -32,10 +32,10 @@ async function postApi<T>(path: string, body?: unknown): Promise<T> {
 }
 
 export const apiCreateUser = () => postApi<{ userId: string }>('users');
-// userId is NOT sent - the server reads it from the HttpOnly cookie set by apiCreateUser().
+// userId is NOT sent — the server reads it from the HttpOnly cookie set by apiCreateUser().
 export const apiToken = () => postApi<{ userToken: string; encryptionKey: string }>('token');
 
-// Email / Google portable login - mint a device token (the userToken comes from the SDK login callback).
+// Email / Google portable login — mint a device token (the userToken comes from the SDK login callback).
 export const apiEmailToken = (deviceId: string, email: string) =>
   postApi<{ deviceToken: string; deviceEncryptionKey: string; otpToken: string }>('email-token', { deviceId, email });
 export const apiSocialToken = (deviceId: string) =>

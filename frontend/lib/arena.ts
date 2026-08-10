@@ -1,14 +1,14 @@
-// lib/arena.ts - small pure helpers for the Arena redesign's "real data" labels (durations + the
+// lib/arena.ts — small pure helpers for the Arena redesign's "real data" labels (durations + the
 // live price-change %). No money math; format-only. Durations come straight from EpochView boundaries
 // so the mockup's "1 day / 12h / 2h" rows reflect the ACTUAL on-chain schedule (e.g. 10 min / 5 min).
 
 /**
  * Compact human duration from a second count: "45s", "5 min", "10 min", "2h", "2h 30m", "1 day",
- * "3 days". Non-positive/NaN inputs degrade to "-". Accepts bigint or number.
+ * "3 days". Non-positive/NaN inputs degrade to "—". Accepts bigint or number.
  */
 export function formatDuration(seconds: bigint | number): string {
   const s = typeof seconds === 'bigint' ? Number(seconds) : seconds;
-  if (!Number.isFinite(s) || s <= 0) return '-';
+  if (!Number.isFinite(s) || s <= 0) return '—';
   if (s < 60) return `${Math.round(s)}s`;
   if (s < 3600) return `${Math.round(s / 60)} min`;
   if (s < 86400) {
@@ -41,7 +41,7 @@ export function formatSignedPct(pct: number): string {
 
 /** Compact USD price from an 18dp quote, e.g. 63750.42e18 → "$63,750". Sub-$1 keeps 2dp. */
 export function formatUsdPrice18(price18: bigint, symbol = '$'): string {
-  if (price18 <= 0n) return '-';
+  if (price18 <= 0n) return '—';
   const whole = price18 / 1_000_000_000_000_000_000n; // floor to whole units
   if (whole === 0n) {
     // sub-unit → 2dp

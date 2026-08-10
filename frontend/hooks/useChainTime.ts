@@ -1,4 +1,4 @@
-// hooks/useChainTime.ts - chain-time offset from block.timestamp for countdowns.
+// hooks/useChainTime.ts — chain-time offset from block.timestamp for countdowns.
 //
 // Periodically re-samples `block.timestamp` (every RESAMPLE_INTERVAL_MS, default 45 s) so the
 // chain↔local-clock offset is refreshed throughout a long session and countdowns/poll-proximity
@@ -37,7 +37,7 @@ export function useChainTime(): ChainTime {
         if (cancelled) return;
         setOffsetMs(Number(block.timestamp) * 1000 - Date.now());
       } catch {
-        /* offset unchanged - falls back to the local clock; correctness lives in contract phase, not here */
+        /* offset unchanged — falls back to the local clock; correctness lives in contract phase, not here */
       }
     };
 

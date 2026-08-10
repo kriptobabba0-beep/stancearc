@@ -190,7 +190,7 @@ export function AdminDemoPanel() {
         title="Settlement"
         icon={<Trophy className="h-5 w-5" />}
         action={
-          <Badge tone="neutral">Sweep {sweep ? `${sweep.done} / ${sweep.total}` : '-'}</Badge>
+          <Badge tone="neutral">Sweep {sweep ? `${sweep.done} / ${sweep.total}` : '—'}</Badge>
         }
       >
         <div className="flex flex-wrap gap-2">
@@ -224,7 +224,7 @@ export function AdminDemoPanel() {
             {oracle && oracle.price18 > 0n ? (
               <MoneyAmount value={oracle.price18} token="price" />
             ) : (
-              '-'
+              '—'
             )}
             {oracleStale ? ' (stale)' : ''}
           </span>
@@ -233,12 +233,12 @@ export function AdminDemoPanel() {
         <p className="text-sm text-ink-soft">
           The outcome is the <strong>real market</strong>: there are no admin price controls. Starting
           and ending an epoch posts a signed Pyth update (fetched from Hermes) on-chain and pays the
-          Pyth update fee - see the Lifecycle buttons above.
+          Pyth update fee — see the Lifecycle buttons above.
         </p>
         {oracle && oracle.updatedAt > 0n && (
           <p className="mt-2 text-xs text-ink-muted">
             Last published {new Date(Number(oracle.updatedAt) * 1000).toLocaleString()}
-            {oracleStale ? ' - older than the demo max price age.' : '.'}
+            {oracleStale ? ' — older than the demo max price age.' : '.'}
           </p>
         )}
         {oracleZero && (
@@ -357,7 +357,7 @@ export function AdminDemoPanel() {
 /**
  * Two-step demo swap for the ACTIVE market: exact approve then exactInputSingle.
  * The "base" leg is the active pool's non-USDC token (WETH 18dp, WBTC 8dp, …) resolved on-chain via
- * useActiveBaseToken - so on the BTC market this swaps the WBTC/USDC pool and parses at 8dp, NOT the
+ * useActiveBaseToken — so on the BTC market this swaps the WBTC/USDC pool and parses at 8dp, NOT the
  * hardwired WETH/18dp it used to (Fix B). USDC stays the global 6dp token.
  */
 function SwapRunner({
@@ -387,7 +387,7 @@ function SwapRunner({
   }
   const { data: allowance } = useRouterAllowance(tokenIn as `0x${string}` | undefined, address);
   const needsApproval = allowance === undefined || (allowance as bigint) < amountIn;
-  // Until the active pool's base leg resolves we can't build a correct swap - disable both buttons.
+  // Until the active pool's base leg resolves we can't build a correct swap — disable both buttons.
   const baseReady = base.address !== undefined;
 
   if (needsApproval) {

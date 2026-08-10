@@ -1,35 +1,40 @@
 'use client';
 
-// components/NavBar.tsx - the Arena "terminal" top navigation.
+// components/NavBar.tsx — the Arena "terminal" top navigation.
 //
-//   LEFT    - the crimson angular logo mark + "FEE ARENA" wordmark over a live "● ARC · LIVE" system line.
-//   CENTER  - the primary routes as MONO-UPPERCASE terminal labels. An octagonal crimson "selector"
-//             (the same cut-corner geometry as the HUD panels) locks onto the active route - an angular
-//             glow + a bright bottom accent - and SLIDES between routes. It's positioned/sized from the
+//   LEFT    — the crimson angular logo mark + "FEE ARENA" wordmark over a live "● ARC · LIVE" system line.
+//   CENTER  — the primary routes as MONO-UPPERCASE terminal labels. An octagonal crimson "selector"
+//             (the same cut-corner geometry as the HUD panels) locks onto the active route — an angular
+//             glow + a bright bottom accent — and SLIDES between routes. It's positioned/sized from the
 //             active link's measured box, so it tracks the real label widths. Desktop only; mobile uses
 //             the sheet below.
-//   RIGHT   - the wallet control + one "···" menu (market selector, Faucet, ArcScan, Explore, About,
+//   RIGHT   — the wallet control + one "···" menu (market selector, Faucet, ArcScan, Explore, About,
 //             owner-only Admin). A hamburger opens the same set as a mobile dialog. (Dark-only.)
 //
 // Pure chrome: the wallet control is <SignInButton/> and Admin gating reuses the owner() read. No
-// hook/contract logic changed - only the assembled header.
+// hook/contract logic changed — only the assembled header.
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAccount, useReadContract } from 'wagmi';
 import { ENV } from '@/lib/env';
 import { cn } from '@/lib/cn';
+import { CAMPAIGN_PAGE_ENABLED } from '@/lib/campaignVisibility';
 import { useMarketContracts } from '@/lib/contracts';
 import { SignInButton } from '@/components/auth/SignInButton';
 import { BrandMark } from '@/components/ui/BrandMark';
 import { Logo, Faucet, External, Dots, Menu, Close, Shield, Wallet, Feedback } from '@/components/ui/icons';
 
 const FAUCET_URL = 'https://faucet.circle.com';
-/** Public beta feedback form (Google Forms) - opens in a new tab. */
+/** Public beta feedback form (Google Forms) — opens in a new tab. */
 const FEEDBACK_URL = 'https://forms.gle/tQh2nCa98GMRFGjXA';
 
-/** Primary destinations - the center nav (Arena first, matching the mockups).
+/** Primary destinations — the center nav (Arena first, matching the mockups).
  * Leaderboard sits LAST (right of Bridge) by request; the rail fits at tablet widths via
- * tighter md link padding + the wordmark deferring to lg. */
+ * tighter md link padding + the wordmark deferring to lg.
+ *
+ * Campaign goes next to Leaderboard because it is the same question asked over a fixed period —
+ * a visitor looking for one is looking for the other. A page nobody can reach is a page nobody
+ * enters, and the standings only drive participation if they are one click from anywhere. */
 const PRIMARY_NAV = [
   { href: '/stance', label: 'Stance' },
   { href: '/agent', label: 'Agent' },
@@ -37,9 +42,12 @@ const PRIMARY_NAV = [
   { href: '/pool', label: 'Pools' },
   { href: '/bridge', label: 'Bridge' },
   { href: '/leaderboard', label: 'Leaderboard' },
+  // Last, and after Leaderboard: a campaign is the leaderboard asked over a fixed period, so it
+  // reads as the thing that follows it rather than something that interrupts the run of pages.
+  ...(CAMPAIGN_PAGE_ENABLED ? ([{ href: '/campaign', label: 'Campaign' }] as const) : []),
 ] as const;
 
-/** The ArcScan target - the connected wallet's page when known, else the explorer root. */
+/** The ArcScan target — the connected wallet's page when known, else the explorer root. */
 function arcScanHref(address?: `0x${string}`): string {
   return address ? `${ENV.EXPLORER_URL}/address/${address}` : ENV.EXPLORER_URL;
 }
@@ -109,6 +117,9 @@ function TerminalNav({ pathname }: { pathname: string }) {
         {PRIMARY_NAV.map((n) => {
           const active = isActive(pathname, n.href);
           const gold = n.href === '/agent'; // the Agent entry wears gold with a shine sweep
+          // Campaign gets the same treatment in its own hue: it is a limited-time thing and should
+          // catch the eye the way Agent does, without reading as a second Agent.
+          const campaign = n.href === '/campaign';
           return (
             <a
               key={n.href}
@@ -116,9 +127,9 @@ function TerminalNav({ pathname }: { pathname: string }) {
               data-active={active ? 'true' : 'false'}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                // Inactive links read as ink-soft (not muted) - the rail must stay legible.
+                // Inactive links read as ink-soft (not muted) — the rail must stay legible.
                 'relative z-10 px-2.5 py-2 font-mono text-[12.5px] font-semibold uppercase tracking-[0.13em] transition-colors focus-visible:outline-none focus-visible:shadow-focus lg:px-3.5',
-                gold ? 'nav-agent-gold' : active ? 'text-ink' : 'text-ink-soft hover:text-ink',
+                gold ? 'nav-agent-gold' : campaign ? 'nav-campaign-cyan' : active ? 'text-ink' : 'text-ink-soft hover:text-ink',
               )}
             >
               {n.label}
@@ -188,7 +199,7 @@ export function NavBar() {
   const [overflowOpen, setOverflowOpen] = useState(false);
   const overflowRef = useRef<HTMLDivElement | null>(null);
 
-  // Mobile nav sheet - a hamburger toggles a dialog; Escape (or a link click) closes it.
+  // Mobile nav sheet — a hamburger toggles a dialog; Escape (or a link click) closes it.
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -217,20 +228,20 @@ export function NavBar() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-surface/70 backdrop-blur-xl">
-      {/* A glowing crimson seam along the bottom edge - the HUD-panel language carried into the chrome. */}
+      {/* A glowing crimson seam along the bottom edge — the HUD-panel language carried into the chrome. */}
       <span
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-brand/45 to-transparent"
       />
       <div className="mx-auto flex h-16 max-w-[1600px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        {/* LEFT - logo mark + wordmark over a live system line */}
+        {/* LEFT — logo mark + wordmark over a live system line */}
         <a
           href="/"
           aria-label="Limen Finance home"
           className="group flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:shadow-focus"
         >
           <BrandMark className="h-8 w-8 transition-transform duration-200 group-hover:scale-110" />
-          {/* Wordmark waits for lg so the six-link rail (incl. LEADERBOARD) fits tablets. */}
+          {/* Wordmark waits for lg so the seven-link rail (incl. CAMPAIGN + LEADERBOARD) fits tablets. */}
           <span className="hidden flex-col leading-none lg:flex">
             <span className="text-sm font-semibold uppercase tracking-[0.22em] text-ink">Limen Finance</span>
             <span className="mt-1 flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-muted">
@@ -240,13 +251,13 @@ export function NavBar() {
           </span>
         </a>
 
-        {/* CENTER - the terminal primary nav (desktop) */}
+        {/* CENTER — the terminal primary nav (desktop) */}
         <TerminalNav pathname={pathname} />
 
-        {/* RIGHT - feedback + wallet + a single overflow menu + mobile hamburger */}
+        {/* RIGHT — feedback + wallet + a single overflow menu + mobile hamburger */}
         <div className="flex items-center gap-2">
           {/* Feedback lives OUTSIDE any wallet state on purpose: same spot on every page,
-              connected or not. Quieter than the crimson Sign In - a bordered secondary. */}
+              connected or not. Quieter than the crimson Sign In — a bordered secondary. */}
           <a
             href={FEEDBACK_URL}
             target="_blank"
@@ -259,7 +270,7 @@ export function NavBar() {
           </a>
           <SignInButton />
 
-          {/* "···" overflow menu (desktop) - market selector + Explore/About/Faucet/ArcScan/Admin. */}
+          {/* "···" overflow menu (desktop) — market selector + Explore/About/Faucet/ArcScan/Admin. */}
           <div ref={overflowRef} className="relative hidden md:block">
             <button
               type="button"
@@ -289,7 +300,7 @@ export function NavBar() {
             )}
           </div>
 
-          {/* Mobile hamburger - toggles the sheet below (md:hidden). */}
+          {/* Mobile hamburger — toggles the sheet below (md:hidden). */}
           <button
             type="button"
             aria-label="Toggle navigation menu"
@@ -303,7 +314,7 @@ export function NavBar() {
         </div>
       </div>
 
-      {/* Mobile nav sheet - primary links + market selector + secondary destinations. */}
+      {/* Mobile nav sheet — primary links + market selector + secondary destinations. */}
       {menuOpen && (
         <div
           id="mobile-nav-panel"
@@ -326,7 +337,13 @@ export function NavBar() {
                     active ? 'bg-brand/10 text-ink' : 'text-ink-soft hover:bg-surface-muted hover:text-ink',
                   )}
                 >
-                  {n.href === '/agent' ? <span className="nav-agent-gold">{n.label}</span> : n.label}
+                  {n.href === '/agent' ? (
+                    <span className="nav-agent-gold">{n.label}</span>
+                  ) : n.href === '/campaign' ? (
+                    <span className="nav-campaign-cyan">{n.label}</span>
+                  ) : (
+                    n.label
+                  )}
                   {active && (
                     <span className="h-1.5 w-1.5 rounded-full bg-brand shadow-[0_0_8px_rgb(var(--c-brand))]" />
                   )}

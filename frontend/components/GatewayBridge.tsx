@@ -1,12 +1,12 @@
 'use client';
 
-// components/GatewayBridge.tsx - "Instant USDC to Arc" via Circle Gateway.
+// components/GatewayBridge.tsx — "Instant USDC to Arc" via Circle Gateway.
 //
 // Gateway is deposit-once / transfer-many. The panel has three regions:
-//   • Unified balance - polls POST /v1/balances for the user's spendable balance per source chain.
-//   • Deposit         - approve(USDC -> GatewayWallet) + GatewayWallet.deposit(usdc, amount) on a source
+//   • Unified balance — polls POST /v1/balances for the user's spendable balance per source chain.
+//   • Deposit         — approve(USDC -> GatewayWallet) + GatewayWallet.deposit(usdc, amount) on a source
 //                       chain. The only slow leg (deposit finality); balance updates above when ready.
-//   • Transfer to Arc - sign an EIP-712 BurnIntent -> POST /v1/transfer -> gatewayMint(attestation,sig)
+//   • Transfer to Arc — sign an EIP-712 BurnIntent -> POST /v1/transfer -> gatewayMint(attestation,sig)
 //                       on Arc. <500ms once the deposit is finalized.
 //
 // Orchestration is inlined (mirrors BridgeUSDC.tsx) over the pure lib/gateway helpers; renders without a
@@ -58,7 +58,7 @@ import { Wallet, External, Spinner, Check, Info, ArrowDown, Activity, Clock } fr
 
 type StepState = 'idle' | 'pending' | 'done' | 'error';
 const MAX_UINT256 = 2n ** 256n - 1n;
-/** Receipt wait ceiling. wagmi passes `timeout: 0` by default, i.e. no deadline of its own - viem's
+/** Receipt wait ceiling. wagmi passes `timeout: 0` by default, i.e. no deadline of its own — viem's
  *  retry budget still bounds a NOT-FOUND hash, but a found-yet-unconfirmed one has no ceiling at all.
  *  An explicit one keeps a stuck step from spinning until the tab closes. */
 const RECEIPT_TIMEOUT_MS = 120_000;
@@ -85,7 +85,7 @@ function firstDecisive(signals: Promise<Verdict>[]): Promise<Verdict> {
   });
 }
 
-/** Poll a chain read until it reports done, or the deadline passes. Transient RPC errors are ignored -
+/** Poll a chain read until it reports done, or the deadline passes. Transient RPC errors are ignored —
  *  a read failing is not evidence of anything, and giving up on one would be worse than waiting. */
 async function pollUntil(check: () => Promise<boolean>, timeoutMs: number, intervalMs = 3_000): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
@@ -93,7 +93,7 @@ async function pollUntil(check: () => Promise<boolean>, timeoutMs: number, inter
     try {
       if (await check()) return true;
     } catch {
-      /* transient - keep polling */
+      /* transient — keep polling */
     }
     if (Date.now() >= deadline) return false;
     await new Promise((r) => setTimeout(r, intervalMs));
@@ -101,11 +101,11 @@ async function pollUntil(check: () => Promise<boolean>, timeoutMs: number, inter
 }
 
 /**
- * Confirm a write by the STATE it was supposed to produce - with the receipt as a fast path, never as
+ * Confirm a write by the STATE it was supposed to produce — with the receipt as a fast path, never as
  * the sole proof.
  *
  * Why: a returned transaction hash is not a promise that THAT hash will mine. Smart-account wallets
- * (EIP-7702 delegation + a relayer submitting on the user's behalf - MetaMask does this by default for
+ * (EIP-7702 delegation + a relayer submitting on the user's behalf — MetaMask does this by default for
  * upgraded accounts) can land the call under a DIFFERENT hash. Waiting on the returned hash then hangs
  * forever on a transaction that actually succeeded: the field report that prompted this was a Gateway
  * deposit that credited 25 USDC on-chain while the UI sat "Depositing…" for 45 minutes.
@@ -129,16 +129,16 @@ async function confirmByState(opts: {
     timeout: RECEIPT_TIMEOUT_MS,
   })
     .then((r): Verdict => {
-      // A found-and-reverted receipt is PROOF of failure - end the race now instead of making the
+      // A found-and-reverted receipt is PROOF of failure — end the race now instead of making the
       // user watch a state poll that can only confirm what already didn't happen.
       if (r.status !== 'success') return { decisive: true, ok: false, detail: 'the transaction reverted' };
       // Succeeded and carries the expected effect: done.
       if (!opts.verifyReceipt || opts.verifyReceipt(r)) return { decisive: true, ok: true };
-      // Succeeded but isn't the call we meant (relayer wrapper, or the hash belongs to another tx) -
+      // Succeeded but isn't the call we meant (relayer wrapper, or the hash belongs to another tx) —
       // that is not a failure either. Say nothing decisive; let the state read rule.
       return { decisive: false, ok: false, detail: 'the returned transaction did not carry the expected event' };
     })
-    // Not found / timed out / the relayer used a different hash - NOT proof of failure.
+    // Not found / timed out / the relayer used a different hash — NOT proof of failure.
     .catch((e): Verdict => ({ decisive: false, ok: false, detail: friendlyError(e) }));
 
   const viaState: Promise<Verdict> = pollUntil(opts.check, timeoutMs).then(
@@ -218,7 +218,7 @@ export function GatewayBridge() {
   const prevPendingRef = useRef<Map<`0x${string}`, GatewayDeposit>>(new Map());
 
   // One poll fetches BOTH the spendable balance and the in-flight deposits, so a finalizing deposit is
-  // always visible (driven by Circle's /v1/deposits, not the local action - survives reloads + UI errors).
+  // always visible (driven by Circle's /v1/deposits, not the local action — survives reloads + UI errors).
   const refresh = useCallback(async () => {
     if (!address) return;
     const src = GATEWAY_SOURCES.map((s) => ({ domain: s.domain, depositor: address }));
@@ -282,7 +282,7 @@ export function GatewayBridge() {
   // ── Deposit state ──────────────────────────────────────────────────────────────
   const [depositKey, setDepositKey] = useState<string>(GATEWAY_SOURCES[0].key);
   const [depositAmount, setDepositAmount] = useState<string>('');
-  /** Synchronous in-flight latch - see runDeposit (a disabled prop lands one render too late). */
+  /** Synchronous in-flight latch — see runDeposit (a disabled prop lands one render too late). */
   const depositInFlight = useRef(false);
   const [depositState, setDepositState] = useState<StepState>('idle');
   const [depositHash, setDepositHash] = useState<`0x${string}`>();
@@ -377,7 +377,7 @@ export function GatewayBridge() {
           check: async () => (await readAllowance()) >= depositAmountParsed,
         });
         if (!approved.ok) {
-          throw new Error(`The approval did not go through${approved.detail ? ` - ${approved.detail}` : '.'}`);
+          throw new Error(`The approval did not go through${approved.detail ? ` — ${approved.detail}` : '.'}`);
         }
       }
 
@@ -392,7 +392,7 @@ export function GatewayBridge() {
       });
       setDepositHash(dHash);
       // Confirm the CREDIT, not the hash. `deposit()` raises availableBalance in the same transaction
-      // it moves the USDC, so this read IS the deposit landing - and unlike a hash it cannot be wrong
+      // it moves the USDC, so this read IS the deposit landing — and unlike a hash it cannot be wrong
       // about which transaction actually mined.
       const deposited = await confirmByState({
         chainId,
@@ -409,7 +409,7 @@ export function GatewayBridge() {
       });
       if (!deposited.ok) {
         throw new Error(
-          `The deposit was not credited to your address${deposited.detail ? ` - ${deposited.detail}` : ''} - open the transaction on ${depositSource.label} to check.`,
+          `The deposit was not credited to your address${deposited.detail ? ` — ${deposited.detail}` : ''} — open the transaction on ${depositSource.label} to check.`,
         );
       }
       setDepositState('done');
@@ -450,9 +450,9 @@ export function GatewayBridge() {
         maxFee: baseMaxFee,
       });
 
-      // Circle Gateway - instant deposit→mint. One-click FORWARDER path: size the maxFee via /v1/estimate,
+      // Circle Gateway — instant deposit→mint. One-click FORWARDER path: size the maxFee via /v1/estimate,
       // sign the EIP-712 BurnIntent ONCE, POST it to /v1/transfer?enableForwarder=true, and Circle broadcasts
-      // the Arc mint itself (no chain switch, no second user tx) - we just poll /v1/transfer/{id}. Falls back
+      // the Arc mint itself (no chain switch, no second user tx) — we just poll /v1/transfer/{id}. Falls back
       // to the manual GatewayMinter.gatewayMint path below if the estimate is unavailable.
       const est = FORWARDER_ENABLED ? await estimateForwarderFee(base).catch(() => null) : null;
       if (est) {
@@ -479,7 +479,7 @@ export function GatewayBridge() {
       const { attestation, signature: gatewaySig } = await submitTransfer(base, signature);
 
       await switchChainAsync({ chainId: ARC_GATEWAY.chainId });
-      // Arc has a ~20 Gwei base-fee floor - supply it inline so the mint is never under-priced.
+      // Arc has a ~20 Gwei base-fee floor — supply it inline so the mint is never under-priced.
       const mHash = await writeContractAsync({
         chainId: ARC_GATEWAY.chainId,
         address: GATEWAY_MINTER,
@@ -501,13 +501,13 @@ export function GatewayBridge() {
       void refresh();
     } catch (e) {
       const msg = friendlyError(e);
-      // Circle's Gateway transfer backend intermittently goes fully down (503 on every submit - forwarder
+      // Circle's Gateway transfer backend intermittently goes fully down (503 on every submit — forwarder
       // AND standard). The client already retried; a sustained outage can't be beaten here. Reassure that
       // the deposit is untouched (the burn never happened) and to retry once Circle recovers.
       const serviceDown = /HTTP 503|temporarily unavailable/i.test(msg);
       setError(
         serviceDown
-          ? 'Circle’s Gateway transfer service is temporarily unavailable (HTTP 503) - this is on Circle’s side, not your transfer. Your deposited balance is safe and untouched; please try again in a few minutes.'
+          ? 'Circle’s Gateway transfer service is temporarily unavailable (HTTP 503) — this is on Circle’s side, not your transfer. Your deposited balance is safe and untouched; please try again in a few minutes.'
           : msg,
       );
       setTransferState('error');
@@ -529,7 +529,7 @@ export function GatewayBridge() {
       footer={
         <span className="flex items-start gap-2">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-ink-faint" />
-          Deposit once into Gateway (the only wait - source-chain finality), then every transfer to Arc is
+          Deposit once into Gateway (the only wait — source-chain finality), then every transfer to Arc is
           near-instant. Get testnet USDC from{' '}
           <a href="https://faucet.circle.com" target="_blank" rel="noreferrer" className="font-medium text-brand hover:text-brand-hover">
             Circle&apos;s faucet
@@ -572,19 +572,19 @@ export function GatewayBridge() {
           {totalAvailable > 0n && (
             <p data-testid="gateway-balance-hint" className="mt-2 text-[13px] text-ink-muted">
               This is a Gateway balance held off-Arc. <span className="text-ink-soft">Send it to Arc below</span> to
-              get real USDC on Arc you can use for Stance, Swap, and Pools - it isn&apos;t spendable on Arc until you do.
+              get real USDC on Arc you can use for Stance, Swap, and Pools — it isn&apos;t spendable on Arc until you do.
             </p>
           )}
           {isConnected && pendingDeposits.length === 0 && totalAvailable === 0n && (
             <p data-testid="gateway-empty" className="mt-2 text-[13px] text-ink-muted">
-              No spendable balance yet. Deposit below - it confirms on the source chain (instant on Avalanche
-              Fuji, ~13-19 min from Ethereum or Base), then appears here ready to send to Arc. You can leave
+              No spendable balance yet. Deposit below — it confirms on the source chain (instant on Avalanche
+              Fuji, ~13–19 min from Ethereum or Base), then appears here ready to send to Arc. You can leave
               and come back; the status updates live.
             </p>
           )}
         </div>
 
-        {/* Deposits in progress - the live finality tracker */}
+        {/* Deposits in progress — the live finality tracker */}
         {pendingDeposits.length > 0 && (
           <div data-testid="gateway-pending" className={panelClass}>
             <div className="flex items-center justify-between">
@@ -594,7 +594,7 @@ export function GatewayBridge() {
               </span>
             </div>
             <p className="mt-1 text-[12px] text-ink-muted">
-              Your USDC isn&apos;t lost - Gateway is finalizing the deposit on the source chain. This one-time
+              Your USDC isn&apos;t lost — Gateway is finalizing the deposit on the source chain. This one-time
               wait is what makes every later transfer to Arc instant.
             </p>
             <div className="mt-3 space-y-3">
@@ -622,7 +622,7 @@ export function GatewayBridge() {
                       <span>
                         {prog.phase === 'confirming'
                           ? `Waiting for ${s?.label ?? 'source'} finality (one-time)`
-                          : 'On-chain finality reached - almost there'}
+                          : 'On-chain finality reached — almost there'}
                       </span>
                       {s && (
                         <a
@@ -650,7 +650,7 @@ export function GatewayBridge() {
             className="flex items-center gap-2 rounded-xl border border-side-up/30 bg-side-up/10 px-3 py-2 text-sm font-medium text-side-up"
           >
             <Check className="h-4 w-4 shrink-0" />
-            {fmtUsdc(c.amount)} USDC from {c.label} is now available - ready to send to Arc.
+            {fmtUsdc(c.amount)} USDC from {c.label} is now available — ready to send to Arc.
           </div>
         ))}
 
@@ -709,7 +709,7 @@ export function GatewayBridge() {
               data-testid="gateway-deposit-btn"
               // `depositState === 'done'` is part of the guard on purpose. Without it the button stayed
               // ENABLED after a successful deposit while still labelled "Deposited", so every further
-              // click silently sent ANOTHER deposit of the same amount - a user testing whether the
+              // click silently sent ANOTHER deposit of the same amount — a user testing whether the
               // button was stuck ended up depositing 4x20 USDC. A repeat deposit must be deliberate:
               // type a fresh amount (which resets the state above) to re-arm it.
               disabled={!isConnected || !depositAmountParsed || busy || depositState === 'done'}
@@ -727,7 +727,7 @@ export function GatewayBridge() {
           )}
           {depositState === 'done' && (
             <p className="mt-1.5 text-xs text-ink-muted">
-              Deposit submitted - watch it finalize under “Deposits in progress” above ({depositSource.approxFinality}).
+              Deposit submitted — watch it finalize under “Deposits in progress” above ({depositSource.approxFinality}).
               It becomes spendable automatically; you don&apos;t need to keep this page open.
             </p>
           )}
@@ -796,7 +796,7 @@ export function GatewayBridge() {
               </label>
 
               <div className="mt-2 flex items-center justify-center gap-2 text-xs text-ink-muted">
-                <Badge tone="neutral">{transferSource?.label ?? '-'}</Badge>
+                <Badge tone="neutral">{transferSource?.label ?? '—'}</Badge>
                 <ArrowDown className="h-3.5 w-3.5 -rotate-90" />
                 <Badge tone="brand">{ARC_GATEWAY.label}</Badge>
               </div>

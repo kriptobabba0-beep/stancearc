@@ -1,6 +1,6 @@
-// agentQuant.ts - the PURE stance-probability math behind the Limen Agent (keeper-side copy).
+// agentQuant.ts — the PURE stance-probability math behind the Limen Agent (keeper-side copy).
 //
-// KEEP IN SYNC with frontend/lib/agent/quant.ts - the two packages do not share code, so the
+// KEEP IN SYNC with frontend/lib/agent/quant.ts — the two packages do not share code, so the
 // math lives twice by design; both copies carry their own tests pinning identical behavior.
 //
 // Given a recent price series and the epoch's qualification band, estimate the probability
@@ -8,19 +8,19 @@
 // view with the highest estimated probability. The model is deliberately simple and
 // stated honestly in the UI: log-returns are treated as approximately normal, volatility
 // scales with the square root of the remaining horizon (random-walk assumption), and
-// short-term momentum is only trusted for a bounded window (driftPersistSec) - a raw
+// short-term momentum is only trusted for a bounded window (driftPersistSec) — a raw
 // 60-minute drift extrapolated over a 12-hour epoch would swamp every other signal and
 // is statistically indefensible, so persistence is capped instead.
 //
-// PURE: no I/O, no clock reads, no randomness - fully unit-testable. The caller supplies
+// PURE: no I/O, no clock reads, no randomness — fully unit-testable. The caller supplies
 // the bar series, the bar interval, the REMAINING seconds to settlement (entering later
-// in the window shortens the horizon and makes RANGE likelier - the honest, time-aware
+// in the window shortens the horizon and makes RANGE likelier — the honest, time-aware
 // behavior), and the epoch's bandBps.
 
 export type StanceView = 'UP' | 'DOWN' | 'RANGE';
 
 export interface StanceFeatures {
-  /** Last observed price (quote per base, plain number - display only). */
+  /** Last observed price (quote per base, plain number — display only). */
   lastPrice: number;
   /** Expected log-return over the remaining horizon (momentum, persistence-capped). */
   driftH: number;
@@ -39,7 +39,7 @@ export interface StanceSignal {
   pUp: number;
   pDown: number;
   pRange: number;
-  /** The recommended view's probability (0..1) - the honest "confidence". */
+  /** The recommended view's probability (0..1) — the honest "confidence". */
   confidence: number;
   features: StanceFeatures;
 }
@@ -100,7 +100,7 @@ export function computeStanceSignal(
   const sd = Math.sqrt(varSum / n);
 
   // Horizon scaling: volatility diffuses with √time (random walk); momentum is only
-  // extrapolated for min(horizon, driftPersistSec) - beyond that it is treated as spent.
+  // extrapolated for min(horizon, driftPersistSec) — beyond that it is treated as spent.
   const hBars = horizonSec / barSec;
   const driftBars = Math.min(horizonSec, driftPersistSec) / barSec;
   const driftH = mean * driftBars;
@@ -150,7 +150,7 @@ export function computeStanceSignal(
 }
 
 /**
- * Deterministic plain-language rationale for a signal - the template renderer used when
+ * Deterministic plain-language rationale for a signal — the template renderer used when
  * no LLM is configured. States the volatility-vs-band comparison, the momentum read, and
  * the probability split, in the product's honest register. PURE.
  */
@@ -173,5 +173,5 @@ export function renderRationale(s: StanceSignal): string {
         ? `comparable to the ±${bandPct}% band, so range and breakout outcomes are both live`
         : `inside the ±${bandPct}% band, so the price is likely to stay in range`;
   const pcts = `UP ${(s.pUp * 100).toFixed(0)}% · DOWN ${(s.pDown * 100).toFixed(0)}% · RANGE ${(s.pRange * 100).toFixed(0)}%`;
-  return `Realized volatility implies a ±${volPct}% expected move over the ${horizonMin} min to settlement - ${width}. ${momentum} (treated as short-lived). Estimated qualification odds: ${pcts}.`;
+  return `Realized volatility implies a ±${volPct}% expected move over the ${horizonMin} min to settlement — ${width}. ${momentum} (treated as short-lived). Estimated qualification odds: ${pcts}.`;
 }

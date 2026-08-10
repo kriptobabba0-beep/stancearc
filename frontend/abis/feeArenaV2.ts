@@ -1,5 +1,5 @@
-// abis/feeArenaV2.ts - FULL FeeArenaV2 ABI generated VERBATIM from the compiled Foundry artifact
-// (out/FeeArenaV2.sol/FeeArenaV2.json) via forge build. DO NOT hand-edit - regenerate from the artifact.
+// abis/feeArenaV2.ts — FULL FeeArenaV2 ABI generated VERBATIM from the compiled Foundry artifact
+// (out/FeeArenaV2.sol/FeeArenaV2.json) via forge build. DO NOT hand-edit — regenerate from the artifact.
 // `as const` is REQUIRED for viem type inference. All on-chain numerics decode to bigint.
 // Conviction-parimutuel v2: stakeWithConviction / claim(recipient) / refundConviction(recipient) /
 // withdrawCredited; EpochV2 + Position tuples mirror src/FeeArenaV2.sol exactly. See docs/spec-feearena-v2.md.

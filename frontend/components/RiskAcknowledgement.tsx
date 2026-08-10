@@ -10,7 +10,7 @@ interface RiskAcknowledgementProps {
 const RISKS = [
   'If your side loses, you forfeit this epoch’s fees (no reward).',
   'You still carry the AMM / impermanent-loss risk on your LP position.',
-  'Your side choice is atomic and immutable for this epoch - it cannot be changed.',
+  'Your side choice is atomic and immutable for this epoch — it cannot be changed.',
   'Your NFT is locked in escrow until the operator settles this epoch.',
 ];
 

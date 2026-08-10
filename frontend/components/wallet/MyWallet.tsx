@@ -1,6 +1,6 @@
 'use client';
 
-// components/wallet/MyWallet.tsx - the full embedded-wallet experience (Google/Email/PIN users).
+// components/wallet/MyWallet.tsx — the full embedded-wallet experience (Google/Email/PIN users).
 // Portfolio overview · assets with USD values · send · receive (QR) · transaction history ·
 // network info · settings. On-brand dark HUD. Send routes through Circle contractExecution.
 
@@ -25,7 +25,7 @@ import {
   Spinner, Close, Info, SwapArrows, ChevronDown, Layers, Trophy, Gift,
 } from '@/components/ui/icons';
 
-const PAGE_SIZE = 8; // Activity rows per page - bounds the card height + aligns it with the right column.
+const PAGE_SIZE = 8; // Activity rows per page — bounds the card height + aligns it with the right column.
 
 const GAS_BUFFER = 100_000n; // reserve ~0.10 USDC for gas (gas is USDC on Arc)
 const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
@@ -262,7 +262,7 @@ function ActionRow({ row }: { row: WalletRow }) {
   const cp = row.action === 'send' ? row.outs[0]?.destinationAddress : row.action === 'receive' ? row.ins[0]?.sourceAddress : undefined;
   const subtitle = meta.verb
     ? `${meta.verb} · ${timeAgo(row.ts)}`
-    : `${row.action === 'send' ? 'to' : 'from'} ${short(cp || '-')} · ${timeAgo(row.ts)}`;
+    : `${row.action === 'send' ? 'to' : 'from'} ${short(cp || '—')} · ${timeAgo(row.ts)}`;
 
   const amtLines = (legs: WalletRow['ins'], sign: string, cls: string) =>
     legs
@@ -409,7 +409,7 @@ export function MyWallet() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="font-mono text-4xl font-medium tracking-tight text-ink">
-              {pricesReady ? fmtUsd(totalUsd) : <span className="text-ink-faint">$ -</span>}
+              {pricesReady ? fmtUsd(totalUsd) : <span className="text-ink-faint">$ —</span>}
             </div>
             <p className="mt-1 text-xs text-ink-muted">Across {balances.length} assets on Arc Testnet</p>
           </div>
@@ -442,7 +442,7 @@ export function MyWallet() {
                   </div>
                   <div className="text-right">
                     <div className="font-mono text-sm text-ink">{fmtAmt(b.amount)}</div>
-                    <div className="font-mono text-[11px] text-ink-muted">{pricesReady ? fmtUsd(b.usd) : '-'}</div>
+                    <div className="font-mono text-[11px] text-ink-muted">{pricesReady ? fmtUsd(b.usd) : '—'}</div>
                   </div>
                 </li>
               ))}

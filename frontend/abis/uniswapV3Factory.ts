@@ -1,4 +1,4 @@
-// abis/uniswapV3Factory.ts - getPool(t0,t1,fee) for pool validation (factory.getPool == POOL).
+// abis/uniswapV3Factory.ts — getPool(t0,t1,fee) for pool validation (factory.getPool == POOL).
 // Verified against out/UniswapV3Factory.sol/UniswapV3Factory.json (forge build).
 export const uniswapV3FactoryAbi = [
   { type: 'function', name: 'getPool', stateMutability: 'view',

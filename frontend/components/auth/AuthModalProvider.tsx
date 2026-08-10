@@ -1,6 +1,6 @@
 'use client';
 
-// components/auth/AuthModalProvider.tsx - app-wide control of the single "Sign in" modal.
+// components/auth/AuthModalProvider.tsx — app-wide control of the single "Sign in" modal.
 // Any component calls useAuthModal().open() to launch it; the modal itself is rendered here so it
 // sits inside the wagmi + wallet contexts.
 

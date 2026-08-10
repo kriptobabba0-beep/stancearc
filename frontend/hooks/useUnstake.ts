@@ -1,4 +1,4 @@
-// hooks/useUnstake.ts - FeeArena.unstake(tokenId); enabled only when Settled && position.swept (contract enforces).
+// hooks/useUnstake.ts — FeeArena.unstake(tokenId); enabled only when Settled && position.swept (contract enforces).
 //
 // WHY THE RECEIPT WAIT IS IMPERATIVE (not the shared reactive useTxToast/useTxReceipt): this hook is
 // instantiated inside ClaimUnstakePanel's per-position row. Unstaking an ALREADY-CLAIMED position drops
@@ -7,7 +7,7 @@
 // useTxToast/useTxReceipt unmounts with the row and never fires, orphaning the keyed loading toast
 // forever (sonner loading toasts never auto-dismiss). An in-flight async fn keeps running after its
 // component unmounts, so we resolve the loading→success/reverted/timeout toast IMPERATIVELY inside
-// `unstake` via publicClient.waitForTransactionReceipt - that always settles the toast even once the
+// `unstake` via publicClient.waitForTransactionReceipt — that always settles the toast even once the
 // row is gone. This is the live v1 claim→unstake flow (a real test path).
 import { useCallback, useState } from 'react';
 import { useAccount, usePublicClient } from 'wagmi';
@@ -30,7 +30,7 @@ export function useUnstake() {
   const { writeContractAsync, data: hash, isPending: isWriting } = useArcWriteContract();
   const [error, setError] = useState<Error | undefined>();
   const [isSimulating, setIsSimulating] = useState(false);
-  // The imperative receipt-wait state (we do NOT use the reactive useTxReceipt here - see header).
+  // The imperative receipt-wait state (we do NOT use the reactive useTxReceipt here — see header).
   const [isConfirming, setIsConfirming] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -57,9 +57,9 @@ export function useUnstake() {
         bumpPollAfterWrite();
         void qc.refetchQueries({ type: 'active' });
 
-        // IMPERATIVE receipt wait - resolves the keyed loading toast even though this row UNMOUNTS the
+        // IMPERATIVE receipt wait — resolves the keyed loading toast even though this row UNMOUNTS the
         // moment an already-claimed position leaves the ClaimUnstakePanel filter (the reactive
-        // useTxToast would never fire after unmount, leaving the sonner spinner orphaned forever - the
+        // useTxToast would never fire after unmount, leaving the sonner spinner orphaned forever — the
         // live bug). This async fn keeps running post-unmount, so the toast is always settled.
         setIsConfirming(true);
         try {
@@ -74,16 +74,16 @@ export function useUnstake() {
             toast.success('Unstaked', { id: TOAST_ID });
           }
         } catch {
-          // Receipt timed out / RPC stalled - the unstake may well have CONFIRMED (Arc can be slow to
+          // Receipt timed out / RPC stalled — the unstake may well have CONFIRMED (Arc can be slow to
           // return receipts). Replace the loading spinner with a reassuring, NON-STUCK toast rather than
           // claiming failure; the background poll surfaces the updated state shortly.
-          toast.error('Sent - couldn’t confirm yet; your positions will update shortly (or refresh).', {
+          toast.error('Sent — couldn’t confirm yet; your positions will update shortly (or refresh).', {
             id: TOAST_ID,
           });
         } finally {
           setIsConfirming(false);
           // Refetch once the receipt settles (success or timeout) so positions update without a manual
-          // refresh - mirrors the success/timeout refetch the shared useTxToast did.
+          // refresh — mirrors the success/timeout refetch the shared useTxToast did.
           void qc.refetchQueries({ type: 'active' });
         }
         return tx;

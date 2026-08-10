@@ -1,6 +1,6 @@
 'use client';
 
-// components/Leaderboard.tsx - "Clean Institutional" ranked table of per-address aggregates for the
+// components/Leaderboard.tsx — "Clean Institutional" ranked table of per-address aggregates for the
 // ACTIVE market, built from on-chain events via useLeaderboard(). Rank, truncated address, epochs
 // entered/won, win-rate, total claimed (base + USDC). The connected wallet's row is highlighted.
 import { useEffect, useState } from 'react';
@@ -21,7 +21,7 @@ function truncate(addr: string): string {
 }
 
 function winRate(row: LeaderboardRow): string {
-  if (row.entered === 0) return '-';
+  if (row.entered === 0) return '—';
   return `${Math.round((row.won / row.entered) * 100)}%`;
 }
 

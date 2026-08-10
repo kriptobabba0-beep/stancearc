@@ -1,12 +1,12 @@
 'use client';
 
-// components/pool/RangeChart.tsx - the liquidity-range chart with DRAGGABLE boundary handles (reference
+// components/pool/RangeChart.tsx — the liquidity-range chart with DRAGGABLE boundary handles (reference
 // image #3). The x-axis is linear in HUMAN price; two handles bracket the selected band and can be
 // dragged (pointer) or nudged (keyboard) to set the range. Every change emits CANONICAL spacing-aligned
-// ticks via lib/rangeMath.customTicks, so a drag and a preset button feed the exact SAME mint - the
+// ticks via lib/rangeMath.customTicks, so a drag and a preset button feed the exact SAME mint — the
 // parent holds the tick range and the handles re-derive their positions from it, keeping the two methods
 // perfectly in sync. The depth backdrop is a stylised concentrated-liquidity curve (a visual aid for
-// choosing a band, not a per-tick on-chain claim - see lib/rangeChartMath.depthBars).
+// choosing a band, not a per-tick on-chain claim — see lib/rangeChartMath.depthBars).
 import { useEffect, useRef, useState } from 'react';
 import type { PoolInfo } from '@/lib/pools';
 import { customTicks, type TickRange } from '@/lib/rangeMath';
@@ -87,7 +87,7 @@ export function RangeChart({
     onChange(customTicks(minPrice, maxPrice, dec0, dec1, baseIsToken0, spacing));
   };
 
-  // Pointer drag - window listeners while a handle is held (so the drag survives leaving the track).
+  // Pointer drag — window listeners while a handle is held (so the drag survives leaving the track).
   useEffect(() => {
     if (!dragging) return;
     const onMove = (e: PointerEvent) => {
@@ -260,7 +260,7 @@ export function RangeChart({
       <div className="mt-1.5 flex justify-between font-mono text-[10px] text-ink-faint" aria-hidden="true">
         {Array.from({ length: 5 }, (_, i) => {
           const p = domain.min + (i / 4) * (domain.max - domain.min);
-          return <span key={i}>{loaded ? formatHumanPrice(p) : '-'}</span>;
+          return <span key={i}>{loaded ? formatHumanPrice(p) : '—'}</span>;
         })}
       </div>
     </div>

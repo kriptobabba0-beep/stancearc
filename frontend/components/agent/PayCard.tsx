@@ -1,13 +1,13 @@
 'use client';
 
-// components/agent/PayCard.tsx - the copilot's pay-per-message card (Circle x402 / Gateway).
+// components/agent/PayCard.tsx — the copilot's pay-per-message card (Circle x402 / Gateway).
 //
 // Appears when the chat API answers 402 (free daily quota exhausted, billing enabled). The
-// user pays from their Circle Gateway balance with a SIGNATURE ONLY - an EIP-3009 transfer
+// user pays from their Circle Gateway balance with a SIGNATURE ONLY — an EIP-3009 transfer
 // authorization that Circle's facilitator verifies and settles in batches, gasless. If the
 // Gateway balance is short, a one-time on-chain deposit (approve + deposit) funds it; after
 // that every message is a single wallet signature. Nothing is charged without the user's
-// explicit click - the same consent rule as every other copilot action.
+// explicit click — the same consent rule as every other copilot action.
 import { useCallback, useEffect, useState } from 'react';
 import { useAccount, usePublicClient, useSignTypedData } from 'wagmi';
 import { erc20Abi, formatUnits, maxUint256, parseUnits } from 'viem';
@@ -34,7 +34,7 @@ export function PayCard({
   onDismiss,
 }: {
   payment: Payment402;
-  /** Called with the signed Payment-Signature header - the chat retries with it. */
+  /** Called with the signed Payment-Signature header — the chat retries with it. */
   onPaid: (header: string) => void;
   onDismiss: () => void;
 }) {
@@ -61,7 +61,7 @@ export function PayCard({
       })) as bigint;
       setAvailable(bal);
     } catch {
-      setAvailable(null); // unknown - the pay attempt itself is still the source of truth
+      setAvailable(null); // unknown — the pay attempt itself is still the source of truth
     }
   }, [publicClient, address]);
 
@@ -147,20 +147,20 @@ export function PayCard({
       </div>
 
       <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">
-        {payment.error ?? 'Your free daily messages are used up.'} Paying is a single wallet signature - gasless, settled in
+        {payment.error ?? 'Your free daily messages are used up.'} Paying is a single wallet signature — gasless, settled in
         batches by Circle Gateway from your Gateway USDC balance.
       </p>
 
       {option === null ? (
         <p className="mt-2 font-mono text-[12.5px] text-side-down">
-          No payment option for this network was offered - try again later.
+          No payment option for this network was offered — try again later.
         </p>
       ) : (
         <>
           <p className="mt-2 font-mono text-[12.5px] text-ink-muted">
             Gateway balance:{' '}
             {available === null ? 'unknown' : `$${formatUnits(available, USDC.decimals)} USDC`}
-            {!hasFunds && available !== null && ` - deposit $${MIN_DEPOSIT_USDC} once to cover ~100 messages.`}
+            {!hasFunds && available !== null && ` — deposit $${MIN_DEPOSIT_USDC} once to cover ~100 messages.`}
           </p>
           {failed && <p className="mt-2 font-mono text-[12.5px] text-side-down">Failed: {failed}</p>}
           <div className="mt-3 flex items-center gap-2">

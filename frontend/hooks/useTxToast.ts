@@ -1,7 +1,7 @@
-// hooks/useTxToast.ts - centralized tx-lifecycle toast driver shared by every write hook. The 7 write
+// hooks/useTxToast.ts — centralized tx-lifecycle toast driver shared by every write hook. The 7 write
 // hooks all follow the same shape: submit a tx (writeContractAsync returns a hash AT SUBMIT), fire a
 // keyed `toast.loading(...)`, then wait on `useWaitForTransactionReceipt({ hash })`. Previously each
-// hook only handled the `isSuccess` branch - so a tx that MINED-BUT-REVERTED still showed a green
+// hook only handled the `isSuccess` branch — so a tx that MINED-BUT-REVERTED still showed a green
 // success toast (the receipt resolves with isSuccess=true even when `status === 'reverted'`), and a
 // receipt query that ERRORED/TIMED-OUT left the keyed loading spinner orphaned forever (sonner loading
 // toasts have no auto-dismiss).
@@ -21,22 +21,22 @@ import { toast } from '@/lib/toast';
 export const TX_RECEIPT_TIMEOUT_MS = 120_000;
 
 /**
- * useTxReceipt - the SHARED receipt-wait wrapper every write flow uses INSTEAD of calling wagmi's
+ * useTxReceipt — the SHARED receipt-wait wrapper every write flow uses INSTEAD of calling wagmi's
  * `useWaitForTransactionReceipt` directly. It exists to fix a LIVE wedge:
  *
  * ROOT CAUSE of the "Providing liquidity…" spinner sticking forever even though the mint CONFIRMED:
  *   - viem's `waitForTransactionReceipt` REJECTS on `timeout` (and after `retryCount` blocks). Good.
  *   - BUT the receipt wait runs as a react-query query, and the app's global QueryClient default is
  *     `retry: 2` (see lib/queryClient.ts). So when Arc's RPC is slow to return `eth_getTransactionReceipt`
- *     and the first 120s timeout rejects, react-query RE-RAN the query twice more - each restarting the
+ *     and the first 120s timeout rejects, react-query RE-RAN the query twice more — each restarting the
  *     full 120s viem timeout. So `isError` only flipped true after ~3×120s ≈ 6 minutes (plus backoff),
  *     which is "forever" to a user. The receipt-arrives + isError-clears logic downstream was correct;
  *     it simply never fired in time.
  *
  * THE FIX (one place, fixes every flow): force `retry: false` on the receipt query so the FIRST timeout
- * / RPC error is the TERMINAL state - `isError` flips true after one ~120s window, the write hooks'
+ * / RPC error is the TERMINAL state — `isError` flips true after one ~120s window, the write hooks'
  * `useTxToast` error branch + the on-ramp panel's `awaitingReceipt` clear fire promptly, the button
- * re-enables and we surface "couldn't confirm - it'll appear shortly / refresh" instead of a dead
+ * re-enables and we surface "couldn't confirm — it'll appear shortly / refresh" instead of a dead
  * spinner. Retrying a *timeout* is pointless anyway (a confirmed-but-slow receipt is recovered by the
  * background positions poll, not by re-arming the wait). The finite `timeout` is also forwarded here so
  * callers don't each have to remember it.
@@ -58,7 +58,7 @@ export function useTxReceipt(
   });
 }
 
-/** Minimal shape of a viem receipt we care about - only the mined/reverted status. */
+/** Minimal shape of a viem receipt we care about — only the mined/reverted status. */
 interface ReceiptLike {
   status?: 'success' | 'reverted';
 }
@@ -73,13 +73,13 @@ export interface TxToastLabels {
 }
 
 export interface UseTxToastArgs {
-  /** The keyed toast id (stable per action) - the loading toast is replaced in place. */
+  /** The keyed toast id (stable per action) — the loading toast is replaced in place. */
   id: string;
   /** The submitted tx hash (undefined until submit). */
   hash: `0x${string}` | undefined;
-  /** The receipt query's `data` (viem TransactionReceipt) - carries `status`. */
+  /** The receipt query's `data` (viem TransactionReceipt) — carries `status`. */
   receipt: ReceiptLike | undefined;
-  /** The receipt query's `isSuccess` (it resolved - but check `receipt.status` for revert). */
+  /** The receipt query's `isSuccess` (it resolved — but check `receipt.status` for revert). */
   isSuccess: boolean;
   /** The receipt query's `isError` (it errored / timed out and will never resolve). */
   isError: boolean;
@@ -93,7 +93,7 @@ export interface UseTxToastArgs {
  */
 export function useTxToast({ id, hash, receipt, isSuccess, isError, labels }: UseTxToastArgs): void {
   const qc = useQueryClient();
-  // The hash we've already driven to a terminal toast - prevents re-firing on subsequent renders.
+  // The hash we've already driven to a terminal toast — prevents re-firing on subsequent renders.
   const handledHash = useRef<`0x${string}` | undefined>(undefined);
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export function useTxToast({ id, hash, receipt, isSuccess, isError, labels }: Us
     if (isSuccess && receipt) {
       handledHash.current = hash;
       if (receipt.status === 'reverted') {
-        // Mined but reverted - NOT a success. Surface an error toast; do not claim success.
+        // Mined but reverted — NOT a success. Surface an error toast; do not claim success.
         toast.error(labels.reverted ?? 'Transaction reverted', { id });
       } else {
         bumpPollAfterWrite();
@@ -118,13 +118,13 @@ export function useTxToast({ id, hash, receipt, isSuccess, isError, labels }: Us
       return;
     }
 
-    // Receipt query errored / timed out (dropped tx, RPC failure, timeout) - it will never resolve.
+    // Receipt query errored / timed out (dropped tx, RPC failure, timeout) — it will never resolve.
     // Replace the orphaned loading spinner with a definitive (non-stuck) toast. CRUCIALLY: the tx may
-    // have actually CONFIRMED on-chain - a receipt timeout is most often just a slow Arc RPC, not a
+    // have actually CONFIRMED on-chain — a receipt timeout is most often just a slow Arc RPC, not a
     // failed tx (the original live wedge: NFT minted, receipt never returned). So we ALSO bump the poll
     // and force an immediate refetch here, exactly like the success path, so the new position/balance/
     // claim state surfaces shortly WITHOUT a manual page refresh. We never claim success (the label is
-    // a reassuring "couldn't confirm yet - appears shortly / refresh"), but we don't leave the UI stale.
+    // a reassuring "couldn't confirm yet — appears shortly / refresh"), but we don't leave the UI stale.
     if (isError) {
       handledHash.current = hash;
       toast.error(labels.error ?? 'Could not confirm transaction', { id });

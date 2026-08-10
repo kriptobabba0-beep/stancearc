@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * Arena design system - theme-aware.
+ * Arena design system — theme-aware.
  * Deep-dark canvas, lifted surfaces, a single crimson accent (#E5484D dark / #DC2626
  * light), and a green/red/blue semantic trio for UP / DOWN / RANGE. Numbers are
  * mono + tabular.
@@ -41,12 +41,12 @@ const config: Config = {
         'subtle-hover': v('subtle-hover'),
       },
       fontFamily: {
-        // Uniswap uses a single clean grotesk everywhere - Inter is the closest free match.
+        // Uniswap uses a single clean grotesk everywhere — Inter is the closest free match.
         display: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         mono: ['var(--font-plex-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
-      // Uniswap radii: generous rounding - inner sections ~16-20px, cards ~24px, pills full.
+      // Uniswap radii: generous rounding — inner sections ~16-20px, cards ~24px, pills full.
       borderRadius: { lg: '0.75rem', xl: '1rem', '2xl': '1.25rem', '3xl': '1.5rem' },
       boxShadow: {
         // Uniswap is flat/clean: cards carry (almost) no shadow; only popovers float.

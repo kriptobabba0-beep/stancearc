@@ -1,8 +1,8 @@
-// hooks/useClaim.ts - version-aware FeeArena claim; pays owner regardless of caller; optimistic disable.
+// hooks/useClaim.ts — version-aware FeeArena claim; pays owner regardless of caller; optimistic disable.
 //
 // VERSION-AWARE WRITE SURFACE:
-//   - v1: claim(uint256 epochId, uint256 tokenId)            - 2 args, payout always routed to the owner.
-//   - v2: claim(uint64 epochId, uint256 tokenId, address recipient) - 3 args. recipient defaults to the
+//   - v1: claim(uint256 epochId, uint256 tokenId)            — 2 args, payout always routed to the owner.
+//   - v2: claim(uint64 epochId, uint256 tokenId, address recipient) — 3 args. recipient defaults to the
 //         connected address (recipient == address(0) routes to the position owner on-chain); an optional
 //         `recipient` override lets a blocklisted owner redirect the sqrt pot share to a clean address.
 // Both reuse the repo write pattern: simulateContract preflight, withGasFloor (Arc 20-gwei floor),

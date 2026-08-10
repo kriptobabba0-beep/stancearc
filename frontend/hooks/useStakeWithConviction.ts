@@ -1,23 +1,23 @@
-// hooks/useStakeWithConviction.ts - FeeArena **v2** conviction stake.
+// hooks/useStakeWithConviction.ts — FeeArena **v2** conviction stake.
 //
 // v2 stake is a USDC-conviction parimutuel: the staker posts a bounded USDC conviction [minConv,maxConv]
 // for their side, which the arena pulls via transferFrom, AND the arena pulls the LP NFT itself. So the
 // flow is up to THREE txs:
-//   1. USDC APPROVE - if allowance(user, arena) < conviction, approve(arena, conviction) (EXACT, never MAX).
-//   2. NFT APPROVE  - if !NPM.isApprovedForAll(user, arena), NPM.setApprovalForAll(arena, true).
-//   3. STAKE        - stakeWithConviction(tokenId, side, conviction) on the v2 arena.
+//   1. USDC APPROVE — if allowance(user, arena) < conviction, approve(arena, conviction) (EXACT, never MAX).
+//   2. NFT APPROVE  — if !NPM.isApprovedForAll(user, arena), NPM.setApprovalForAll(arena, true).
+//   3. STAKE        — stakeWithConviction(tokenId, side, conviction) on the v2 arena.
 // All reuse the repo write pattern: simulateContract preflight, withGasFloor (Arc 20-gwei floor),
 // useTxToast lifecycle, bumpPollAfterWrite + an immediate active-query refetch, friendlyError.
 //
 // WHY THE NFT APPROVE (live-bug fix): FeeArenaV2.stakeWithConviction (src/FeeArenaV2.sol) has the ARENA
-// call `INonfungiblePositionManager(NPM).safeTransferFrom(msg.sender, address(this), tokenId, ...)` - the
+// call `INonfungiblePositionManager(NPM).safeTransferFrom(msg.sender, address(this), tokenId, ...)` — the
 // arena PULLS the NFT out of the user's wallet. For an ERC-721 pull the caller (the arena) must be an
 // approved operator (or per-token approved) for that NFT, else it reverts "ERC721: transfer caller is
 // not owner nor approved". (v1's useStakeWithSide is different: the USER calls safeTransferFrom directly,
 // so no approval is needed there.) We use setApprovalForAll (operator approval) because per-token
-// approve() is cleared the moment the NFT moves into escrow - operator approval persists across stakes.
+// approve() is cleared the moment the NFT moves into escrow — operator approval persists across stakes.
 //
-// NOTE: msg.sender must NOT be the keeper/owner (the arena enforces operator-exclusion) - a normal
+// NOTE: msg.sender must NOT be the keeper/owner (the arena enforces operator-exclusion) — a normal
 // user wallet stakes fine. Side.NONE and out-of-bounds conviction are rejected client-side first.
 import { useCallback, useState } from 'react';
 import { useAccount, usePublicClient, useReadContract } from 'wagmi';
@@ -39,7 +39,7 @@ function sideLabel(side: Side): string {
   return Side[side] ?? 'side';
 }
 
-/** Conviction bounds (USDC 6dp base units) for the active v2 market - from lib/markets.ts. */
+/** Conviction bounds (USDC 6dp base units) for the active v2 market — from lib/markets.ts. */
 export interface ConvictionBounds {
   minConv: bigint;
   maxConv: bigint;
@@ -96,8 +96,8 @@ export function useStakeWithConviction(bounds: ConvictionBounds) {
     isSuccess,
     isError: isReceiptError,
     labels: {
-      success: 'Staked - your position + conviction are in the arena',
-      reverted: 'Stake reverted - your position is not staked',
+      success: 'Staked — your position + conviction are in the arena',
+      reverted: 'Stake reverted — your position is not staked',
       error: 'Could not confirm the stake',
     },
   });
@@ -115,7 +115,7 @@ export function useStakeWithConviction(bounds: ConvictionBounds) {
           );
         }
 
-        // STEP 1 - APPROVE (only if the current allowance can't cover the conviction).
+        // STEP 1 — APPROVE (only if the current allowance can't cover the conviction).
         const currentAllowance = (allowance as bigint | undefined) ?? 0n;
         if (currentAllowance < conviction) {
           setIsSimulating(true);
@@ -131,11 +131,11 @@ export function useStakeWithConviction(bounds: ConvictionBounds) {
             withGasFloor(approveReq) as Parameters<typeof writeContractAsync>[0],
           );
           toast.loading('Approving USDC conviction', { id: TOAST_ID, description: arcScanTxUrl(approveTx) });
-          // Wait for the approve to mine before staking - the stake's transferFrom needs the allowance live.
+          // Wait for the approve to mine before staking — the stake's transferFrom needs the allowance live.
           await publicClient.waitForTransactionReceipt({ hash: approveTx, timeout: TX_RECEIPT_TIMEOUT_MS });
         }
 
-        // STEP 2 - APPROVE THE LP NFT (operator approval), only if the arena isn't already an operator.
+        // STEP 2 — APPROVE THE LP NFT (operator approval), only if the arena isn't already an operator.
         // The arena PULLS the NFT inside stakeWithConviction (NPM.safeTransferFrom(user -> arena)); that
         // pull reverts "ERC721: transfer caller is not owner nor approved" unless the arena is approved.
         // setApprovalForAll persists across stakes (per-token approve is cleared once the NFT escrows).
@@ -153,11 +153,11 @@ export function useStakeWithConviction(bounds: ConvictionBounds) {
             withGasFloor(nftApproveReq) as Parameters<typeof writeContractAsync>[0],
           );
           toast.loading('Approving your LP NFT for the arena', { id: TOAST_ID, description: arcScanTxUrl(nftApproveTx) });
-          // Wait for the operator approval to mine before staking - the stake's NFT pull needs it live.
+          // Wait for the operator approval to mine before staking — the stake's NFT pull needs it live.
           await publicClient.waitForTransactionReceipt({ hash: nftApproveTx, timeout: TX_RECEIPT_TIMEOUT_MS });
         }
 
-        // STEP 3 - STAKE WITH CONVICTION.
+        // STEP 3 — STAKE WITH CONVICTION.
         setIsSimulating(true);
         const { request } = await publicClient.simulateContract({
           account: address,

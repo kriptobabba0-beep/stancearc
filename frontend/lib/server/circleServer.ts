@@ -1,4 +1,4 @@
-// lib/server/circleServer.ts - SERVER-ONLY Circle W3S (Programmable Wallets) client.
+// lib/server/circleServer.ts — SERVER-ONLY Circle W3S (Programmable Wallets) client.
 //
 // ⚠️ NEVER import this from a client component. It reads the secret CIRCLE_API_KEY from process.env and
 // must only run inside Next.js Route Handlers (`export const runtime = 'nodejs'`). The browser talks to
@@ -8,7 +8,7 @@
 //   POST /users {userId}                       -> 201
 //   POST /users/token {userId}                 -> {data:{userToken,encryptionKey}}
 //   POST /user/initialize (X-User-Token)       -> {data:{challengeId}}   (accountType EOA, ARC-TESTNET)
-//   POST /user/transactions/contractExecution  -> {data:{challengeId}}   (no entitySecret - user signs via PIN)
+//   POST /user/transactions/contractExecution  -> {data:{challengeId}}   (no entitySecret — user signs via PIN)
 //   GET  /transactions/{id} | GET /wallets     -> read state / list wallets (X-User-Token)
 // The user's PIN + MPC keyshare stay on-device (Web SDK); this server never signs.
 
@@ -76,7 +76,7 @@ async function circleFetch(
   if (!res.ok) {
     const msg =
       json && typeof json === 'object' && typeof json.message === 'string' ? json.message : `HTTP ${res.status}`;
-    // Note: only the Circle-provided message is surfaced - never the API key / headers.
+    // Note: only the Circle-provided message is surfaced — never the API key / headers.
     throw new CircleError(`Circle ${path} failed: ${msg}`, res.status);
   }
   return json;
@@ -98,7 +98,7 @@ export async function createUserToken(
   return { userToken: String(d.userToken ?? ''), encryptionKey: String(d.encryptionKey ?? '') };
 }
 
-// ── Email / social device tokens (portable login - no userId; identity = email/Google) ──
+// ── Email / social device tokens (portable login — no userId; identity = email/Google) ──
 // The client gets userToken+encryptionKey from the SDK login callback, NOT from /users/token.
 export async function createEmailDeviceToken(
   deviceId: string,
@@ -126,7 +126,7 @@ export async function createSocialDeviceToken(
 }
 
 // ── Wallet provisioning ───────────────────────────────────────────────────────────────
-// Circle Programmable Wallets - provision the user's wallet via POST /user/initialize (accountType EOA,
+// Circle Programmable Wallets — provision the user's wallet via POST /user/initialize (accountType EOA,
 // blockchains ARC-TESTNET). Returns a challengeId the W3S Web SDK resolves with the user's on-device PIN;
 // the MPC keyshare never touches our server.
 export async function initializeWallet(
@@ -151,14 +151,14 @@ export interface ContractExecArgs {
   /** EITHER abiFunctionSignature+abiParameters (e.g. "claim(uint256)" + ["42"]) … */
   abiFunctionSignature?: string;
   abiParameters?: unknown[];
-  /** … OR raw ABI-encoded calldata (mutually exclusive; tuple-safe - viem-encoded client-side). */
+  /** … OR raw ABI-encoded calldata (mutually exclusive; tuple-safe — viem-encoded client-side). */
   callData?: string;
   /** Native value to send (USDC on Arc), atomic string. Default "0". */
   amount?: string;
   feeLevel?: FeeLevel;
 }
 
-// Circle Contracts (Smart Contract Platform) - execute a state-changing call on a deployed contract
+// Circle Contracts (Smart Contract Platform) — execute a state-changing call on a deployed contract
 // through the user's MPC wallet. The user signs with their PIN on-device; we only forward the call
 // (callData, or abiFunctionSignature + params) plus any native amount, and hand back the challengeId
 // the Web SDK resolves. This is the write path behind every embedded-wallet stake/claim/swap.
@@ -253,7 +253,7 @@ export const ARC_BLOCKCHAIN = 'ARC-TESTNET';
 
 /**
  * List indexed event logs for a contract via Circle's Smart Contract Platform
- * (GET /v1/w3s/contracts/events). This is an ACCOUNT-level read - it needs only the API key (pass
+ * (GET /v1/w3s/contracts/events). This is an ACCOUNT-level read — it needs only the API key (pass
  * `opts.apiKey` to use the SCP key), never a user token. Returns the RAW logs (topics + data); the
  * caller decodes them with the contract ABI (Circle returns decodedData: null for UNVERIFIED contracts).
  */
@@ -270,7 +270,7 @@ export async function listContractEvents(
   const d = dataOf(await circleFetch(`/contracts/events?${qs}`, { method: 'GET', ...rest }));
   const logs = (d.eventLogs as Record<string, unknown>[]) ?? [];
   // Validate hex at the trust boundary so a malformed/hostile upstream can't feed garbage to viem's
-  // decoder - non-hex topics are dropped and data defaults to '0x' (the decode then degrades, not 500s).
+  // decoder — non-hex topics are dropped and data defaults to '0x' (the decode then degrades, not 500s).
   const isHex = (v: unknown): v is `0x${string}` => typeof v === 'string' && /^0x[0-9a-fA-F]*$/.test(v);
   return logs.map((l) => ({
     id: String(l.id ?? ''),

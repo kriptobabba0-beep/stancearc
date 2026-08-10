@@ -1,14 +1,14 @@
-// hooks/useSwap.ts - swap one pool token for the other on the ACTIVE market's Uniswap-V3-fork pool via
+// hooks/useSwap.ts — swap one pool token for the other on the ACTIVE market's Uniswap-V3-fork pool via
 // the shared SwapRouter.exactInputSingle. This is the trading-fee on-ramp: every swap pays the pool's
 // 0.3% fee, which is what the LP positions earn and (when staked) what fills the Arena pots. Without a
-// swap UI the pools never accrue fees - this hook is what actually generates them.
+// swap UI the pools never accrue fees — this hook is what actually generates them.
 //
 // The router PULLS the input token via transferFrom (exactly like the keeper's arb swaps), so the flow
 // is up to TWO txs (mirrors useStakeWithConviction's approve-then-act with an allowance short-circuit):
-//   1. APPROVE - if ERC20 allowance(user, router) < amountIn, approve(router, MAX) ONCE and AWAIT its
+//   1. APPROVE — if ERC20 allowance(user, router) < amountIn, approve(router, MAX) ONCE and AWAIT its
 //      receipt (the swap's transferFrom needs the allowance live before it runs). MAX so the user is
-//      approved for all future swaps after the first - the allowance short-circuit then skips re-approval.
-//   2. SWAP   - simulate exactInputSingle({ tokenIn, tokenOut, fee: FEE_TIER, recipient: user,
+//      approved for all future swaps after the first — the allowance short-circuit then skips re-approval.
+//   2. SWAP   — simulate exactInputSingle({ tokenIn, tokenOut, fee: FEE_TIER, recipient: user,
 //      deadline: now+20min, amountIn, amountOutMinimum, sqrtPriceLimitX96: 0 }) → withGasFloor →
 //      writeContractAsync → toast.loading → IMPERATIVELY await the receipt.
 //
@@ -16,7 +16,7 @@
 // SwapForm refetches balances on success, and the form can re-render / the amount input can clear the
 // moment a balance changes. An in-flight async fn keeps running regardless, so we resolve the keyed
 // loading→success/reverted/timeout toast IMPERATIVELY inside `swap` via
-// publicClient.waitForTransactionReceipt - it always settles even if the component re-renders. The
+// publicClient.waitForTransactionReceipt — it always settles even if the component re-renders. The
 // approve step is awaited the same way so step 2 only runs once the allowance is on-chain.
 import { useCallback, useState } from 'react';
 import { useAccount, usePublicClient } from 'wagmi';
@@ -30,9 +30,10 @@ import { bumpPollAfterWrite } from '@/hooks/usePollInterval';
 import { toast, arcScanTxUrl } from '@/lib/toast';
 import { TX_RECEIPT_TIMEOUT_MS } from '@/hooks/useTxToast';
 import { useArcWriteContract } from '@/hooks/useArcWriteContract';
+import { receivedAmount } from '@/lib/swapReceipt';
 
 const TOAST_ID = 'swap';
-// 20-minute deadline from submit - generous for testnet block times; never the cause of a revert.
+// 20-minute deadline from submit — generous for testnet block times; never the cause of a revert.
 const DEADLINE_BUFFER_SECONDS = 20n * 60n;
 
 export interface SwapArgs {
@@ -42,8 +43,19 @@ export interface SwapArgs {
   tokenOut: `0x${string}`;
   /** Exact input amount in `tokenIn` raw units. */
   amountIn: bigint;
-  /** Minimum acceptable output (raw units of `tokenOut`) - slippage floor; the swap reverts below it. */
+  /** Minimum acceptable output (raw units of `tokenOut`) — slippage floor; the swap reverts below it. */
   amountOutMinimum: bigint;
+}
+
+/** A swap that CONFIRMED on chain, as the confirmation screen restates it. */
+export interface SwapResult {
+  hash: `0x${string}`;
+  tokenIn: `0x${string}`;
+  tokenOut: `0x${string}`;
+  /** What was actually sold — exact, since exact-input is what was signed. */
+  amountIn: bigint;
+  /** What actually landed, read off the receipt. Null when the receipt didn't say. */
+  amountOut: bigint | null;
 }
 
 export function useSwap() {
@@ -53,21 +65,30 @@ export function useSwap() {
   const { writeContractAsync, data: hash, isPending: isWriting } = useArcWriteContract();
   const [error, setError] = useState<Error | undefined>();
   const [isSimulating, setIsSimulating] = useState(false);
-  // Imperative receipt-wait state (we do NOT use the reactive useTxReceipt here - see header).
+  // Imperative receipt-wait state (we do NOT use the reactive useTxReceipt here — see header).
   const [isApproving, setIsApproving] = useState(false);
   const [isSwapping, setIsSwapping] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [result, setResult] = useState<SwapResult | undefined>();
+
+  /** Back to a blank form. The confirmation stays up until the user dismisses it. */
+  const reset = useCallback(() => {
+    setResult(undefined);
+    setIsSuccess(false);
+    setError(undefined);
+  }, []);
 
   const swap = useCallback(
     async ({ tokenIn, tokenOut, amountIn, amountOutMinimum }: SwapArgs) => {
       setError(undefined);
       setIsSuccess(false);
+      setResult(undefined);
       try {
         if (!address) throw new Error('Connect your wallet first.');
         if (!publicClient) throw new Error('No RPC client available.');
         if (amountIn <= 0n) throw new Error('Enter an amount to swap.');
 
-        // STEP 1 - APPROVE the router to pull `tokenIn` (only if the live allowance can't cover amountIn).
+        // STEP 1 — APPROVE the router to pull `tokenIn` (only if the live allowance can't cover amountIn).
         // The router does transferFrom(user → router), so it needs an allowance ≥ amountIn before the swap.
         const currentAllowance = (await publicClient.readContract({
           address: tokenIn,
@@ -92,7 +113,7 @@ export function useSwap() {
             withGasFloor(approveReq) as Parameters<typeof writeContractAsync>[0],
           );
           toast.loading('Approving token for the swap', { id: TOAST_ID, description: arcScanTxUrl(approveTx) });
-          // AWAIT the approve before swapping - the swap's transferFrom needs the allowance live on-chain.
+          // AWAIT the approve before swapping — the swap's transferFrom needs the allowance live on-chain.
           setIsApproving(true);
           try {
             await publicClient.waitForTransactionReceipt({ hash: approveTx, timeout: TX_RECEIPT_TIMEOUT_MS });
@@ -101,7 +122,7 @@ export function useSwap() {
           }
         }
 
-        // STEP 2 - SWAP via exactInputSingle. Full-range single pool, so no price limit (0 = unbounded);
+        // STEP 2 — SWAP via exactInputSingle. Full-range single pool, so no price limit (0 = unbounded);
         // amountOutMinimum is the slippage floor that protects the user on-chain.
         const deadline = BigInt(Math.floor(Date.now() / 1000)) + DEADLINE_BUFFER_SECONDS;
         const params = {
@@ -116,7 +137,7 @@ export function useSwap() {
         } as const;
 
         setIsSimulating(true);
-        // MANDATORY preflight - catches insufficient balance / allowance / slippage before signing.
+        // MANDATORY preflight — catches insufficient balance / allowance / slippage before signing.
         const { request } = await publicClient.simulateContract({
           account: address,
           address: swapRouter.address,
@@ -133,7 +154,7 @@ export function useSwap() {
         bumpPollAfterWrite();
         void qc.refetchQueries({ type: 'active' });
 
-        // IMPERATIVE receipt wait - settles the keyed loading toast to success / reverted / timeout even
+        // IMPERATIVE receipt wait — settles the keyed loading toast to success / reverted / timeout even
         // if the form re-renders when a balance changes (the reactive useTxToast could miss it).
         setIsSwapping(true);
         try {
@@ -145,13 +166,22 @@ export function useSwap() {
             toast.error('Swap reverted', { id: TOAST_ID });
           } else {
             setIsSuccess(true);
+            // The settled figure, straight off this receipt — see lib/swapReceipt for why the
+            // quote is not good enough to show once the trade is done.
+            setResult({
+              hash: tx,
+              tokenIn,
+              tokenOut,
+              amountIn,
+              amountOut: receivedAmount(receipt.logs, tokenOut, address),
+            });
             toast.success('Swapped', { id: TOAST_ID });
           }
         } catch {
-          // Receipt timed out / RPC stalled - the swap may well have CONFIRMED (Arc can be slow to
+          // Receipt timed out / RPC stalled — the swap may well have CONFIRMED (Arc can be slow to
           // return receipts). Replace the spinner with a reassuring, non-stuck toast; the poll surfaces
           // the new balances shortly.
-          toast.error('Sent - couldn’t confirm yet; your balances will update shortly (or refresh).', {
+          toast.error('Sent — couldn’t confirm yet; your balances will update shortly (or refresh).', {
             id: TOAST_ID,
           });
         } finally {
@@ -179,6 +209,9 @@ export function useSwap() {
     isApproving,
     isSwapping,
     isSuccess,
+    /** Set only for a swap that CONFIRMED. A receipt we couldn't read leaves this undefined. */
+    result,
+    reset,
     error,
     hash,
   };

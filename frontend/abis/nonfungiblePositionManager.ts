@@ -1,9 +1,9 @@
-// abis/nonfungiblePositionManager.ts - NPM surface used by the dashboard: positions(), collect(),
+// abis/nonfungiblePositionManager.ts — NPM surface used by the dashboard: positions(), collect(),
 // decreaseLiquidity() + multicall() (withdraw / remove-liquidity), mint() (provide-liquidity / on-ramp),
 // safeTransferFrom (4-arg, stake) + 3-arg, factory(), ERC721Enumerable. Verified against
 // out/NonfungiblePositionManager.sol/NonfungiblePositionManager.json (forge build).
 export const nonfungiblePositionManagerAbi = [
-  // mint(MintParams) - open a new V3 position. payable (native is never sent for ERC20/ERC20 pools).
+  // mint(MintParams) — open a new V3 position. payable (native is never sent for ERC20/ERC20 pools).
   { type: 'function', name: 'mint', stateMutability: 'payable',
     inputs: [{ name: 'params', type: 'tuple', components: [
       { name: 'token0', type: 'address' }, { name: 'token1', type: 'address' },
@@ -29,7 +29,7 @@ export const nonfungiblePositionManagerAbi = [
       { name: 'tokenId', type: 'uint256' }, { name: 'recipient', type: 'address' },
       { name: 'amount0Max', type: 'uint128' }, { name: 'amount1Max', type: 'uint128' } ] }],
     outputs: [{ name: 'amount0', type: 'uint256' }, { name: 'amount1', type: 'uint256' }] },
-  // decreaseLiquidity(DecreaseLiquidityParams) - burn `liquidity` from a position, crediting the
+  // decreaseLiquidity(DecreaseLiquidityParams) — burn `liquidity` from a position, crediting the
   // withdrawn token0/token1 to the position's tokensOwed (still INSIDE the NPM until collect()).
   { type: 'function', name: 'decreaseLiquidity', stateMutability: 'payable',
     inputs: [{ name: 'params', type: 'tuple', components: [
@@ -37,7 +37,7 @@ export const nonfungiblePositionManagerAbi = [
       { name: 'amount0Min', type: 'uint256' }, { name: 'amount1Min', type: 'uint256' },
       { name: 'deadline', type: 'uint256' } ] }],
     outputs: [{ name: 'amount0', type: 'uint256' }, { name: 'amount1', type: 'uint256' }] },
-  // multicall(bytes[]) - atomically batch encoded NPM calls in one tx (decreaseLiquidity + collect).
+  // multicall(bytes[]) — atomically batch encoded NPM calls in one tx (decreaseLiquidity + collect).
   { type: 'function', name: 'multicall', stateMutability: 'payable',
     inputs: [{ name: 'data', type: 'bytes[]' }],
     outputs: [{ name: 'results', type: 'bytes[]' }] },
@@ -48,7 +48,7 @@ export const nonfungiblePositionManagerAbi = [
     inputs: [{ name: 'from', type: 'address' }, { name: 'to', type: 'address' },
       { name: 'tokenId', type: 'uint256' }], outputs: [] },
   // ERC-721 OPERATOR APPROVAL. Required by the v2 stake: FeeArenaV2.stakeWithConviction has the ARENA
-  // call NPM.safeTransferFrom(msg.sender, arena, tokenId, ...) (the arena PULLS the NFT - unlike v1
+  // call NPM.safeTransferFrom(msg.sender, arena, tokenId, ...) (the arena PULLS the NFT — unlike v1
   // where the user pushes it), so the arena must be an approved operator first or the pull reverts with
   // "ERC721: transfer caller is not owner nor approved". setApprovalForAll (operator approval) persists
   // across stakes; per-token approve() is cleared when the NFT enters escrow, forcing re-approval each time.

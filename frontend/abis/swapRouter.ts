@@ -1,4 +1,4 @@
-// abis/swapRouter.ts - exactInputSingle for demo fee-generation swaps (admin only, exact-amount approvals).
+// abis/swapRouter.ts — exactInputSingle for demo fee-generation swaps (admin only, exact-amount approvals).
 // Verified against out/SwapRouter.sol/SwapRouter.json (forge build).
 export const swapRouterAbi = [
   { type: 'function', name: 'exactInputSingle', stateMutability: 'payable',

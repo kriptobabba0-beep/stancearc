@@ -1,6 +1,6 @@
 'use client';
 
-// components/MarketProvider.tsx - React context holding the active market + setter, persisted to
+// components/MarketProvider.tsx — React context holding the active market + setter, persisted to
 // localStorage (SSR-guarded). All FeeArena/oracle/pool reads & writes resolve through the active
 // market via useMarketContracts() (lib/contracts.ts), so switching here re-points the whole dashboard.
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -23,7 +23,7 @@ function readStoredMarketId(): string {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored && MARKETS.some((m) => m.id === stored)) return stored;
   } catch {
-    /* localStorage may be unavailable (private mode) - fall back to default */
+    /* localStorage may be unavailable (private mode) — fall back to default */
   }
   return DEFAULT_MARKET_ID;
 }

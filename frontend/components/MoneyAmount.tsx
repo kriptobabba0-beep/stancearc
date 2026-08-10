@@ -7,7 +7,7 @@ interface MoneyAmountProps {
   value: bigint;
   /**
    * 'USDC' (6dp, global) | 'price' (18dp quote) | 'WETH' (18dp, legacy default-market base) |
-   * 'base' (the active market's base leg - pass `decimals` for the active market's baseDecimals).
+   * 'base' (the active market's base leg — pass `decimals` for the active market's baseDecimals).
    */
   token: 'USDC' | 'WETH' | 'price' | 'base';
   /** Required for token='base': the active market's baseDecimals (WETH 18, WBTC 8, …). */

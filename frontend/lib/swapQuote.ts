@@ -1,4 +1,4 @@
-// lib/swapQuote.ts - PURE, bigint exact-input single-pool swap quote for a FULL-RANGE Uniswap-V3-fork
+// lib/swapQuote.ts — PURE, bigint exact-input single-pool swap quote for a FULL-RANGE Uniswap-V3-fork
 // pool (the Arena pool is a single full-range position, so active liquidity L is CONSTANT and no tick
 // is ever crossed). This lets the Swap form preview the output + price impact entirely client-side
 // from the pool's live (sqrtPriceX96, liquidity) without a quoter contract.
@@ -24,14 +24,14 @@
 // (or non-positive sqrtP) → a zero quote (amountOut 0, price unchanged, 0 impact), so the form can
 // disable the button on an empty pool / empty input rather than dividing by zero.
 //
-// NOTE - concentrated (range-selectable) positions: now that LPs can mint NARROW ranges, the pool's
-// active liquidity L is only piecewise-constant - a swap that pushes the price across a position's
+// NOTE — concentrated (range-selectable) positions: now that LPs can mint NARROW ranges, the pool's
+// active liquidity L is only piecewise-constant — a swap that pushes the price across a position's
 // tick boundary changes L mid-swap, which this constant-L quote does not model. The quote is therefore
 // an APPROXIMATION (slightly optimistic when crossing into thinner liquidity); the slippage-floored
-// amountOutMinimum the form submits remains the actual execution guard - the swap reverts rather than
+// amountOutMinimum the form submits remains the actual execution guard — the swap reverts rather than
 // fill past it. No logic change: the on-chain pool handles tick crossings exactly.
 
-/** Q96 = 2^96 - the Uniswap fixed-point scale for sqrtPriceX96. */
+/** Q96 = 2^96 — the Uniswap fixed-point scale for sqrtPriceX96. */
 export const Q96 = 2n ** 96n;
 
 /** Fee denominator: feePips is in millionths (3000 = 0.3%). */
@@ -65,7 +65,7 @@ function zeroQuote(sqrtPriceX96: bigint): SwapQuote {
 }
 
 /**
- * Exact-input single-pool quote for a full-range (constant-L) Uniswap-V3 pool. PURE - every input is
+ * Exact-input single-pool quote for a full-range (constant-L) Uniswap-V3 pool. PURE — every input is
  * supplied, no chain reads. Returns { amountOut, sqrtPriceAfterX96, priceImpactBps }.
  *
  * The output token is token1 when `zeroForOne` (token0 was the input) and token0 otherwise; the caller
@@ -79,7 +79,7 @@ export function quoteExactInputSingle({
   liquidity,
   feePips,
 }: SwapQuoteArgs): SwapQuote {
-  // Guards - an empty pool, empty input, or a degenerate price can't produce a meaningful quote.
+  // Guards — an empty pool, empty input, or a degenerate price can't produce a meaningful quote.
   if (liquidity <= 0n || amountIn <= 0n || sqrtPriceX96 <= 0n) return zeroQuote(sqrtPriceX96);
 
   const fee = BigInt(feePips);
@@ -115,7 +115,7 @@ export function quoteExactInputSingle({
 
 /**
  * Relative spot-price move in basis points between two sqrt-prices (constant L). PURE.
- * P = (sqrt/Q96)^2, so |ΔP|/P = |sqrtAfter² − sqrtBefore²| / sqrtBefore² - computed from the squares
+ * P = (sqrt/Q96)^2, so |ΔP|/P = |sqrtAfter² − sqrtBefore²| / sqrtBefore² — computed from the squares
  * for exactness. Always ≥ 0 (magnitude). Returns 0 when before is non-positive.
  */
 export function priceImpactBps(sqrtBeforeX96: bigint, sqrtAfterX96: bigint): number {

@@ -1,13 +1,13 @@
-// scripts/keeper/gasWatchdog.mjs - self-healing gas for the settlement keeper.
+// scripts/keeper/gasWatchdog.mjs — self-healing gas for the settlement keeper.
 //
 // THE PROBLEM IT SOLVES: the keeper crank signer pays native USDC for every settlement tx (+ a Pyth
 // update per settle, across 3 markets on short epochs). It drains steadily, and the keeper itself only
-// WARNs on low balance - it never refills. When the signer hits the floor, every settle fails with
+// WARNs on low balance — it never refills. When the signer hits the floor, every settle fails with
 // "insufficient funds for gas" and ALL markets wedge on "Settlement in progress…" until a human funds it.
 //
 // THIS WATCHDOG runs as its OWN container (decoupled from the keeper, so it keeps refilling even if the
 // keeper is unhealthy). Each tick it reads the keeper signer's balance and, when it dips below a
-// threshold, tops it up from the owner reserve - keeping the signer well ABOVE the keeper's own floor so
+// threshold, tops it up from the owner reserve — keeping the signer well ABOVE the keeper's own floor so
 // it can never wedge on gas. It NEVER drains the reserve below a safety floor, caps each refill, and
 // alerts loudly (in its log) when the reserve runs low so an operator can top it up from the faucet.
 //
@@ -54,14 +54,14 @@ const intervalRaw = Number(env.GASWD_INTERVAL_MS || '30000'); // guard a non-num
 const INTERVAL = Number.isFinite(intervalRaw) ? Math.max(10_000, intervalRaw) : 30_000;
 const GAS = BigInt(env.GAS_FLOOR_GWEI || '28') * 1_000_000_000n; // bid the same floor the keeper uses
 // Headroom for the refill tx's OWN gas (a native transfer is 21k gas) so a refill never dips the reserve
-// below RESERVE_MIN - the owner pays `amount` as value PLUS this gas fee from the same balance.
+// below RESERVE_MIN — the owner pays `amount` as value PLUS this gas fee from the same balance.
 const GAS_RESERVE = 30_000n * GAS;
 if (REFILL_TO <= REFILL_BELOW) die('GASWD_REFILL_TO_USDC must be greater than GASWD_REFILL_BELOW_USDC');
 
 // REFILL-SAFE INTERLOCK. The keeper rewrites a tiny sentinel ({ts, refillSafe}) every poll pass.
 // We refill ONLY when that sentinel is FRESH and refillSafe===true. This is what stops the watchdog
 // from being a blind "drain pump": a keeper whose spend cap has TRIPPED publishes refillSafe:false,
-// and a CRASH-LOOPING keeper never rewrites the sentinel so it goes STALE - in both cases we fail
+// and a CRASH-LOOPING keeper never rewrites the sentinel so it goes STALE — in both cases we fail
 // CLOSED (no refill), disconnecting the reserve from a keeper that's burning pathologically. The
 // interlock is OPT-IN: leave GASWD_REFILL_SAFE_FILE unset to keep the old always-refill behavior.
 const REFILL_SAFE_FILE = (env.GASWD_REFILL_SAFE_FILE || '').trim();
@@ -71,7 +71,7 @@ const REFILL_SAFE_STALE_MS = Number.isFinite(staleRaw) ? Math.max(30_000, staleR
 /**
  * Decide whether it's safe to refill the keeper signer right now, reading the keeper's sentinel.
  * Fails CLOSED on every uncertainty (no file, unreadable, unparseable, stale ts, refillSafe!==true).
- * When the interlock is not configured (no path) it returns safe - preserving prior behavior.
+ * When the interlock is not configured (no path) it returns safe — preserving prior behavior.
  */
 function refillSafe() {
   if (!REFILL_SAFE_FILE) return { safe: true, reason: 'interlock-disabled' };
@@ -97,7 +97,7 @@ const wallet = createWalletClient({ account: owner, chain, transport });
 const keeperSigner = privateKeyToAccount(keeperKey).address;
 
 if (owner.address.toLowerCase() === keeperSigner.toLowerCase()) {
-  die('owner and keeper signer are the SAME address - refusing to run (refill would be a no-op self-send)');
+  die('owner and keeper signer are the SAME address — refusing to run (refill would be a no-op self-send)');
 }
 
 let busy = false; // re-entrancy guard: a slow tick must never overlap the next and double-send
@@ -112,26 +112,26 @@ async function tick() {
 
     if (kbal >= REFILL_BELOW) {
       if (obal < RESERVE_WARN)
-        log({ msg: 'WARN reserve low - top up the owner from the faucet', reserveUsdc: formatEther(obal), owner: owner.address });
+        log({ msg: 'WARN reserve low — top up the owner from the faucet', reserveUsdc: formatEther(obal), owner: owner.address });
       else log({ msg: 'ok', keeperUsdc: formatEther(kbal), reserveUsdc: formatEther(obal) });
       return;
     }
 
-    // Signer is low and wants a refill - but FAIL CLOSED unless the keeper says it's safe. A tripped
+    // Signer is low and wants a refill — but FAIL CLOSED unless the keeper says it's safe. A tripped
     // spend cap (refillSafe:false) or a crash-looping keeper (stale sentinel) must NOT be refilled, or
     // the watchdog just pumps the reserve into a keeper that's burning pathologically.
     const rs = refillSafe();
     if (!rs.safe) {
-      log({ msg: 'refill BLOCKED - keeper not in a refill-safe state (failing closed)', reason: rs.reason, keeperUsdc: formatEther(kbal), reserveUsdc: formatEther(obal) });
+      log({ msg: 'refill BLOCKED — keeper not in a refill-safe state (failing closed)', reason: rs.reason, keeperUsdc: formatEther(kbal), reserveUsdc: formatEther(obal) });
       return;
     }
 
-    // Signer is low - compute a safe refill that never breaches the reserve floor (value + this tx's gas)
+    // Signer is low — compute a safe refill that never breaches the reserve floor (value + this tx's gas)
     // or the per-tx cap.
     const spendable = obal > RESERVE_MIN + GAS_RESERVE ? obal - RESERVE_MIN - GAS_RESERVE : 0n;
     if (spendable <= 0n) {
       log({
-        msg: 'ALERT reserve DEPLETED - cannot refill the keeper signer; FUND the owner NOW',
+        msg: 'ALERT reserve DEPLETED — cannot refill the keeper signer; FUND the owner NOW',
         keeperUsdc: formatEther(kbal),
         reserveUsdc: formatEther(obal),
         owner: owner.address,
@@ -161,7 +161,7 @@ async function tick() {
     });
     const reserveAfter = obal - amount - gasPaid;
     if (reserveAfter < RESERVE_WARN)
-      log({ msg: 'WARN reserve low after refill - top up the owner from the faucet', reserveUsdc: formatEther(reserveAfter), owner: owner.address });
+      log({ msg: 'WARN reserve low after refill — top up the owner from the faucet', reserveUsdc: formatEther(reserveAfter), owner: owner.address });
   } catch (e) {
     log({ msg: 'tick.error', error: e instanceof Error ? e.message : String(e) });
   } finally {
@@ -181,12 +181,12 @@ log({
   gasGwei: Number(GAS / 1_000_000_000n),
   refillSafeInterlock: REFILL_SAFE_FILE ? { file: REFILL_SAFE_FILE, staleMs: REFILL_SAFE_STALE_MS } : 'disabled',
 });
-// Defense-in-depth: never let a stray rejection/exception take the watchdog down - log and keep running.
+// Defense-in-depth: never let a stray rejection/exception take the watchdog down — log and keep running.
 process.on('unhandledRejection', (e) => log({ msg: 'unhandledRejection', error: e instanceof Error ? e.message : String(e) }));
 process.on('uncaughtException', (e) => log({ msg: 'uncaughtException', error: e instanceof Error ? e.message : String(e) }));
 
 // Self-rescheduling loop: the NEXT tick is scheduled INTERVAL after the current one FINISHES (tick never
-// rejects - it wraps everything in try/finally), so slow refills can't pile up a backlog of ticks.
+// rejects — it wraps everything in try/finally), so slow refills can't pile up a backlog of ticks.
 const loop = () => {
   tick().finally(() => setTimeout(loop, INTERVAL));
 };

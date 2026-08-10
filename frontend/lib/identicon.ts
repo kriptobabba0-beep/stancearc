@@ -1,6 +1,6 @@
-// lib/identicon.ts - deterministic on-chain avatars for the leaderboard: every address gets
+// lib/identicon.ts — deterministic on-chain avatars for the leaderboard: every address gets
 // a 5×5 vertically-mirrored pixel mark (blockies-style) in one of the arena's accent hues.
-// Pure address-bytes → cells/color, so the same wallet looks the same on every device - no
+// Pure address-bytes → cells/color, so the same wallet looks the same on every device — no
 // uploads, no external avatar service, nothing to moderate.
 
 /** Accent palette tuned for the dark canvas (vivid, distinguishable, no muddy mid-tones). */

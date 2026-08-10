@@ -1,7 +1,7 @@
-// hooks/useRefundConviction.ts - FeeArena **v2** refundConviction: reclaim a WINNING position's
+// hooks/useRefundConviction.ts — FeeArena **v2** refundConviction: reclaim a WINNING position's
 // conviction principal 1:1 (USDC), decoupled from the sqrt pot claim.
 //
-// Without this a v2 winner's staked conviction is structurally STUCK - the arena custodies it and only
+// Without this a v2 winner's staked conviction is structurally STUCK — the arena custodies it and only
 // `refundConviction(epochId, tokenId, recipient)` releases it. Gated on (Settled && side==winner &&
 // !refunded) on-chain; the UI gates the button on the Lens previewRefund.refundable first.
 //

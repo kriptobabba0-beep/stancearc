@@ -1,6 +1,6 @@
 'use client';
 
-// hooks/useWalletTransactions.ts - the embedded wallet's recent transactions (Circle history feed).
+// hooks/useWalletTransactions.ts — the embedded wallet's recent transactions (Circle history feed).
 
 import { useQuery } from '@tanstack/react-query';
 import { useCircleWallet } from '@/components/circle/CircleWalletProvider';

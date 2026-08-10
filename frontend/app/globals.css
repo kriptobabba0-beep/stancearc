@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /*
- * Theme tokens - RGB channel triplets consumed by tailwind.config.ts via
+ * Theme tokens — RGB channel triplets consumed by tailwind.config.ts via
  * `rgb(var(--c-*) / <alpha-value>)`. The SAME utility classes resolve to the
  * active theme; `.dark` on <html> (set by ThemeProvider) flips the values.
  * Contrast verified AA for all text tokens against their surfaces.
@@ -22,7 +22,7 @@
   --c-ink-soft: 61 61 61;
   --c-ink-muted: 125 125 125;
   --c-ink-faint: 162 162 162;
-  /* Arena crimson - the single accent (was Uniswap magenta/pink). */
+  /* Arena crimson — the single accent (was Uniswap magenta/pink). */
   --c-brand: 220 38 38;
   --c-brand-hover: 185 28 28;
   --c-brand-soft: 254 235 234;
@@ -34,7 +34,7 @@
   --c-side-down-soft: 255 237 235;
   --c-side-range-soft: 226 241 251;
 
-  /* Decorative (theme-aware) - selection wash, dot-grid ink, top brand glow. */
+  /* Decorative (theme-aware) — selection wash, dot-grid ink, top brand glow. */
   --fa-selection: 220 38 38; /* brand */
   --fa-grid-dot: 11 11 11; /* near-black ink */
   --fa-grid-alpha: 0.04;
@@ -46,7 +46,7 @@
   --c-range-ring: 191 224 244;
   --c-subtle-hover: 252 226 226;
 
-  /* Wine / oxblood accent for the star CTA buttons - deliberately deeper than the brand crimson. Defined
+  /* Wine / oxblood accent for the star CTA buttons — deliberately deeper than the brand crimson. Defined
      once (no .dark override): the button keeps its own identity in both themes. */
   --c-wine: 124 29 43;
   --c-wine-bright: 201 58 78;
@@ -93,7 +93,7 @@
     /* Reserve the scrollbar gutter permanently: when navigation (or a market switch on the
        leaderboard) crosses the "content taller than viewport" threshold, the classic Windows
        scrollbar would otherwise appear/disappear and shove the whole centered layout
-       sideways. `overflow-y: scroll` is the reservation that actually holds in Chromium -
+       sideways. `overflow-y: scroll` is the reservation that actually holds in Chromium —
        `scrollbar-gutter: stable` alone is ignored on the root there (verified in-browser);
        overlay-scrollbar platforms take no space either way, so this is a no-op for them. */
     overflow-y: scroll;
@@ -153,16 +153,16 @@
     );
   }
 
-  /* The base surface used across cards - Uniswap: white, large radius, hairline border, flat. */
+  /* The base surface used across cards — Uniswap: white, large radius, hairline border, flat. */
   .card-base {
     @apply rounded-3xl border border-line bg-surface;
   }
 
   /*
-   * Arena "HUD" panel - the reference frame, measured from 1.jpg:
+   * Arena "HUD" panel — the reference frame, measured from 1.jpg:
    *   • An OCTAGON: all four corners chamfered at 45° (~5.2% of panel width).
    *   • INTERLOCKING JOINT TABS: at a fixed height, the edge facing a neighbouring column physically
-   *     STEPS OUT ~9px into the 24px gutter (45° lead-ins, ~110px tall) and back - both neighbours
+   *     STEPS OUT ~9px into the 24px gutter (45° lead-ins, ~110px tall) and back — both neighbours
    *     protrude toward each other, narrowing the gutter to a ~6px channel where a glowing crimson
    *     bar sits. The tab is part of the panel OUTLINE itself (border + fill follow it), NOT an overlay.
    *
@@ -179,7 +179,7 @@
   .hud-panel {
     --hud-cut: clamp(16px, 5.2cqw, 34px);
     --hud-ext: 12px; /* horizontal paint expansion into the gutter */
-    --hud-jt: 190px; /* joint top (fixed px from panel top - columns are top-aligned) */
+    --hud-jt: 190px; /* joint top (fixed px from panel top — columns are top-aligned) */
     --hud-jh: 110px; /* joint height */
     --hud-jl: 11px; /* 45° lead-in */
     --hud-jd: 9px; /* tab depth into the gutter */
@@ -288,7 +288,7 @@
       );
     }
   }
-  /* Accent border (active step / selected) - crimson edge. */
+  /* Accent border (active step / selected) — crimson edge. */
   .hud-panel-accent {
     --hud-border: linear-gradient(180deg, rgb(226 84 88), rgb(150 36 40));
   }
@@ -296,13 +296,13 @@
   .hud-panel-muted {
     --hud-fill: var(--c-surface-muted);
   }
-  /* Smaller chamfer - compact tiles. */
+  /* Smaller chamfer — compact tiles. */
   .hud-panel-sm {
     --hud-cut: 9px;
     --hud-inset: 1.25px;
   }
 
-  /* Small uppercase metadata label (the dt/kicker pattern) - MONO app-wide (the Arena language). */
+  /* Small uppercase metadata label (the dt/kicker pattern) — MONO app-wide (the Arena language). */
   .kicker {
     @apply font-mono text-[11px] font-medium uppercase tracking-[0.07em] text-ink-muted;
   }
@@ -319,7 +319,7 @@
      overflow the button (top:-80%, left:115%, ...); add `star-btn--contain` to a very WIDE button to
      rein the fly-out back in (the offsets are a % of button size, so a wide button otherwise flings the
      outermost stars far across the screen). buttonClass / arenaButtonClass add .star-btn to primary +
-     secondary (identical - the one button); ghost/danger/subtle don't. */
+     secondary (identical — the one button); ghost/danger/subtle don't. */
   .star-btn {
     position: relative;
     cursor: pointer;
@@ -351,8 +351,8 @@
       0 0 0 2px rgb(var(--c-canvas)),
       0 0 0 4px rgb(var(--c-wine-bright));
   }
-  /* The six sparkles - exact positions, sizes and easings from the source. Hidden at REST via
-     visibility:hidden (NOT just z-index behind the fill - that trick fails during entrance / route
+  /* The six sparkles — exact positions, sizes and easings from the source. Hidden at REST via
+     visibility:hidden (NOT just z-index behind the fill — that trick fails during entrance / route
      fades, where an ancestor's opacity makes the button see-through and the stars behind it flash into
      view for ~1s). On hover they become visible, switch in front (z-index 2) and fly outward. */
   .star-btn .star {
@@ -394,7 +394,7 @@
     .star-btn .star { display: none; }
   }
 
-  /* Top-nav "selector" - an octagonal crimson HUD module (the same cut-corner geometry as .hud-panel)
+  /* Top-nav "selector" — an octagonal crimson HUD module (the same cut-corner geometry as .hud-panel)
      that locks onto the active route and slides between them. Its box is measured in NavBar.tsx
      (top/width/height arrive via inline style). The fill is the angular module; drop-shadow gives the
      glow that follows the clip (box-shadow would be cut by it); ::after is the bright bottom accent. */
@@ -450,7 +450,7 @@
     position: relative;
     background: rgb(var(--c-surface) / 0.97);
     backdrop-filter: blur(18px);
-    /* The same octagon cut-corner geometry as the HUD panels + nav selector - angular, not a rounded
+    /* The same octagon cut-corner geometry as the HUD panels + nav selector — angular, not a rounded
        rect. clip-path removes the border, so the hairline edge + the pop are drop-shadows (they follow
        the clip). */
     clip-path: polygon(
@@ -475,7 +475,7 @@
     background: linear-gradient(to right, transparent 12%, rgb(var(--c-brand) / 0.85) 50%, transparent 88%);
   }
 
-  /* Chamfered HUD trigger - the account chip + the icon buttons that open the menus. A REAL clickable
+  /* Chamfered HUD trigger — the account chip + the icon buttons that open the menus. A REAL clickable
      button: an octagon cut-corner shape with a visible 1.25px edge and a raised, lighter-than-the-bar
      fill, drawn as two stacked clipped layers (::before = the edge colour, ::after = the inset fill) so
      the border follows the chamfer cleanly (a plain border/clip leaves gaps at the cuts). The edge flares
@@ -651,7 +651,7 @@
   }
 }
 
-/* Bouncing-dots loader - motion keyframes + scoped classes used by <BouncingLoader>. Three dots bounce
+/* Bouncing-dots loader — motion keyframes + scoped classes used by <BouncingLoader>. Three dots bounce
    while a soft crimson ground-shadow squashes in sync; the crimson reads on the near-black canvas where
    a literal dark shadow would vanish. Markup order is 3 .lf-circle then 3 .lf-shadow, so the nth-child
    rules below seat each shadow under its own dot. (Silhouette adapted from a Uiverse loader by mobinkakei.) */
@@ -757,7 +757,7 @@
   }
 }
 
-/* Sonner toast - align to the Clean Institutional system. We keep sonner's richColors for the
+/* Sonner toast — align to the Clean Institutional system. We keep sonner's richColors for the
    success/error accents but force our surface/ink/line tokens + font-sans so the toast doesn't clash
    with the dashboard. Targets the `.fa-toast` className passed via the Toaster's toastOptions.
    Token-driven so the toast follows the active theme. */
@@ -777,7 +777,7 @@
 
 /* A11y (3c): respect the OS "reduce motion" setting globally. Tailwind's `motion-safe:` variants
    already gate the entrance/fade animations, but several decorative loops (spinner, pulse, shimmer,
-   live-ring) are applied unconditionally - disable all non-essential motion here so the design stays
+   live-ring) are applied unconditionally — disable all non-essential motion here so the design stays
    visually identical but holds still for users who ask for it. */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -790,9 +790,9 @@
   }
 }
 
-/* Pool surface up-scale. The user prefers the page at ~110% browser zoom - bigger, clearer, more
+/* Pool surface up-scale. The user prefers the page at ~110% browser zoom — bigger, clearer, more
    composed. `zoom` reproduces that EXACTLY (re-rasterised, so text stays crisp) and scales every
-   element uniformly - typography, the HUD cards, spacing and controls - without per-utility edits.
+   element uniformly — typography, the HUD cards, spacing and controls — without per-utility edits.
    It is GATED to wide viewports (≥1280px): below that the content would be ~10% wider than the
    viewport and overflow horizontally, so the compact responsive layout is left at 1× and stays intact.
    The max-w-6xl page body (1152px) becomes ~1267px here, which fits any ≥1280px screen. */
@@ -826,7 +826,7 @@
   animation: nav-agent-shine 2.6s linear infinite;
 }
 /* Seamless loop: the travel is EXACTLY one tile width (a 200% position delta at 200%
-   background-size), so the last frame equals the first - constant left-to-right flow,
+   background-size), so the last frame equals the first — constant left-to-right flow,
    no restart hitch. */
 @keyframes nav-agent-shine {
   from { background-position: 200% 0; }
@@ -834,4 +834,97 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-agent-gold { animation: none; background-position: 50% 0; }
+}
+
+/* ── Swap confirmation ──────────────────────────────────────────────────────────────────────
+   When a swap settles the card becomes a receipt rather than opening a modal, so the figure the
+   user was already staring at stays exactly where it was and simply stops being a prediction.
+
+   The celebration is deliberately one thing: a crimson seam that draws itself once across the
+   panel, the same seam that runs under the nav and along the HUD panels. Anything more (drifting
+   tokens, a burst) would compete with the number, and the number IS the good news. */
+@keyframes swap-done-seam {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+@keyframes swap-done-rise {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes swap-done-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes swap-done-halo {
+  from { opacity: 0.55; transform: scale(0.7); }
+  to   { opacity: 0; transform: scale(1.9); }
+}
+
+.swap-done-seam {
+  transform-origin: 50% 50%;
+  background: linear-gradient(to right, transparent, rgb(var(--c-brand) / 0.85) 50%, transparent);
+  box-shadow: 0 0 8px rgb(var(--c-brand) / 0.55);
+  animation: swap-done-seam 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+/* Staggered so the eye lands on the amount first and reads the detail after. */
+.swap-done-rise { animation: swap-done-rise 460ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.swap-done-d1 { animation-delay: 90ms; }
+.swap-done-d2 { animation-delay: 190ms; }
+.swap-done-d3 { animation-delay: 290ms; }
+
+.swap-done-check path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: swap-done-draw 420ms cubic-bezier(0.65, 0, 0.35, 1) 160ms both;
+}
+.swap-done-halo { animation: swap-done-halo 900ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both; }
+
+/* Motion is the flourish here, never the message: with it off, the receipt is simply present. */
+@media (prefers-reduced-motion: reduce) {
+  .swap-done-seam,
+  .swap-done-rise,
+  .swap-done-check path,
+  .swap-done-halo {
+    animation: none;
+  }
+  .swap-done-seam { transform: none; opacity: 1; }
+  .swap-done-rise { opacity: 1; transform: none; }
+  .swap-done-check path { stroke-dashoffset: 0; }
+  .swap-done-halo { display: none; }
+}
+
+/* ── Cyan "CAMPAIGN" nav entry ───────────────────────────────────────────────────────────────
+   Same mechanic as the gold AGENT entry — the gradient IS the text fill, so the glint travels
+   across the letters rather than over them — in a hue that cannot be mistaken for it. Cyan also
+   stays clear of the three side colours (up green, down red, range blue) and of the crimson
+   selector, so nothing on the rail reads as a status it isn't.
+
+   The sweep is deliberately slower than Agent's 2.6s. Two entries shining in lockstep would look
+   like one animation stretched across the nav; at different periods they drift apart and each
+   reads as its own thing. */
+.nav-campaign-cyan {
+  /* Ends match so the tile repeats without a seam. */
+  background: linear-gradient(
+    105deg,
+    #0891b2 0%,
+    #06b6d4 22%,
+    #22d3ee 38%,
+    #cffafe 50%,
+    #22d3ee 62%,
+    #06b6d4 78%,
+    #0891b2 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px rgb(34 211 238 / 0.36));
+  animation: nav-campaign-shine 3.4s linear infinite;
+}
+@keyframes nav-campaign-shine {
+  from { background-position: 200% 0; }
+  to { background-position: 0% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-campaign-cyan { animation: none; background-position: 50% 0; }
 }

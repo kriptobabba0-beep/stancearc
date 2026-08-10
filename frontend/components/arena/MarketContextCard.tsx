@@ -1,6 +1,6 @@
 'use client';
 
-// components/arena/MarketContextCard.tsx - the Arena LEFT column ("Current Round"). A HUD panel with
+// components/arena/MarketContextCard.tsx — the Arena LEFT column ("Current Round"). A HUD panel with
 // the round's schedule/rule rows + the live per-side depth bar. Every value is REAL (derived from the
 // active market's EpochView), so the mockup's "1 day / 12h / 2h TWAP / ±1.5%" become the actual
 // on-chain schedule and band (e.g. 10 min / 5 min / Pyth spot / ±0.20%).
@@ -55,7 +55,7 @@ export function MarketContextCard() {
 
       {/* Rows spread evenly through the stretched middle (no single dead void). Their
           positions stay put across market switches because everything below has CONSTANT
-          height - the status footnote reserves two lines (LivePositionStatus) so a longer
+          height — the status footnote reserves two lines (LivePositionStatus) so a longer
           note can't lift this whole bottom-anchored region. */}
       <div className="mt-2 flex flex-1 flex-col justify-evenly divide-y divide-line">
         <MetaRow icon={<Calendar className="h-4 w-4" />} label="Epoch length" value={formatDuration(epochLength)} />

@@ -1,14 +1,14 @@
 'use client';
 
-// components/EpochProofDetail.tsx - the provably-fair reconstruction of one settled epoch. Everything
+// components/EpochProofDetail.tsx — the provably-fair reconstruction of one settled epoch. Everything
 // shown here is derived ONLY from on-chain events (+ the band read from the epoch struct), so a user
 // can VERIFY the settlement was honest end-to-end:
-//   1. ORACLE MOVE   - start price → settle price (from EpochStarted / EpochResolved), the signed Δbps,
+//   1. ORACLE MOVE   — start price → settle price (from EpochStarted / EpochResolved), the signed Δbps,
 //                      and the band. We RE-APPLY the rule (deriveWinningSide) and badge whether the
 //                      reconstructed winner matches the event's reported winner.
-//   2. PROVENANCE    - the Pyth feed id (immutable, from market config) + the latest on-chain publish
+//   2. PROVENANCE    — the Pyth feed id (immutable, from market config) + the latest on-chain publish
 //                      time + confidence interval, so the price source is auditable.
-//   3. POT SPLIT     - per-position owner / side / contribution6 / floor payout, summing to the pot.
+//   3. POT SPLIT     — per-position owner / side / contribution6 / floor payout, summing to the pot.
 import Link from 'next/link';
 import { buttonClass } from '@/components/ui/Button';
 import { Stars } from '@/components/ui/Stars';
@@ -89,7 +89,7 @@ function PotSplitRow({ pos, baseSymbol }: { pos: ProofPosition; baseSymbol: stri
         {pos.isWinner ? (
           <Badge tone="success">won</Badge>
         ) : (
-          <span className="text-xs text-ink-faint">-</span>
+          <span className="text-xs text-ink-faint">—</span>
         )}
       </td>
       <td className="py-2.5 text-right font-mono text-xs tnum text-ink">
@@ -144,7 +144,7 @@ export function EpochProofDetail({ epochId }: { epochId: bigint }) {
   const winningLabel =
     proof.winningSide !== Side.NONE ? SIDE_LABELS[proof.winningSide] : SIDE_LABELS[Side.RANGE];
   const headline = proof.rolledOver
-    ? 'Pot rolled forward - no winner'
+    ? 'Pot rolled forward — no winner'
     : proof.settled
       ? `${winningLabel} won`
       : 'Epoch in progress';
@@ -178,12 +178,12 @@ export function EpochProofDetail({ epochId }: { epochId: bigint }) {
           <Stat label="Start price" value={formatPrice18(proof.startPrice18)} sub={formatUnixTime(proof.startTimeActual)} />
           <Stat
             label="Settle price"
-            value={proof.settlePrice18 !== undefined ? formatPrice18(proof.settlePrice18) : '-'}
+            value={proof.settlePrice18 !== undefined ? formatPrice18(proof.settlePrice18) : '—'}
             sub={formatUnixTime(proof.settleTimeActual)}
           />
           <Stat
             label="Δ vs band"
-            value={proof.deltaBps !== undefined ? formatDeltaBps(proof.deltaBps) : '-'}
+            value={proof.deltaBps !== undefined ? formatDeltaBps(proof.deltaBps) : '—'}
             sub={`band ±${formatBps(proof.bandBps)}`}
           />
         </div>
@@ -191,10 +191,10 @@ export function EpochProofDetail({ epochId }: { epochId: bigint }) {
         <div className="mt-4 rounded-xl border border-line bg-surface-muted px-4 py-3">
           <dl>
             <DataRow label="Reported winner (event)">
-              {proof.winningSide !== Side.NONE ? <SideBadge side={proof.winningSide} /> : '-'}
+              {proof.winningSide !== Side.NONE ? <SideBadge side={proof.winningSide} /> : '—'}
             </DataRow>
             <DataRow label="Reconstructed winner (Δ vs band)">
-              {proof.derivedWinningSide !== undefined ? <SideBadge side={proof.derivedWinningSide} /> : '-'}
+              {proof.derivedWinningSide !== undefined ? <SideBadge side={proof.derivedWinningSide} /> : '—'}
             </DataRow>
             <DataRow label="Match">
               <VerificationBadge proof={proof} />
@@ -214,13 +214,13 @@ export function EpochProofDetail({ epochId }: { epochId: bigint }) {
             <span className="break-all text-xs">{feedId}</span>
           </DataRow>
           <DataRow label="Latest on-chain price">
-            {provenance ? formatPythPrice(provenance.price, provenance.expo) : '-'}
+            {provenance ? formatPythPrice(provenance.price, provenance.expo) : '—'}
           </DataRow>
           <DataRow label="Confidence (±)">
-            {provenance ? formatPythPrice(provenance.conf, provenance.expo) : '-'}
+            {provenance ? formatPythPrice(provenance.conf, provenance.expo) : '—'}
           </DataRow>
           <DataRow label="Last publish time">
-            {provenance ? formatUnixTime(provenance.publishTime) : '-'}
+            {provenance ? formatUnixTime(provenance.publishTime) : '—'}
           </DataRow>
         </dl>
         <p className="mt-3 text-xs text-ink-muted">
@@ -242,7 +242,7 @@ export function EpochProofDetail({ epochId }: { epochId: bigint }) {
         }
       >
         {!proof.settled ? (
-          <p className="text-sm text-ink-muted">This epoch hasn’t settled yet - no split to show.</p>
+          <p className="text-sm text-ink-muted">This epoch hasn’t settled yet — no split to show.</p>
         ) : proof.positions.length === 0 ? (
           <p className="text-sm text-ink-muted">No staked positions were recorded for this epoch.</p>
         ) : (
@@ -251,12 +251,12 @@ export function EpochProofDetail({ epochId }: { epochId: bigint }) {
               <Stat
                 label="Pot (base)"
                 value={<BaseAmount value={proof.potBase} />}
-                sub="forfeited fees - base leg"
+                sub="forfeited fees — base leg"
               />
               <Stat
                 label="Pot (USDC)"
                 value={<MoneyAmount value={proof.potUSDC} token="USDC" />}
-                sub="forfeited fees - USDC leg"
+                sub="forfeited fees — USDC leg"
               />
             </div>
             <div className="-mx-1 overflow-x-auto">
@@ -279,7 +279,7 @@ export function EpochProofDetail({ epochId }: { epochId: bigint }) {
               </table>
             </div>
             <p className="mt-3 text-xs text-ink-muted">
-              Each winner’s payout = pot × (their contribution ÷ winner denominator), floored - summing
+              Each winner’s payout = pot × (their contribution ÷ winner denominator), floored — summing
               to the pot. Winner denominator: <span className="font-mono">{proof.winnerDenominator.toString()}</span>.
             </p>
           </>

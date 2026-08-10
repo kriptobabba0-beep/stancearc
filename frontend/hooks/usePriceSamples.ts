@@ -1,14 +1,14 @@
 'use client';
 
-// hooks/usePriceSamples.ts - the live "pulse" feed for the Arena price chart. A fixed-interval (1s)
+// hooks/usePriceSamples.ts — the live "pulse" feed for the Arena price chart. A fixed-interval (1s)
 // ring buffer of the oracle price, built for a FLUID always-moving chart (the user's reference is
 // xo.market's pulse ticker):
 //   • INSTANT render: the very first oracle read seeds the whole buffer flat at that price, so the
 //     chart appears immediately (no "collecting…" wait for N distinct reads).
-//   • 1s tick: every second a new point is appended and the window slides - the line always moves.
+//   • 1s tick: every second a new point is appended and the window slides — the line always moves.
 //   • EASING: the on-chain oracle refreshes ~every 5s in steps; each tick moves the plotted value a
 //     fraction toward the latest read, so steps render as smooth glides instead of jumps. Display
-//     only - every value converges to genuine oracle reads, nothing is invented beyond interpolation.
+//     only — every value converges to genuine oracle reads, nothing is invented beyond interpolation.
 import { useEffect, useRef, useState } from 'react';
 import { useOraclePrice } from '@/hooks/useOraclePrice';
 import { useActiveMarket } from '@/components/MarketProvider';
@@ -18,7 +18,7 @@ export function usePriceSamples(max = 90): number[] {
   const { data } = useOraclePrice();
   // Each market's oracle chart is INDEPENDENT. Without keying on the active market, switching tabs
   // would ease the existing buffer (the old market's prices, e.g. cirBTC/USDC ~$63k) toward the new
-  // market's price (cirBTC/EURC ~€55k) - rendering a phantom rise/drop between unrelated markets.
+  // market's price (cirBTC/EURC ~€55k) — rendering a phantom rise/drop between unrelated markets.
   const marketId = useActiveMarket().id;
   const [samples, setSamples] = useState<number[]>([]);
   const targetRef = useRef<number | undefined>(undefined);

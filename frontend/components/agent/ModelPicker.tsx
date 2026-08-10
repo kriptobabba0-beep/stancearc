@@ -1,8 +1,8 @@
 'use client';
 
-// components/agent/ModelPicker.tsx - the copilot's model selector, in the user's terms.
+// components/agent/ModelPicker.tsx — the copilot's model selector, in the user's terms.
 //
-// Each row answers the only questions a user has: how good, how fast - two dot scales and
+// Each row answers the only questions a user has: how good, how fast — two dot scales and
 // a plain tagline. What a message COSTS them is the flat platform price (or free), shown
 // once in the footer, because model choice never changes their bill. Unknown-but-allowed
 // model ids stay listable with no dots. The trigger keeps the agent-model testid.
@@ -14,8 +14,8 @@ interface ModelMeta {
   label: string;
   /** What picking this model means for the user, in plain words. */
   tagline: string;
-  qualityDots: number; // 1..5 - higher = smarter answers
-  speedDots: number; // 1..5 - higher = faster replies
+  qualityDots: number; // 1..5 — higher = smarter answers
+  speedDots: number; // 1..5 — higher = faster replies
 }
 
 const MODEL_META: Record<string, ModelMeta> = {
@@ -59,7 +59,7 @@ export function ModelPicker({
 }) {
   const [open, setOpen] = useState(false);
   // The trigger lives inside a clip-path'd hud-panel, which would clip an in-place
-  // dropdown - so the menu renders in a body portal at a fixed position instead.
+  // dropdown — so the menu renders in a body portal at a fixed position instead.
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLUListElement>(null);
@@ -165,7 +165,7 @@ export function ModelPicker({
           })}
           {priceLabel && (
             <li className="mt-1 border-t border-line px-3 py-2.5 font-mono text-[10.5px] text-ink-muted" aria-hidden="true">
-              You pay {priceLabel} - same for every model.
+              You pay {priceLabel} — same for every model.
             </li>
           )}
         </ul>,

@@ -1,6 +1,6 @@
 'use client';
 
-// components/landing/Ticker.tsx - the landing's "the chain is already running" strip: a seamless
+// components/landing/Ticker.tsx — the landing's "the chain is already running" strip: a seamless
 // marquee of REAL FeeArena events (stakes, claims, settlements) from the live activity feed. The
 // track holds two copies of the items and slides −50% (CSS .landing-marquee); hovering pauses it.
 // With no events yet this session, an honest static line renders instead of fabricated activity.
@@ -17,7 +17,7 @@ function short(addr: unknown): string {
 
 function sideLabel(raw: unknown): string {
   const n = Number(raw);
-  return SIDE_LABELS[(Number.isFinite(n) ? n : Side.NONE) as Side] ?? '-';
+  return SIDE_LABELS[(Number.isFinite(n) ? n : Side.NONE) as Side] ?? '—';
 }
 
 /** One feed log → a ticker line + a tone for its leading dot. */
@@ -37,7 +37,7 @@ function lineFor(eventName: string, args: Record<string, unknown>): { text: stri
       return { text: `epoch #${String(args.epochId ?? '?')} started`, tone: 'bg-ink-faint' };
     case 'EpochResolved':
       return {
-        text: `epoch #${String(args.epochId ?? '?')} resolved - ${sideLabel(args.winningSide)} wins`,
+        text: `epoch #${String(args.epochId ?? '?')} resolved — ${sideLabel(args.winningSide)} wins`,
         tone: 'bg-side-up',
       };
     case 'EmptyWinnerRollover':
@@ -66,7 +66,7 @@ export function Ticker() {
         <div className="relative min-w-0 flex-1 overflow-hidden" aria-hidden={items.length === 0 ? undefined : 'false'}>
           {items.length === 0 ? (
             <p className="truncate font-mono text-[12px] text-ink-muted">
-              Watching the chain - recent stakes, claims and settlements stream here.
+              Watching the chain — recent stakes, claims and settlements stream here.
             </p>
           ) : (
             <div className="landing-marquee">

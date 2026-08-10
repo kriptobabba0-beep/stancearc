@@ -1,9 +1,9 @@
-// hooks/useStakeWithSide.ts - version-aware stake.
-//   - v1: atomic NPM.safeTransferFrom(user, feeArena, tokenId, encodedSide) - the receiver hook records.
+// hooks/useStakeWithSide.ts — version-aware stake.
+//   - v1: atomic NPM.safeTransferFrom(user, feeArena, tokenId, encodedSide) — the receiver hook records.
 //   - v3 (ENTRY-ANCHORED): approve-if-needed -> payable feeArena.stakeWithSide(tokenId, side,
 //     expectedEntryPrice18, maxDeviationBps, hermesBlob){value: pythFee}. The blob and the expected
 //     price come from the SAME Hermes update, so the contract anchors the position at (or within
-//     maxDeviationBps of) exactly the price the user confirmed - or reverts, never mis-anchors.
+//     maxDeviationBps of) exactly the price the user confirmed — or reverts, never mis-anchors.
 // Mandatory simulateContract preflight; Side.NONE rejected client-side; optimistic poll bump on submit.
 import { useCallback, useState } from 'react';
 import type { Abi } from 'viem';
@@ -62,8 +62,8 @@ export function useStakeWithSide() {
     isSuccess,
     isError: isReceiptError,
     labels: {
-      success: 'Staked - your position is in the arena',
-      reverted: 'Stake reverted - your position is not staked',
+      success: 'Staked — your position is in the arena',
+      reverted: 'Stake reverted — your position is not staked',
       error: 'Could not confirm the stake',
     },
   });
@@ -93,7 +93,7 @@ export function useStakeWithSide() {
           })) as bigint;
           // 3) The arena PULLS the NFT inside stakeWithSide (NPM.safeTransferFrom(user -> arena)),
           // so the arena must be an approved operator first, else the pull reverts "ERC721: transfer
-          // caller is not owner nor approved". Use setApprovalForAll (operator approval) - it persists
+          // caller is not owner nor approved". Use setApprovalForAll (operator approval) — it persists
           // across stakes, whereas per-token approve() is cleared the moment the NFT enters escrow.
           const approvedForAll = (await publicClient.readContract({
             address: npm.address,
@@ -128,7 +128,7 @@ export function useStakeWithSide() {
           const tx = await writeContractAsync(
             withGasFloor(request) as Parameters<typeof writeContractAsync>[0],
           );
-          toast.loading(`Staking ${sideLabel(side)} - anchoring your entry price`, {
+          toast.loading(`Staking ${sideLabel(side)} — anchoring your entry price`, {
             id: TOAST_ID,
             description: arcScanTxUrl(tx),
           });
@@ -139,7 +139,7 @@ export function useStakeWithSide() {
 
         // ── v1 stake: atomic safeTransferFrom with the side payload ─────────────────
         const data = encodeSide(side);
-        // MANDATORY preflight - catches closed-window / bad-encoding / wrong-pool before signing.
+        // MANDATORY preflight — catches closed-window / bad-encoding / wrong-pool before signing.
         const { request } = await publicClient.simulateContract({
           account: address,
           address: npm.address,

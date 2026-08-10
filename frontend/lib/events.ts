@@ -1,4 +1,4 @@
-// lib/events.ts - watchContractEvent wrapper: onError re-subscribe + getLogs fallback + (blockNumber,logIndex) dedupe.
+// lib/events.ts — watchContractEvent wrapper: onError re-subscribe + getLogs fallback + (blockNumber,logIndex) dedupe.
 // OPTIMIZATION ONLY. UI state derives from polled reads; correctness must survive every event being dropped.
 import type { PublicClient, Abi, AbiEvent, Log, GetLogsReturnType } from 'viem';
 import { getPublicClient } from 'wagmi/actions';
@@ -155,7 +155,7 @@ export const CHUNK_CONCURRENCY = 5;
  * large ranges (e.g. when `fromBlock` defaults to 0 on a market with many historical blocks).
  * Per-market `fromBlock` in NEXT_PUBLIC_MARKETS config is strongly recommended to keep the range
  * small (see .env.example); NEXT_PUBLIC_FEE_ARENA_FROM_BLOCK does NOT apply when
- * NEXT_PUBLIC_MARKETS is set - each market entry must carry its own `fromBlock`.
+ * NEXT_PUBLIC_MARKETS is set — each market entry must carry its own `fromBlock`.
  */
 export async function getEventLogsChunked<TEvent extends AbiEvent>(
   client: PublicClient,
@@ -168,7 +168,7 @@ export async function getEventLogsChunked<TEvent extends AbiEvent>(
     concurrency?: number;
     /**
      * Optional INDEXED-arg filter (e.g. `{ owner: '0x…' }`). When set, the RPC bloom-filters each
-     * window to matching logs only - so a per-user query returns a handful of logs instead of every
+     * window to matching logs only — so a per-user query returns a handful of logs instead of every
      * position's, and skips blocks without the topic. Forwarded verbatim to getLogs.
      */
     eventArgs?: Record<string, unknown>;

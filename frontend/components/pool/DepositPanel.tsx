@@ -1,6 +1,6 @@
 'use client';
 
-// components/pool/DepositPanel.tsx - the "Add deposit amount" module (reference image #3, right card).
+// components/pool/DepositPanel.tsx — the "Add deposit amount" module (reference image #3, right card).
 // Two linked token rows (last-edited drives, the other is the bigint-exact counterpart), 50% / Max
 // shortcuts, a USD split bar, the total, and the approve→provide CTA. All mechanics come from
 // useLiquidityDeposit; the RANGE is owned by the page (chart handles + presets) and passed to the hook.
@@ -131,7 +131,7 @@ export function DepositPanel({ pool, deposit }: { pool: PoolInfo; deposit: Liqui
     <div data-testid="deposit-panel">
       <h3 className="mb-3 font-display text-[15px] font-semibold text-ink">Add deposit amount</h3>
 
-      {/* Faucet hint - base is a real Circle token (no wrap/public mint). */}
+      {/* Faucet hint — base is a real Circle token (no wrap/public mint). */}
       {deposit.isConnected && deposit.baseLow && (
         <a
           href={FAUCET_URL}
@@ -211,7 +211,7 @@ export function DepositPanel({ pool, deposit }: { pool: PoolInfo; deposit: Liqui
         >
           <Alert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>
-            Price is outside this range - you’ll deposit only{' '}
+            Price is outside this range — you’ll deposit only{' '}
             {deposit.baseActive ? pool.base.symbol : pool.quote.symbol} and earn no fees until price
             re-enters the band.
           </span>

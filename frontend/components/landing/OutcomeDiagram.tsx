@@ -1,11 +1,11 @@
 'use client';
 
-// components/landing/OutcomeDiagram.tsx - the hero's centerpiece (mockup 7.png): the live market as
+// components/landing/OutcomeDiagram.tsx — the hero's centerpiece (mockup 7.png): the live market as
 // a circuit. One input line feeds a circular PRICE NODE (pair · live oracle price · LIVE dot), which
 // branches along three animated connectors to the three outcomes:
-//   ↗ UP    - settles higher than the band top
-//   ∿ RANGE - settles inside the ±band
-//   ↘ DOWN  - settles lower than the band bottom
+//   ↗ UP    — settles higher than the band top
+//   ∿ RANGE — settles inside the ±band
+//   ↘ DOWN  — settles lower than the band bottom
 // Every number is real: the node shows the live Pyth price; the outcome thresholds are the actual
 // settlement band (epoch start price ± bandBps once the round is running, else around the live price).
 // Connectors are an absolutely-positioned SVG underlay (percent coordinates + non-scaling strokes) so
@@ -73,7 +73,7 @@ export function OutcomeDiagram({
   return (
     <div className="landing-float relative">
       <div className="relative flex items-center gap-6 sm:gap-10">
-        {/* Connector underlay - input line into the node + three branches out to the chips. */}
+        {/* Connector underlay — input line into the node + three branches out to the chips. */}
         <svg
           aria-hidden="true"
           viewBox="0 0 100 100"
@@ -153,7 +153,7 @@ export function OutcomeDiagram({
           <OutcomeChip
             icon={<WaveRange className="h-5 w-5" />}
             name="RANGE"
-            detail={`Between ${fmt(downAt)} - ${fmt(upAt)}`}
+            detail={`Between ${fmt(downAt)} – ${fmt(upAt)}`}
             colorClass="text-ink-soft"
             hex={RANGE_HEX}
           />

@@ -1,4 +1,4 @@
-// lib/contracts.ts - typed contract handles (address + abi).
+// lib/contracts.ts — typed contract handles (address + abi).
 //
 // TWO tiers:
 //  1. SHARED INFRA (global, one per chain): USDC, router, NPM, factory, multicall, Pyth contract.
@@ -21,7 +21,7 @@ export const npm = { address: ENV.NPM_ADDRESS, abi: nonfungiblePositionManagerAb
 export const swapRouter = { address: ENV.SWAP_ROUTER_ADDRESS, abi: swapRouterAbi } as const;
 export const factory = { address: ENV.FACTORY_ADDRESS, abi: uniswapV3FactoryAbi } as const;
 export const usdc = { address: ENV.USDC_ADDRESS, abi: erc20Abi } as const; // ERC-20 USDC (6dp)
-export const eurc = { address: ENV.EURC_ADDRESS, abi: erc20Abi } as const; // Circle EURC (6dp) - euro stablecoin on Arc
+export const eurc = { address: ENV.EURC_ADDRESS, abi: erc20Abi } as const; // Circle EURC (6dp) — euro stablecoin on Arc
 export const weth = { address: ENV.WETH_ADDRESS, abi: erc20Abi } as const; // WETH9 test token (18dp)
 export const positionNft = { address: ENV.NPM_ADDRESS, abi: erc721Abi } as const;
 
@@ -32,7 +32,7 @@ export const npmContract = npm;
 
 // ── Per-market contract config ─────────────────────────────────────────────────
 
-/** The arena ABI a market binds to - v2 -> FeeArenaV2, v3 -> FeeArenaV3 (entry-anchored), else v1. */
+/** The arena ABI a market binds to — v2 -> FeeArenaV2, v3 -> FeeArenaV3 (entry-anchored), else v1. */
 export type FeeArenaAbi = typeof feeArenaAbi | typeof feeArenaV2Abi | typeof feeArenaV3Abi;
 
 export interface MarketContracts {
@@ -44,13 +44,13 @@ export interface MarketContracts {
   oracle: { address: `0x${string}`; abi: typeof mockPriceOracleAbi };
   pool: { address: `0x${string}`; abi: typeof uniswapV3PoolAbi };
   /**
-   * The FeeArenaV2Lens (read/preview surface). Present ONLY for v2 markets - the frontend reads
+   * The FeeArenaV2Lens (read/preview surface). Present ONLY for v2 markets — the frontend reads
    * previewClaim / previewRefund / getStake / getStakesByEpoch from here, not from the arena.
    */
   lens?: { address: `0x${string}`; abi: typeof feeArenaV2LensAbi };
 }
 
-/** Build the FeeArena/oracle/pool (+ v2 Lens) handles for a market (pure - used by hooks + non-React code). */
+/** Build the FeeArena/oracle/pool (+ v2 Lens) handles for a market (pure — used by hooks + non-React code). */
 export function marketContracts(market: Market): MarketContracts {
   const v2 = isV2Market(market);
   const v3 = isV3Market(market);
@@ -70,7 +70,7 @@ export function useMarketContracts(): MarketContracts {
 
 /**
  * The STAKE/PREVIEW read surface for a market. v2 moved getStake / getStakesByEpoch / previewClaim /
- * previewRefund OFF the arena and onto the FeeArenaV2Lens - the arena has none of them. v1 keeps them
+ * previewRefund OFF the arena and onto the FeeArenaV2Lens — the arena has none of them. v1 keeps them
  * on the arena. So hooks that read stakes/previews must target THIS handle, not `feeArena`:
  *   - v2  -> the Lens (feeArenaV2LensAbi @ market.lens)
  *   - v1  -> the arena (feeArenaAbi @ market.feeArena)
@@ -87,7 +87,7 @@ export function readSurface(contracts: MarketContracts): ReadSurface {
   if (contracts.lens) return contracts.lens; // v2: previews/stake listings live on the Lens
   // v1/v3: the arena carries getStake(sByEpoch)/previewClaim/getUserStakes itself. The arena `abi`
   // is the v1|v2|v3 union; for a non-v2 market it is concretely the v1 or v3 ABI, both of which are
-  // ReadSurface members - cast through unknown since a union value isn't structurally a union type.
+  // ReadSurface members — cast through unknown since a union value isn't structurally a union type.
   return contracts.feeArena as unknown as ReadSurface;
 }
 

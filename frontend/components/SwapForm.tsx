@@ -1,9 +1,9 @@
 'use client';
 
-// components/SwapForm.tsx - a Uniswap-style SINGLE swap card across the whole token set (cirBTC / USDC /
+// components/SwapForm.tsx — a Uniswap-style SINGLE swap card across the whole token set (cirBTC / USDC /
 // EURC). The user picks the "You pay" and "You receive" tokens from a selector; the card resolves the
 // direct V3 pool for that pair (lib/pools), quotes client-side from the pool's slot0 + liquidity, and
-// swaps via the shared SwapRouter (useSwap is pool-agnostic - it routes by tokenIn/tokenOut/fee). All
+// swaps via the shared SwapRouter (useSwap is pool-agnostic — it routes by tokenIn/tokenOut/fee). All
 // three pairs (cirBTC/USDC, EURC/USDC, cirBTC/EURC) are tradeable, so e.g. cirBTC⇄EURC works directly.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAccount, useReadContract } from 'wagmi';
@@ -16,16 +16,25 @@ import { buttonClass } from '@/components/ui/Button';
 import { Stars } from '@/components/ui/Stars';
 import { ArrowDown, ChevronDown, Settings, Alert, Check } from '@/components/ui/icons';
 import { TokenGlyph } from '@/components/TokenGlyph';
+import { SwapCompleted } from '@/components/swap/SwapCompleted';
 import { formatBase, formatBps } from '@/lib/format';
+import { arcScanTxUrl } from '@/lib/toast';
 import { quoteExactInputSingle } from '@/lib/swapQuote';
+import { useExactQuote } from '@/hooks/useExactQuote';
+import { autoSlippageBps } from '@/lib/autoSlippage';
 import { cn } from '@/lib/cn';
 import { TOKENS, type TokenInfo } from '@/lib/tokens';
 import { findPool, type PoolInfo } from '@/lib/pools';
 
-const HIGH_IMPACT_BPS = 300; // ~3% - amber warning
-const MAX_IMPACT_BPS = 2500; // 25% - HARD cap: block a swap that would run the thin pool off its peg
+const HIGH_IMPACT_BPS = 300; // ~3% — amber warning
+const MAX_IMPACT_BPS = 2500; // 25% — HARD cap: block a swap that would run the thin pool off its peg
 const SLIPPAGE_PRESETS_BPS = [50, 100, 300] as const;
 const DEFAULT_SLIPPAGE_BPS = 100;
+/** Bounds for a typed slippage. Below 1bp no swap can fill; above 50% the quote stops meaning much. */
+const MIN_SLIPPAGE_BPS = 1;
+const MAX_SLIPPAGE_BPS = 5_000;
+/** Past this, say plainly what the number is buying: a fill at a much worse price. */
+const HIGH_SLIPPAGE_BPS = 500;
 
 function parseAmount(s: string, decimals: number): bigint {
   try {
@@ -142,7 +151,37 @@ export function SwapForm() {
   const [tokenIn, setTokenIn] = useState<TokenInfo>(TOKENS[0]);
   const [tokenOut, setTokenOut] = useState<TokenInfo>(TOKENS[1]);
   const [amountInput, setAmountInput] = useState('');
+  // Auto is the default: it reads the quote's own quality and widens only when it has to.
+  const [slippageMode, setSlippageMode] = useState<'auto' | 'manual'>('auto');
   const [slippageBps, setSlippageBps] = useState<number>(DEFAULT_SLIPPAGE_BPS);
+  const [impactAccepted, setImpactAccepted] = useState(false);
+  const [customSlippage, setCustomSlippage] = useState('');
+  const [customSlippageError, setCustomSlippageError] = useState<string | null>(null);
+
+  // A typed percent only takes effect once it is a number inside the allowed band. Anything else
+  // leaves the last good slippage in place, so a half-typed value can never quietly widen or
+  // tighten the trade the user is about to sign.
+  const applyCustomSlippage = (raw: string) => {
+    const cleaned = raw.replace(',', '.');
+    setCustomSlippage(cleaned);
+    if (cleaned.trim() === '') {
+      setCustomSlippageError(null);
+      setSlippageBps(DEFAULT_SLIPPAGE_BPS);
+      return;
+    }
+    const pct = Number(cleaned);
+    if (!Number.isFinite(pct) || pct <= 0) {
+      setCustomSlippageError('Enter a percentage, for example 2.5');
+      return;
+    }
+    const bps = Math.round(pct * 100);
+    if (bps < MIN_SLIPPAGE_BPS || bps > MAX_SLIPPAGE_BPS) {
+      setCustomSlippageError(`Use ${formatBps(MIN_SLIPPAGE_BPS)} to ${formatBps(MAX_SLIPPAGE_BPS)}`);
+      return;
+    }
+    setCustomSlippageError(null);
+    setSlippageBps(bps);
+  };
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
@@ -241,26 +280,55 @@ export function SwapForm() {
     return quoteExactInputSingle({ amountIn, zeroForOne, sqrtPriceX96, liquidity, feePips: pool.feeTier });
   }, [amountIn, zeroForOne, sqrtPriceX96, liquidity, pool]);
 
-  const amountOut = quote?.amountOut ?? 0n;
-  const priceImpactBps = quote?.priceImpactBps ?? 0;
-  const amountOutMinimum = applySlippage(amountOut, slippageBps);
-  const highImpact = priceImpactBps > HIGH_IMPACT_BPS;
-  // Hard cap: refuse a swap whose price impact would shove the (thin) pool far off its peg. The arb +
-  // swap bot keep the peg, but a single huge swap can outrun them - block it instead of breaking the pool.
-  const impactTooHigh = priceImpactBps > MAX_IMPACT_BPS;
+  // The pool's own answer when it can give one; the local estimate only as a fallback. The estimate
+  // assumes constant liquidity, which a narrow-range pool breaks, and that gap is what produced
+  // "Too little received" on swaps the user could afford.
+  const exactQuote = useExactQuote({
+    tokenIn: tokenIn.address,
+    tokenOut: tokenOut.address,
+    amountIn,
+    feeTier: pool?.feeTier,
+    sqrtPriceX96,
+    fallback: { amountOut: quote?.amountOut ?? 0n, priceImpactBps: quote?.priceImpactBps ?? 0 },
+  });
 
-  const { swap, isPending, isApproving, error } = useSwap();
+  const amountOut = exactQuote.amountOut;
+  const priceImpactBps = exactQuote.priceImpactBps;
+  const autoBps = autoSlippageBps({ priceImpactBps, exact: exactQuote.exact });
+  const effectiveSlippageBps = slippageMode === 'auto' ? autoBps : slippageBps;
+  const amountOutMinimum = applySlippage(amountOut, effectiveSlippageBps);
+  const highImpact = priceImpactBps > HIGH_IMPACT_BPS;
+  // A trade this size moves the pool a long way. It is no longer refused outright: on a thin pool
+  // that just meant the swap was impossible. The user is told the number and asked to confirm it.
+  const impactNeedsConsent = priceImpactBps > MAX_IMPACT_BPS;
+
+  const { swap, isPending, isApproving, error, result, reset } = useSwap();
 
   const hasLiquidity = liquidity > 0n;
-  // Only "insufficient" once the balance has actually loaded - a mid-refetch undefined read (which
+  // Only "insufficient" once the balance has actually loaded — a mid-refetch undefined read (which
   // defaults fromBalance to 0n) must NOT count, or it flashes a false warning during the swap.
   const insufficientBalance = inBalRaw !== undefined && amountIn > fromBalance;
   const amountEntered = amountIn > 0n;
   const hasQuote = amountOut > 0n;
   const canSwap =
-    isConnected && !!pool && hasLiquidity && amountEntered && !insufficientBalance && hasQuote && !impactTooHigh && !isPending;
+    isConnected && !!pool && hasLiquidity && amountEntered && !insufficientBalance && hasQuote && (!impactNeedsConsent || impactAccepted) && !isPending;
+
+  // A new amount or pair is a different trade; a tick left over from the previous one would be
+  // consent the user never gave.
+  useEffect(() => setImpactAccepted(false), [amountInput, tokenIn.address, tokenOut.address]);
 
   const onMax = () => setAmountInput(formatBase(fromBalance, tokenIn.decimals));
+  // The confirmation restates the trade FROM THE RESULT, not from the form's current selection:
+  // the two are the same right now, but reading the settled trade off the thing that settled is
+  // the version that cannot drift.
+  const doneTokenIn = result ? TOKENS.find((t) => sameAddr(t.address, result.tokenIn)) : undefined;
+  const doneTokenOut = result ? TOKENS.find((t) => sameAddr(t.address, result.tokenOut)) : undefined;
+  const showCompleted = !!result && !!doneTokenIn && !!doneTokenOut;
+  const onDone = () => {
+    reset();
+    setAmountInput('');
+    setImpactAccepted(false);
+  };
   const onSwap = () => {
     if (!canSwap) return;
     void swap({ tokenIn: tokenIn.address, tokenOut: tokenOut.address, amountIn, amountOutMinimum });
@@ -285,8 +353,8 @@ export function SwapForm() {
   } else if (!hasLiquidity) {
     submitLabel = 'No liquidity';
     ctaVariant = 'subtle';
-  } else if (impactTooHigh) {
-    submitLabel = 'Price impact too high';
+  } else if (impactNeedsConsent && !impactAccepted) {
+    submitLabel = 'Confirm the price impact';
     ctaVariant = 'subtle';
   } else submitLabel = 'Swap';
 
@@ -305,7 +373,9 @@ export function SwapForm() {
           >
             Swap
           </span>
-          <div ref={settingsRef} className="relative">
+          {/* Nothing to configure on a settled trade, so the control that configures the next one
+              is not offered here. */}
+          <div ref={settingsRef} className={cn('relative', showCompleted && 'hidden')}>
             <button
               type="button"
               data-testid="swap-settings-toggle"
@@ -329,19 +399,47 @@ export function SwapForm() {
               >
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-sm font-medium text-ink">Max slippage</span>
-                  <span className="text-sm font-mono text-ink-muted">{formatBps(slippageBps)}</span>
+                    <span className="text-sm font-mono text-ink-muted" data-testid="swap-slippage-value">
+                    {slippageMode !== 'auto'
+                      ? formatBps(slippageBps)
+                      : hasQuote
+                        ? `Auto · ${formatBps(autoBps)}`
+                        : 'Auto'}
+                  </span>
                 </div>
                 <div className="flex gap-1.5" data-testid="swap-slippage">
+                  <button
+                    type="button"
+                    data-testid="swap-slippage-auto"
+                    aria-pressed={slippageMode === 'auto'}
+                    onClick={() => {
+                      setSlippageMode('auto');
+                      setCustomSlippage('');
+                      setCustomSlippageError(null);
+                    }}
+                    className={cn(
+                      'flex-1 rounded-xl border px-2.5 py-1.5 text-[13px] font-medium transition-colors',
+                      slippageMode === 'auto'
+                        ? 'border-brand bg-brand-soft text-brand'
+                        : 'border-line bg-surface text-ink-soft hover:border-line-strong',
+                    )}
+                  >
+                    Auto
+                  </button>
                   {SLIPPAGE_PRESETS_BPS.map((bps) => (
                     <button
                       key={bps}
                       type="button"
                       data-testid={`swap-slippage-${bps}`}
-                      aria-pressed={slippageBps === bps}
-                      onClick={() => setSlippageBps(bps)}
+                      aria-pressed={slippageMode === 'manual' && slippageBps === bps && customSlippage === ''}
+                      onClick={() => {
+                        setSlippageMode('manual');
+                        setSlippageBps(bps);
+                        setCustomSlippage('');
+                      }}
                       className={cn(
                         'flex-1 rounded-xl border px-2.5 py-1.5 text-[13px] font-medium transition-colors',
-                        slippageBps === bps
+                        slippageMode === 'manual' && slippageBps === bps && customSlippage === ''
                           ? 'border-brand bg-brand-soft text-brand'
                           : 'border-line bg-surface text-ink-soft hover:border-line-strong',
                       )}
@@ -350,11 +448,58 @@ export function SwapForm() {
                     </button>
                   ))}
                 </div>
+
+                {/* Typed slippage. The presets cover normal days; a thin or drifting pool needs a
+                    number the presets don't have, and the alternative is a swap that just reverts. */}
+                <label className="mt-2 flex items-center gap-2">
+                  <span className="sr-only">Custom slippage percent</span>
+                  <div
+                    className={cn(
+                      'flex flex-1 items-center rounded-xl border px-2.5 py-1.5 transition-colors',
+                      customSlippage !== ''
+                        ? 'border-brand bg-brand-soft'
+                        : 'border-line bg-surface hover:border-line-strong',
+                    )}
+                  >
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="Custom"
+                      value={customSlippage}
+                      data-testid="swap-slippage-custom"
+                      onChange={(e) => applyCustomSlippage(e.target.value)}
+                      className="w-full bg-transparent text-[13px] font-medium text-ink outline-none placeholder:text-ink-faint"
+                    />
+                    <span className="ml-1 text-[13px] text-ink-muted">%</span>
+                  </div>
+                </label>
+
+                {customSlippageError && (
+                  <p className="mt-1.5 text-[11px] text-side-down" data-testid="swap-slippage-error">
+                    {customSlippageError}
+                  </p>
+                )}
+                {!customSlippageError && slippageBps >= HIGH_SLIPPAGE_BPS && (
+                  <p className="mt-1.5 text-[11px] text-amber-500" data-testid="swap-slippage-warning">
+                    You could receive up to {formatBps(slippageBps)} less than quoted.
+                  </p>
+                )}
               </div>
             )}
           </div>
         </div>
 
+        {showCompleted ? (
+          <SwapCompleted
+            tokenIn={doneTokenIn}
+            tokenOut={doneTokenOut}
+            amountIn={result.amountIn}
+            amountOut={result.amountOut}
+            explorerUrl={arcScanTxUrl(result.hash)}
+            onDone={onDone}
+          />
+        ) : (
+          <>
         <div className="relative">
           {/* You pay */}
           <div className={panelClass} data-testid="swap-pay-panel">
@@ -438,28 +583,63 @@ export function SwapForm() {
                 {formatBase(amountOutMinimum, tokenOut.decimals)} {tokenOut.symbol}
               </span>
             </div>
-          </div>
-        )}
-        {!hasQuote && (
-          <div className="sr-only">
-            <span data-testid="swap-price-impact">-</span>
-            <span data-testid="swap-min-received">-</span>
+            {!exactQuote.exact && (
+              <p className="text-[11px] text-ink-muted" data-testid="swap-quote-estimated">
+                Estimated from the pool price. The floor above is widened to match.
+              </p>
+            )}
           </div>
         )}
 
-        {highImpact && (
+        {/* A trade this size moves the pool a long way. It used to be refused outright, which on a
+            thin pool simply meant the swap could not be done at all. Show the number and let the
+            user decide, because it is their trade. */}
+        {hasQuote && impactNeedsConsent && (
+          <label
+            data-testid="swap-impact-consent"
+            className="mx-1 mt-2 block cursor-pointer rounded-xl border border-amber-300/60 bg-amber-50 px-3 py-2.5 text-[12px] text-amber-900 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200"
+          >
+            <span className="block">
+              This swap moves the price {formatBps(priceImpactBps)}. You would receive about{' '}
+              {formatBase(amountOut, tokenOut.decimals)} {tokenOut.symbol}, and no less than{' '}
+              {formatBase(amountOutMinimum, tokenOut.decimals)}.
+            </span>
+            {/* Its own line: the box belongs next to the words it is agreeing to, not floating
+                beside a paragraph. */}
+            <span className="mt-2 flex items-center gap-2 font-medium">
+              <input
+                type="checkbox"
+                checked={impactAccepted}
+                data-testid="swap-impact-consent-input"
+                onChange={(e) => setImpactAccepted(e.target.checked)}
+                className="h-4 w-4 cursor-pointer rounded border-line accent-brand"
+              />
+              I accept.
+            </span>
+          </label>
+        )}
+        {!hasQuote && (
+          <div className="sr-only">
+            <span data-testid="swap-price-impact">—</span>
+            <span data-testid="swap-min-received">—</span>
+          </div>
+        )}
+
+        {/* Suppressed while the consent box is up: that already states the impact, and saying it
+            twice makes the screen look like two different problems. */}
+        {highImpact && !impactNeedsConsent && (
           <p
             data-testid="swap-impact-warning"
             className="mx-1 mt-2 flex items-start gap-1.5 rounded-xl border border-amber-300/60 bg-amber-50 px-3 py-2 text-[13px] text-amber-700 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300"
           >
             <Alert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            High price impact - you&apos;re moving the pool a lot. Consider a smaller amount.
+            High price impact — you&apos;re moving the pool a lot. Consider a smaller amount.
           </p>
         )}
 
         {pool && !hasLiquidity && (
           <p data-testid="swap-no-liquidity" className="mx-1 mt-2 text-[13px] text-ink-muted">
-            This pool has no liquidity yet - provide liquidity first so swaps can route.
+            This pool has no liquidity yet — provide liquidity first so swaps can route.
           </p>
         )}
         {insufficientBalance && !isPending && (
@@ -468,7 +648,7 @@ export function SwapForm() {
           </span>
         )}
 
-        {/* Inset the CTA inside the card's straight edge - the card is a chamfered HUD octagon that clips
+        {/* Inset the CTA inside the card's straight edge — the card is a chamfered HUD octagon that clips
             its children, so a full-bleed button's corners would be cut. Bigger label than the inputs. */}
         <div className="px-4 pt-2">
           <button
@@ -487,6 +667,8 @@ export function SwapForm() {
           <p role="alert" className="mx-1 mt-2 text-[13px] text-side-down">
             {error.message}
           </p>
+        )}
+          </>
         )}
       </Card>
     </div>

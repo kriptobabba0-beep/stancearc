@@ -1,6 +1,6 @@
 'use client';
 
-// components/pool/PoolStatHeader.tsx - the three headline cards on the Pool list page: TVL, 24h Volume,
+// components/pool/PoolStatHeader.tsx — the three headline cards on the Pool list page: TVL, 24h Volume,
 // 24h Fees, each with a real sparkline (lib/poolStats over real on-chain data). Rendered in the app's
 // HUD card language with the semantic trio for the three hues (crimson / green / blue). TVL lands first
 // (fast reserves query); Volume + Fees fill in when the 24h Swap-event scan resolves.
@@ -33,7 +33,7 @@ function StatCard({
           loading ? (
             <Skeleton className="mt-2 h-8 w-40 rounded-md" />
           ) : (
-            <div className="mt-1.5 font-mono text-2xl font-semibold text-ink-muted">-</div>
+            <div className="mt-1.5 font-mono text-2xl font-semibold text-ink-muted">—</div>
           )
         ) : (
           <div className="mt-1.5 font-mono text-[26px] font-semibold tracking-tight text-ink tnum sm:text-3xl">

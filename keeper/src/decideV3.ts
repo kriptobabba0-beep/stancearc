@@ -1,4 +1,4 @@
-// decideV3.ts - the PURE decision function for ENTRY-ANCHORED (v3) markets.
+// decideV3.ts — the PURE decision function for ENTRY-ANCHORED (v3) markets.
 //
 // The v3 lifecycle is simpler than v1's: there is NO startEpoch (no global start price).
 //   create -> open -> [entry window] -> [locked watch] -> SETTLE (submit the settlement
@@ -11,7 +11,7 @@
 // decide treats them identically: once `nowSec >= settlementTime`, the next action is
 // SETTLE regardless of which of the two the view reports.
 //
-// Settlement never expires on-chain (a late submit is valid - every position resolves
+// Settlement never expires on-chain (a late submit is valid — every position resolves
 // against its own anchor), so unlike v1 there is NO terminal STUCK state: the keeper
 // keeps attempting SETTLE until it lands; a prolonged failure surfaces through the
 // loop's existing failure/backoff/WEDGED alerting.
@@ -38,7 +38,7 @@ export interface KeeperStateV3 {
   nowSec: bigint;
   paused: boolean;
   /**
-   * Auto-return backlog of the most recently Settled epoch (all OPTIONAL - reads are
+   * Auto-return backlog of the most recently Settled epoch (all OPTIONAL — reads are
    * best-effort; absent fields disable UNSTAKE, never the lifecycle).
    */
   lastSettledEpochId?: bigint;
@@ -65,12 +65,12 @@ export const GRACE_SECONDS_V3 = 600n;
 
 /**
  * Owner-key recovery decision for a v3 market that cannot settle:
- *   - 'RECOVER'    - the epoch is past settlement, never resolved, and the on-chain grace has
+ *   - 'RECOVER'    — the epoch is past settlement, never resolved, and the on-chain grace has
  *                    elapsed: call the owner-only emergencySettle(epochId) now to unwedge it.
- *   - 'WAIT_GRACE' - same wedge shape but grace has NOT elapsed yet (emergencySettle would revert
+ *   - 'WAIT_GRACE' — same wedge shape but grace has NOT elapsed yet (emergencySettle would revert
  *                    GraceNotElapsed): keep trying the normal SETTLE (the oracle may recover) and
  *                    re-check later; do NOT spam emergencySettle.
- *   - 'NONE'       - not a recovery situation (no owner key, healthy/early epoch, wrong phase, or
+ *   - 'NONE'       — not a recovery situation (no owner key, healthy/early epoch, wrong phase, or
  *                    ordering can't be confirmed): take no recovery action.
  */
 export type RecoveryDecisionV3 = 'RECOVER' | 'WAIT_GRACE' | 'NONE';
@@ -79,14 +79,14 @@ export type RecoveryDecisionV3 = 'RECOVER' | 'WAIT_GRACE' | 'NONE';
  * Decide whether the owner key should emergencySettle a v3 epoch that is stuck UNSETTLED. PURE.
  *
  * Fires ONLY for the genuinely-unrecoverable SETTLE wedge (Hermes/oracle dead, or every submit
- * rejected) - NOT for a Settling epoch mid-process (those are bounded by the gas-fit + O(1) solvency
+ * rejected) — NOT for a Settling epoch mid-process (those are bounded by the gas-fit + O(1) solvency
  * and resolve positions properly; emergency-settling them would needlessly discard outcomes). Every
  * condition the contract's emergencySettle enforces is checked here so a doomed tx is never signed:
  *   1. an owner key is configured (absent → 'NONE', behavior unchanged);
  *   2. the epoch is still in the entry/lock phase (internal EntryOpen → emergencySettle-eligible);
  *   3. we are at/past settlementTime (a healthy pre-settlement epoch is never touched);
  *   4. epochId == lastSettledEpochId + 1 == currentEpochId (the contract's exact ordering guard);
- *   5. the on-chain grace has elapsed (else 'WAIT_GRACE' - keep trying SETTLE, don't spam).
+ *   5. the on-chain grace has elapsed (else 'WAIT_GRACE' — keep trying SETTLE, don't spam).
  * The 600s grace window is itself the "genuinely stuck" confirmation: if the keeper couldn't land a
  * settlement for 10 minutes past settlementTime, the oracle path is dead and rollover-via-emergency
  * is the correct, fund-preserving escape.
@@ -102,12 +102,12 @@ export function decideRecoveryV3(state: KeeperStateV3, ownerKeyConfigured: boole
   // lastSettledEpochId we can't prove the ordering, so we never risk a reverting owner tx.
   if (state.lastSettledEpochId === undefined) return 'NONE';
   if (state.currentEpochId !== state.lastSettledEpochId + 1n) return 'NONE';
-  // Respect the on-chain grace: before it elapses, emergencySettle reverts - keep trying SETTLE.
+  // Respect the on-chain grace: before it elapses, emergencySettle reverts — keep trying SETTLE.
   if (state.nowSec <= state.settlementTime + GRACE_SECONDS_V3) return 'WAIT_GRACE';
   return 'RECOVER';
 }
 
-/** Decide the single next action for a v3 market. PURE - no I/O, no clock read. */
+/** Decide the single next action for a v3 market. PURE — no I/O, no clock read. */
 export function decideActionV3(state: KeeperStateV3): ActionV3 {
   if (state.paused) return 'NONE';
   if (state.currentEpochId === 0n) return 'CREATE';

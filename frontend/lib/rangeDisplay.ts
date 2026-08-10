@@ -1,15 +1,15 @@
-// lib/rangeDisplay.ts - RENDER-ONLY helpers shared by the range-aware liquidity UI
+// lib/rangeDisplay.ts — RENDER-ONLY helpers shared by the range-aware liquidity UI
 // (ProvideLiquidity / YourLiquidity / PositionPicker). Pure: no React, no chain reads, no hardcoded
-// decimals or orientation - everything is parameterised, mirroring lib/rangeMath's contract.
+// decimals or orientation — everything is parameterised, mirroring lib/rangeMath's contract.
 //
 // All prices here are DISPLAY-grade floats from rangeMath.tickToPrice ("quote per base", e.g. USDC
-// per cirBTC, inversion already resolved). Token AMOUNTS never flow through this module - those stay
+// per cirBTC, inversion already resolved). Token AMOUNTS never flow through this module — those stay
 // bigint-exact in rangeMath.counterpartAmount.
 import { maxUsableTick, tickToPrice } from '@/lib/rangeMath';
 
 /**
  * True when [tickLower, tickUpper] covers the WHOLE usable range for the fee tier's spacing
- * (±maxUsableTick - e.g. ±887220 for spacing 60, mirroring fullRangeTicks/DeployMarket._seed).
+ * (±maxUsableTick — e.g. ±887220 for spacing 60, mirroring fullRangeTicks/DeployMarket._seed).
  * Orientation/decimals-free: full range is a pure tick-space property.
  */
 export function isFullRangeTicks(tickLower: number, tickUpper: number, spacing: number): boolean {
@@ -20,7 +20,7 @@ export function isFullRangeTicks(tickLower: number, tickUpper: number, spacing: 
 /**
  * Compact human price for range labels: thousands get grouping + no decimals ("63,750"), mid-range
  * keeps 2 decimals, sub-1 keeps 6; degenerate values collapse to "0"/"∞"/"<0.0001" so a full-range
- * tick never renders as a 38-digit number. Display only - NEVER parse this back (it contains commas).
+ * tick never renders as a 38-digit number. Display only — NEVER parse this back (it contains commas).
  */
 export function formatHumanPrice(p: number): string {
   if (!Number.isFinite(p) || p <= 0) return '0';
@@ -33,7 +33,7 @@ export function formatHumanPrice(p: number): string {
 
 /**
  * The ORDERED human price band [min, max] for a tick range. tickToPrice is DECREASING in tick when
- * baseIsToken0=false (the live cirBTC/USDC inversion), so the endpoints are sorted here - callers
+ * baseIsToken0=false (the live cirBTC/USDC inversion), so the endpoints are sorted here — callers
  * must never assume tickLower maps to the min price.
  */
 export function bandPrices(
@@ -48,7 +48,7 @@ export function bandPrices(
   return a <= b ? { min: a, max: b } : { min: b, max: a };
 }
 
-/** "min - max" human price band label for a tick range (ordered, compact-formatted). */
+/** "min – max" human price band label for a tick range (ordered, compact-formatted). */
 export function bandLabel(
   tickLower: number,
   tickUpper: number,
@@ -57,12 +57,12 @@ export function bandLabel(
   baseIsToken0: boolean,
 ): string {
   const { min, max } = bandPrices(tickLower, tickUpper, dec0, dec1, baseIsToken0);
-  return `${formatHumanPrice(min)} - ${formatHumanPrice(max)}`;
+  return `${formatHumanPrice(min)} – ${formatHumanPrice(max)}`;
 }
 
 /**
  * Decode a pool slot0() read into { sqrtPriceX96, tick }. viem 2.19.4 decodes the flat multi-output
- * positionally (an array: [0]=sqrtPriceX96, [1]=tick) - named fallbacks keep this robust to either
+ * positionally (an array: [0]=sqrtPriceX96, [1]=tick) — named fallbacks keep this robust to either
  * decode shape (same pattern as SwapForm / useOwnedPositions). Returns undefined while loading or on
  * a malformed read so callers can render a loading state instead of a wrong price.
  */

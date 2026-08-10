@@ -1,4 +1,4 @@
-// POST /api/circle/execute - create a contract-execution challenge for the user's embedded wallet.
+// POST /api/circle/execute — create a contract-execution challenge for the user's embedded wallet.
 // Body: { userToken, walletId, contractAddress, abiFunctionSignature, abiParameters[], amount?, feeLevel? }
 import { NextResponse } from 'next/server';
 import { contractExecution, type FeeLevel } from '@/lib/server/circleServer';

@@ -1,12 +1,12 @@
-// hooks/useRemoveLiquidity.ts - withdraw / remove-liquidity: pull 100% of a position's liquidity back
+// hooks/useRemoveLiquidity.ts — withdraw / remove-liquidity: pull 100% of a position's liquidity back
 // to the connected wallet in ONE transaction.
 //
 // Flow: read the position's CURRENT liquidity via NPM.positions(tokenId), then batch
 //   1) decreaseLiquidity({ tokenId, liquidity: <full>, amount0Min: 0, amount1Min: 0, deadline })
 //   2) collect({ tokenId, recipient: owner, amount0Max: uint128.max, amount1Max: uint128.max })
 // into a single NPM.multicall([...]) tx (the Uniswap V3 NPM is Multicall). decreaseLiquidity only
-// credits the withdrawn token0/token1 to the position's tokensOwed - collect is what actually moves
-// them to the wallet - so both are required, and multicall makes them atomic in one signature.
+// credits the withdrawn token0/token1 to the position's tokensOwed — collect is what actually moves
+// them to the wallet — so both are required, and multicall makes them atomic in one signature.
 //
 // Reuses the repo write pattern: simulateContract preflight -> writeContractAsync(withGasFloor) ->
 // submit-time toast.loading + bumpPollAfterWrite + qc.refetchQueries. A 0-liquidity position is
@@ -14,12 +14,12 @@
 //
 // WHY THE RECEIPT WAIT IS IMPERATIVE (not the shared reactive useTxToast/useTxReceipt): this hook is
 // instantiated PER-ROW inside LiquidityRow (components/YourLiquidity.tsx). A 100% withdraw makes the
-// position vanish from useOwnedPositions, so the LiquidityRow UNMOUNTS - and with it any reactive
-// receipt hook - usually BEFORE the receipt resolves (the positions poll wins the race). A reactive
+// position vanish from useOwnedPositions, so the LiquidityRow UNMOUNTS — and with it any reactive
+// receipt hook — usually BEFORE the receipt resolves (the positions poll wins the race). A reactive
 // useTxToast would then never fire, orphaning the keyed loading toast forever (sonner loading toasts
 // never auto-dismiss). An in-flight async fn keeps running after its component unmounts, so we resolve
 // the loading→success/reverted/timeout toast IMPERATIVELY inside `remove` via
-// publicClient.waitForTransactionReceipt - that always settles the toast even once the row is gone.
+// publicClient.waitForTransactionReceipt — that always settles the toast even once the row is gone.
 import { useCallback, useState } from 'react';
 import { useAccount, usePublicClient } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
@@ -37,10 +37,10 @@ import { useArcWriteContract } from '@/hooks/useArcWriteContract';
 const TOAST_ID_BASE = 'remove-liquidity';
 const toastIdFor = (tokenId: bigint) => `${TOAST_ID_BASE}-${tokenId}`;
 const MAX_UINT128 = (1n << 128n) - 1n;
-// 20-minute deadline from submit - generous for testnet block times; never the cause of a revert.
+// 20-minute deadline from submit — generous for testnet block times; never the cause of a revert.
 const DEADLINE_BUFFER_SECONDS = 20n * 60n;
 
-/** Decoded NPM.positions() - viem decodes this tuple POSITIONALLY (an array; [7]=liquidity), NOT as a
+/** Decoded NPM.positions() — viem decodes this tuple POSITIONALLY (an array; [7]=liquidity), NOT as a
  *  named struct, so read liquidity with a named-then-positional fallback (same as useOwnedPositions).
  *  Only the liquidity field is consumed here. */
 interface PositionsResult {
@@ -55,7 +55,7 @@ export function useRemoveLiquidity() {
   const { writeContractAsync, data: hash, isPending: isWriting } = useArcWriteContract();
   const [error, setError] = useState<Error | undefined>();
   const [isSimulating, setIsSimulating] = useState(false);
-  // The imperative receipt-wait state (we do NOT use the reactive useTxReceipt here - see header).
+  // The imperative receipt-wait state (we do NOT use the reactive useTxReceipt here — see header).
   const [isConfirming, setIsConfirming] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -69,21 +69,21 @@ export function useRemoveLiquidity() {
         if (!address) throw new Error('Connect your wallet first.');
         if (!publicClient) throw new Error('No RPC client available.');
 
-        // 1) Read the position's CURRENT liquidity - we withdraw 100% of whatever is there.
+        // 1) Read the position's CURRENT liquidity — we withdraw 100% of whatever is there.
         const position = (await publicClient.readContract({
           address: npm.address,
           abi: npm.abi,
           functionName: 'positions',
           args: [tokenId],
         })) as unknown as PositionsResult;
-        // viem decodes positions() positionally - liquidity is index [7]; fall back from the named key
+        // viem decodes positions() positionally — liquidity is index [7]; fall back from the named key
         // (a bare `position.liquidity` was undefined -> "Cannot convert undefined to a BigInt").
         const liquidity = position.liquidity ?? position[7];
         if (liquidity === undefined) {
-          throw new Error('Could not read this position’s liquidity - please try again in a moment.');
+          throw new Error('Could not read this position’s liquidity — please try again in a moment.');
         }
         if (liquidity === 0n) {
-          // Nothing to remove - decreaseLiquidity(0) would revert. Surface a clear message, no write.
+          // Nothing to remove — decreaseLiquidity(0) would revert. Surface a clear message, no write.
           throw new Error('This position has no liquidity to remove.');
         }
 
@@ -102,7 +102,7 @@ export function useRemoveLiquidity() {
         });
 
         setIsSimulating(true);
-        // MANDATORY preflight - catches not-owner / wrong tokenId / already-empty before signing.
+        // MANDATORY preflight — catches not-owner / wrong tokenId / already-empty before signing.
         const { request } = await publicClient.simulateContract({
           account: address,
           address: npm.address,
@@ -119,9 +119,9 @@ export function useRemoveLiquidity() {
         bumpPollAfterWrite();
         void qc.refetchQueries({ type: 'active' });
 
-        // IMPERATIVE receipt wait - resolves the keyed loading toast even though this row UNMOUNTS the
+        // IMPERATIVE receipt wait — resolves the keyed loading toast even though this row UNMOUNTS the
         // moment the position disappears from useOwnedPositions (the reactive useTxToast would never
-        // fire after unmount, leaving the sonner spinner orphaned forever - the live bug). This async
+        // fire after unmount, leaving the sonner spinner orphaned forever — the live bug). This async
         // fn keeps running post-unmount, so the toast is always settled to success / reverted / timeout.
         setIsConfirming(true);
         try {
@@ -136,16 +136,16 @@ export function useRemoveLiquidity() {
             toast.success('Liquidity + fees sent to your wallet', { id });
           }
         } catch {
-          // Receipt timed out / RPC stalled - the withdraw may well have CONFIRMED (Arc can be slow to
+          // Receipt timed out / RPC stalled — the withdraw may well have CONFIRMED (Arc can be slow to
           // return receipts). Replace the loading spinner with a reassuring, NON-STUCK toast rather than
           // claiming failure; the background poll surfaces the freed tokens shortly.
-          toast.error('Sent - couldn’t confirm yet; your liquidity will update shortly (or refresh).', {
+          toast.error('Sent — couldn’t confirm yet; your liquidity will update shortly (or refresh).', {
             id,
           });
         } finally {
           setIsConfirming(false);
           // Refetch once the receipt settles (success or timeout) so balances/positions update without
-          // a manual refresh - mirrors the success/timeout refetch the shared useTxToast did.
+          // a manual refresh — mirrors the success/timeout refetch the shared useTxToast did.
           void qc.refetchQueries({ type: 'active' });
         }
         return tx;

@@ -1,7 +1,7 @@
-// lib/gateway.ts - Circle Gateway "instant cross-chain USDC" onboarding (testnet) config + off-chain helpers.
+// lib/gateway.ts — Circle Gateway "instant cross-chain USDC" onboarding (testnet) config + off-chain helpers.
 //
 // Gateway is deposit-once / transfer-many: deposit USDC into the GatewayWallet on a SOURCE chain (the only
-// slow leg - finality), then every transfer to Arc is sign(EIP-712 BurnIntent) -> POST /v1/transfer ->
+// slow leg — finality), then every transfer to Arc is sign(EIP-712 BurnIntent) -> POST /v1/transfer ->
 // gatewayMint(attestation, signature) on Arc (<500ms once the deposit is finalized).
 //
 // SOURCES (all verified 2026-06-19 against Circle's live API + contract source):
@@ -9,7 +9,7 @@
 //      GatewayWallet = 0x0077777d7EBA4688BDeF3E311b846F25870A19B9  (deposit side, source chain)
 //      GatewayMinter = 0x0022222ABE238Cc2C7Bb1f21003F0a260052475B  (gatewayMint, on Arc)
 //  - EIP-712 burn intent (confirmed byte-for-byte vs circlefin/evm-gateway-contracts
-//      src/lib/EIP712Domain.sol + test/js/eip712TestData.js): the domain is INTENTIONALLY "domain-less" -
+//      src/lib/EIP712Domain.sol + test/js/eip712TestData.js): the domain is INTENTIONALLY "domain-less" —
 //      { name: "GatewayWallet", version: "1" } with NO chainId / verifyingContract (so intents verify
 //      cross-chain). All address fields in TransferSpec are bytes32 (left-padded).
 //  - REST API (testnet, no auth): https://gateway-api-testnet.circle.com/v1
@@ -28,13 +28,13 @@ export const GATEWAY_API_URL = 'https://gateway-api-testnet.circle.com/v1';
 export const USDC_DECIMALS = 6;
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as const;
-/** Pre-padded zero bytes32 - `destinationCaller` (anyone may submit the mint). */
+/** Pre-padded zero bytes32 — `destinationCaller` (anyone may submit the mint). */
 export const ZERO_BYTES32 =
   '0x0000000000000000000000000000000000000000000000000000000000000000' as `0x${string}`;
 
 // ── Arc (the mint destination) ─────────────────────────────────────────────────────
 // NOTE: chainId/domain are typed `number` (not literals) so wagmi's writeContract generic narrows
-// the same way the proven CCTP path does - a literal chainId pushes it onto a stricter inference
+// the same way the proven CCTP path does — a literal chainId pushes it onto a stricter inference
 // branch that resolves to `never`.
 export const ARC_GATEWAY: {
   domain: number;
@@ -86,7 +86,7 @@ export const GATEWAY_SOURCES: GatewaySource[] = [
     domain: 6,
     usdc: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
     explorer: 'https://sepolia.basescan.org',
-    approxFinality: '~13-19 minutes',
+    approxFinality: '~13–19 minutes',
     finalitySeconds: 1020,
     gasFeeFloor: 10_000n, // ~$0.01
   },
@@ -97,7 +97,7 @@ export const GATEWAY_SOURCES: GatewaySource[] = [
     domain: 0,
     usdc: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
     explorer: 'https://sepolia.etherscan.io',
-    approxFinality: '~13-19 minutes',
+    approxFinality: '~13–19 minutes',
     finalitySeconds: 1140,
     gasFeeFloor: 1_000_000n, // ~$1.00
   },
@@ -181,7 +181,7 @@ export function randomSalt(): `0x${string}` {
 }
 
 // ── EIP-712 burn intent typed data ──────────────────────────────────────────────────
-/** Domain-less domain - name + version ONLY (NO chainId / verifyingContract). Intentional. */
+/** Domain-less domain — name + version ONLY (NO chainId / verifyingContract). Intentional. */
 export const GATEWAY_DOMAIN = { name: 'GatewayWallet', version: '1' } as const;
 
 export const BURN_INTENT_TYPES = {
@@ -317,8 +317,8 @@ type FetchImpl = typeof fetch;
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 /**
- * POST JSON to the Gateway API. `retries` re-attempts on TRANSIENT failures only - a network throw or a 5xx
- * (Circle's testnet /transfer intermittently 503s "Service temporarily unavailable") - with linear backoff.
+ * POST JSON to the Gateway API. `retries` re-attempts on TRANSIENT failures only — a network throw or a 5xx
+ * (Circle's testnet /transfer intermittently 503s "Service temporarily unavailable") — with linear backoff.
  * 4xx are terminal (bad fee/signature/balance) and never retried. Submits pass retries>0 so a transient blip
  * doesn't waste the user's signature; polled reads leave it at 0 (they self-heal next poll). On a final
  * failure it surfaces Circle's own message ("Invalid signature", "Insufficient balance for depositor 0x…").
@@ -343,16 +343,16 @@ async function postJson(
     }
     if (res.ok) return res.json();
     if (res.status >= 500 && res.status < 600 && attempt < retries) {
-      await sleep(retryDelayMs * (attempt + 1)); // transient server error - retry
+      await sleep(retryDelayMs * (attempt + 1)); // transient server error — retry
       continue;
     }
-    // Surface Circle's own reason instead of a bare status - the message is the point of debugging. Body is public.
+    // Surface Circle's own reason instead of a bare status — the message is the point of debugging. Body is public.
     let detail = '';
     try {
       const j = (await res.json()) as { message?: unknown };
       if (typeof j?.message === 'string' && j.message.trim()) detail = `: ${j.message.trim()}`;
     } catch {
-      /* non-JSON / empty body - fall back to the status alone */
+      /* non-JSON / empty body — fall back to the status alone */
     }
     throw new Error(`Gateway API ${url} failed (HTTP ${res.status})${detail}.`);
   }
@@ -404,7 +404,7 @@ export async function submitTransfer(
     `${GATEWAY_API_URL}/transfer`,
     [{ burnIntent: serializeBurnIntent(message), signature }],
     fetchImpl,
-    { retries, retryDelayMs }, // the signed intent is reusable - ride out a transient 503, not waste the signature
+    { retries, retryDelayMs }, // the signed intent is reusable — ride out a transient 503, not waste the signature
   )) as { attestation?: string; signature?: string };
   if (!json.attestation || !json.signature) {
     throw new Error('Gateway /transfer returned no attestation. Try the transfer again.');
@@ -415,7 +415,7 @@ export async function submitTransfer(
 // ── Forwarder (one-click) path ──────────────────────────────────────────────────────
 // With ?enableForwarder=true, Circle BROADCASTS the destination mint itself (no user gatewayMint tx, no
 // chain switch). Two divergences from the manual path, both verified against the live testnet API: (1) the
-// burn intent's maxFee must ALSO cover Circle's mint gas - size it via /estimate; (2) the POST returns a
+// burn intent's maxFee must ALSO cover Circle's mint gas — size it via /estimate; (2) the POST returns a
 // `transferId` (and OMITS attestation/signature), which we poll on GET /transfer/{id} until the mint settles.
 /** Arc supports Gateway forwarding. Flip to false to force the manual gatewayMint path everywhere. */
 export const FORWARDER_ENABLED = true;
@@ -424,7 +424,7 @@ export const FORWARDER_ENABLED = true;
  * Size a forwarder burn intent: POST /estimate?enableForwarder=true with the UNSIGNED intent → Circle echoes
  * it back with the maxFee bumped to cover its destination-mint gas + a fresh maxBlockHeight. The forwarder
  * estimate WRAPS the result in `{ body: [{ burnIntent }] }` (the non-forwarder one returns the array bare).
- * Returns null if the (undocumented) shape doesn't match - the caller then falls back to the manual mint.
+ * Returns null if the (undocumented) shape doesn't match — the caller then falls back to the manual mint.
  */
 export async function estimateForwarderFee(
   message: BurnIntentMessage,
@@ -441,10 +441,10 @@ export async function estimateForwarderFee(
         await sleep(retryDelayMs * (attempt + 1));
         continue;
       }
-      return null; // network down - caller falls back to the manual mint
+      return null; // network down — caller falls back to the manual mint
     }
     if (res.status >= 500 && res.status < 600 && attempt < retries) {
-      await sleep(retryDelayMs * (attempt + 1)); // transient 503 - retry before giving up on the forwarder
+      await sleep(retryDelayMs * (attempt + 1)); // transient 503 — retry before giving up on the forwarder
       continue;
     }
     if (!res.ok) return null;
@@ -464,7 +464,7 @@ export async function estimateForwarderFee(
 /**
  * Submit a signed burn intent via the FORWARDER. Returns the `transferId` to poll. Forwarder responses key
  * off transferId only and OMIT attestation/signature (so we can't reuse submitTransfer, which throws on a
- * missing attestation). Circle broadcasts the Arc mint - the caller does NOT call gatewayMint.
+ * missing attestation). Circle broadcasts the Arc mint — the caller does NOT call gatewayMint.
  */
 export async function submitForwarderTransfer(
   message: BurnIntentMessage,
@@ -475,7 +475,7 @@ export async function submitForwarderTransfer(
     `${GATEWAY_API_URL}/transfer?enableForwarder=true`,
     [{ burnIntent: serializeBurnIntent(message), signature }],
     fetchImpl,
-    { retries, retryDelayMs }, // Circle's testnet forwarder intermittently 503s - retry before failing
+    { retries, retryDelayMs }, // Circle's testnet forwarder intermittently 503s — retry before failing
   )) as { transferId?: string };
   if (!json?.transferId) {
     throw new Error('Gateway forwarding enabled but no transferId was returned. Try the transfer again.');
@@ -486,8 +486,8 @@ export async function submitForwarderTransfer(
 /**
  * Poll GET /transfer/{id} until Circle's forwarded mint settles. Resolves with the Arc mint tx hash on
  * `confirmed`|`finalized`; throws on `failed`|`expired` or timeout. Early polls can 400 ("not available
- * yet") before the record is queryable - treated as transient. Done-set is {confirmed,finalized} (testnet
- * ordering is unverified - never hard-code only one); a terminal status with no hash yet → poll again.
+ * yet") before the record is queryable — treated as transient. Done-set is {confirmed,finalized} (testnet
+ * ordering is unverified — never hard-code only one); a terminal status with no hash yet → poll again.
  */
 export async function pollForwarderTransfer(
   transferId: string,
@@ -504,11 +504,11 @@ export async function pollForwarderTransfer(
     try {
       res = await fetchImpl(`${GATEWAY_API_URL}/transfer/${transferId}`);
     } catch {
-      await sleep(intervalMs); // network blip - keep polling (bounded by timeoutMs)
+      await sleep(intervalMs); // network blip — keep polling (bounded by timeoutMs)
       continue;
     }
     if (!res.ok) {
-      // Early 400 ("not available yet") or a transient 5xx - keep polling rather than failing a transfer
+      // Early 400 ("not available yet") or a transient 5xx — keep polling rather than failing a transfer
       // that Circle is still processing. A persistent error is bounded by timeoutMs → "still processing".
       await sleep(intervalMs);
       continue;
@@ -522,7 +522,7 @@ export async function pollForwarderTransfer(
     onStatus?.(status);
     if (status === 'confirmed' || status === 'finalized') {
       if (d.transactionHash) return { status, transactionHash: d.transactionHash as `0x${string}` };
-      // terminal-success but the hash hasn't propagated - fall through and poll once more
+      // terminal-success but the hash hasn't propagated — fall through and poll once more
     } else if (status === 'failed') {
       throw new Error(d.forwardingDetails?.failureReason || 'Circle could not complete the forwarded mint.');
     } else if (status === 'expired') {
@@ -530,7 +530,7 @@ export async function pollForwarderTransfer(
     }
     await sleep(intervalMs);
   }
-  throw new Error(`Still processing (transfer ${transferId}). The mint may still land - check ArcScan shortly.`);
+  throw new Error(`Still processing (transfer ${transferId}). The mint may still land — check ArcScan shortly.`);
 }
 
 // ── Deposit status tracking (live finality loop) ────────────────────────────────────
@@ -539,7 +539,7 @@ export interface GatewayDeposit {
   domain: number;
   /** USDC atomic units (6dp). */
   amount: bigint;
-  /** Circle's status - "pending" while it finalizes; anything else means it's been credited. */
+  /** Circle's status — "pending" while it finalizes; anything else means it's been credited. */
   status: string;
   blockHeight: bigint;
   /** Block timestamp in ms epoch (drives the elapsed/ETA math). 0 if absent. */

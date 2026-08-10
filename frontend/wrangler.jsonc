@@ -1,7 +1,7 @@
 {
   // Cloudflare Workers deploy config for the Limen Finance frontend (Next.js via @opennextjs/cloudflare).
   // `opennextjs-cloudflare build` emits .open-next/worker.js + .open-next/assets, which this serves.
-  // Minimal config: no R2 incremental-cache bucket and no self-reference binding - the app is
+  // Minimal config: no R2 incremental-cache bucket and no self-reference binding — the app is
   // request-dynamic (RPC reads, no ISR), so neither is needed, and omitting them keeps the first deploy
   // clean. Add them later if ISR/caching is introduced (see opennext.js.org/cloudflare/caching).
   "$schema": "node_modules/wrangler/config-schema.json",

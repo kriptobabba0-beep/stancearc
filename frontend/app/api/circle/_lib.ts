@@ -1,4 +1,4 @@
-// app/api/circle/_lib.ts - shared helpers for the Circle proxy route handlers (NOT a route itself).
+// app/api/circle/_lib.ts — shared helpers for the Circle proxy route handlers (NOT a route itself).
 import { NextResponse } from 'next/server';
 import { circleHttpError } from '@/lib/server/circleServer';
 

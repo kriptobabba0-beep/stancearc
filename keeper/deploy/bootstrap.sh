@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bootstrap.sh - one-command server setup for the Fee Arena keeper + arb bot.
+# bootstrap.sh — one-command server setup for the Fee Arena keeper + arb bot.
 #
 # Run this ON a fresh Ubuntu/Debian server (e.g. a rented VPS), from inside the keeper/
 # directory (the folder that contains docker-compose.yml and your filled-in .env):
@@ -7,7 +7,7 @@
 #   cd keeper
 #   sudo bash deploy/bootstrap.sh
 #
-# It is idempotent - re-run it any time to pick up code/.env changes (it rebuilds + restarts).
+# It is idempotent — re-run it any time to pick up code/.env changes (it rebuilds + restarts).
 # What it does:
 #   1. verifies .env exists (your secrets + config),
 #   2. installs Docker Engine + the compose plugin if they're missing,
@@ -28,11 +28,11 @@ if [ ! -f .env ]; then
   echo "Copy your local keeper/.env to this server first (see DEPLOY.md), then re-run." >&2
   exit 1
 fi
-chmod 600 .env || true  # keys live here - restrict to the owner
+chmod 600 .env || true  # keys live here — restrict to the owner
 
 # --- 2. install Docker + compose plugin if absent ---
 if ! command -v docker >/dev/null 2>&1; then
-  echo "==> Docker not found - installing via get.docker.com (Ubuntu/Debian) ..."
+  echo "==> Docker not found — installing via get.docker.com (Ubuntu/Debian) ..."
   curl -fsSL https://get.docker.com | sh
 else
   echo "==> Docker already installed: $(docker --version)"

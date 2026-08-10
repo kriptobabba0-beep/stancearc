@@ -1,4 +1,4 @@
-// app/manifest.ts - web app manifest (served at /manifest.webmanifest, linked automatically).
+// app/manifest.ts — web app manifest (served at /manifest.webmanifest, linked automatically).
 // Gives Android/desktop "install" surfaces the real Limen mark and dark-canvas chrome.
 import type { MetadataRoute } from 'next';
 import { SITE_NAME, SITE_DESCRIPTION } from '@/lib/seo';

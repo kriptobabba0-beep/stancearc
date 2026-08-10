@@ -1,9 +1,9 @@
-// components/ui/BrandMark.tsx - the full-color Limen Finance mark (the doorway on crimson),
+// components/ui/BrandMark.tsx — the full-color Limen Finance mark (the doorway on crimson),
 // inlined from limen-mark-master.svg so identity surfaces render it crisp at any size with no
-// extra request. Corners are rounded via CSS border-radius - SVG clips its own overflow, so
+// extra request. Corners are rounded via CSS border-radius — SVG clips its own overflow, so
 // the full-bleed artwork rounds cleanly without clipPath ids (which would collide when the
 // mark appears more than once on a page). Fixed brand colors on purpose: the mark is the
-// logo, not a tintable icon - for currentColor contexts use the `Logo` glyph in icons.tsx.
+// logo, not a tintable icon — for currentColor contexts use the `Logo` glyph in icons.tsx.
 import { cn } from '@/lib/cn';
 
 export function BrandMark({
@@ -13,7 +13,7 @@ export function BrandMark({
 }: {
   className?: string;
   label?: string;
-  /** Crop to a full circle - for round avatar slots (e.g. the copilot's ringed avatar). */
+  /** Crop to a full circle — for round avatar slots (e.g. the copilot's ringed avatar). */
   circle?: boolean;
 }) {
   return (

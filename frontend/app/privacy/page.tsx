@@ -1,4 +1,4 @@
-// app/privacy/page.tsx - Privacy Policy. Server component: the full policy, verbatim from the team's
+// app/privacy/page.tsx — Privacy Policy. Server component: the full policy, verbatim from the team's
 // reviewed copy. Curly quotes/apostrophes on purpose (react/no-unescaped-entities). Bullet lists render
 // through the shared List helper. Inline code token (fa_circle_uid) uses <code>.
 import type { Metadata } from 'next';

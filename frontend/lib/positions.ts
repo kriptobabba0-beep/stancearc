@@ -1,11 +1,11 @@
-// lib/positions.ts - pure filtering for Arena-stakeable V3 positions. No wagmi/ENV here so it
+// lib/positions.ts — pure filtering for Arena-stakeable V3 positions. No wagmi/ENV here so it
 // stays trivially unit-testable; the hook (useOwnedPositions) wires the chain reads around it.
 import type { OwnedPosition } from '@/lib/types';
 
 /**
  * The subset of NPM.positions(tokenId) we need to decide stakeability, plus the tokenId itself.
  * `token0`/`token1` are the pool token addresses, `fee` the pool fee tier, `liquidity` the LP amount,
- * `tickLower`/`tickUpper` the position's price band (carried through for the range badges - they do
+ * `tickLower`/`tickUpper` the position's price band (carried through for the range badges — they do
  * NOT affect the filter: the v1 arena accepts any range, in-range gating happens at sweep time).
  */
 export interface RawPosition {
@@ -40,7 +40,7 @@ function isSamePair(token0: string, token1: string, a: string, b: string): boole
  *   - fee == feeTier
  *   - liquidity > 0
  *   - tokenId not already staked by this user
- * Range ticks pass through untouched (any range is stakeable - the badges, not the filter, surface
+ * Range ticks pass through untouched (any range is stakeable — the badges, not the filter, surface
  * out-of-range risk). Returns the minimal `OwnedPosition[]` PositionPicker consumes, preserving order.
  */
 export function filterArenaPositions(

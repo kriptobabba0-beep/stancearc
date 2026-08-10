@@ -1,4 +1,4 @@
-// app/terms/page.tsx - Terms of Use. Server component: the full testnet terms, verbatim from the
+// app/terms/page.tsx — Terms of Use. Server component: the full testnet terms, verbatim from the
 // team's reviewed copy. Curly quotes/apostrophes on purpose (react/no-unescaped-entities). Bullet
 // lists render through the shared List helper.
 import type { Metadata } from 'next';

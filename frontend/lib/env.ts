@@ -1,11 +1,11 @@
-// lib/env.ts - validates/parses all NEXT_PUBLIC_* at module load; hard-fails on missing/invalid.
+// lib/env.ts — validates/parses all NEXT_PUBLIC_* at module load; hard-fails on missing/invalid.
 // Pure `parseEnv` is testable in isolation; `ENV` is the frozen snapshot the app imports.
 
 export interface AppEnv {
   CHAIN_ID: number;
   /** All configured Arc HTTP RPC endpoints (in order, de-duped). At least one entry. */
   RPC_HTTP_URLS: string[];
-  /** First (primary) Arc HTTP RPC URL - kept for back-compat with single-URL consumers. */
+  /** First (primary) Arc HTTP RPC URL — kept for back-compat with single-URL consumers. */
   RPC_HTTP: string;
   RPC_WS: string;
   EXPLORER_URL: string;
@@ -14,6 +14,8 @@ export interface AppEnv {
   FEE_ARENA_FROM_BLOCK: bigint;
   ORACLE_ADDRESS: `0x${string}`;
   NPM_ADDRESS: `0x${string}`;
+  /** Uniswap QuoterV2 lens. Gives the swap form an exact, tick-aware quote. */
+  QUOTER_ADDRESS: `0x${string}`;
   FACTORY_ADDRESS: `0x${string}`;
   POOL_ADDRESS: `0x${string}`;
   SWAP_ROUTER_ADDRESS: `0x${string}`;
@@ -170,6 +172,9 @@ export function parseEnv(raw: Record<string, string | undefined>): AppEnv {
     FEE_ARENA_FROM_BLOCK: optBlock(raw, 'NEXT_PUBLIC_FEE_ARENA_FROM_BLOCK'),
     ORACLE_ADDRESS: reqAddress(raw, 'NEXT_PUBLIC_ORACLE_ADDRESS'),
     NPM_ADDRESS: reqAddress(raw, 'NEXT_PUBLIC_NPM_ADDRESS'),
+    // Defaulted rather than required: the app must still boot (on the local estimate) if a market
+    // is brought up before its quoter is deployed.
+    QUOTER_ADDRESS: optAddress(raw, 'NEXT_PUBLIC_QUOTER_ADDRESS', '0xAFCd5e3f8fe76AC40aAD722cD4D909CAb2ef59bF'),
     FACTORY_ADDRESS: reqAddress(raw, 'NEXT_PUBLIC_FACTORY_ADDRESS'),
     POOL_ADDRESS: reqAddress(raw, 'NEXT_PUBLIC_POOL_ADDRESS'),
     SWAP_ROUTER_ADDRESS: reqAddress(raw, 'NEXT_PUBLIC_SWAP_ROUTER_ADDRESS'),
@@ -210,6 +215,7 @@ const RAW: Record<string, string | undefined> = {
   NEXT_PUBLIC_FEE_ARENA_FROM_BLOCK: process.env.NEXT_PUBLIC_FEE_ARENA_FROM_BLOCK,
   NEXT_PUBLIC_ORACLE_ADDRESS: process.env.NEXT_PUBLIC_ORACLE_ADDRESS,
   NEXT_PUBLIC_NPM_ADDRESS: process.env.NEXT_PUBLIC_NPM_ADDRESS,
+  NEXT_PUBLIC_QUOTER_ADDRESS: process.env.NEXT_PUBLIC_QUOTER_ADDRESS,
   NEXT_PUBLIC_FACTORY_ADDRESS: process.env.NEXT_PUBLIC_FACTORY_ADDRESS,
   NEXT_PUBLIC_POOL_ADDRESS: process.env.NEXT_PUBLIC_POOL_ADDRESS,
   NEXT_PUBLIC_SWAP_ROUTER_ADDRESS: process.env.NEXT_PUBLIC_SWAP_ROUTER_ADDRESS,

@@ -26,7 +26,7 @@ const MAX_ITEMS = 50;
  *
  * Each item is enriched best-effort with its block timestamp (resolved once per block via a cached
  * getBlock fan-out) so the feed can show relative time ("2m ago"). A failed/absent timestamp simply
- * omits the relative-time label - it never affects correctness (UI state derives from polled reads).
+ * omits the relative-time label — it never affects correctness (UI state derives from polled reads).
  */
 export function useActivityFeed(): { events: FeedItem[] } {
   const { feeArena } = useMarketContracts();

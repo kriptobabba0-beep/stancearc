@@ -1,21 +1,21 @@
-// alert.ts - REAL alerting (dead-man's-switch). The keeper/arb already LOG
+// alert.ts — REAL alerting (dead-man's-switch). The keeper/arb already LOG
 // `ALERT … WEDGED` / `WARN low balance`, but nothing reaches a human. This module
 // dispatches those events to a configurable webhook so an operator is actually paged.
 //
 // Two independent channels, both OFF unless their URL is set:
-//   - ALERT_WEBHOOK_URL    - receives compact JSON alerts (market WEDGED, low signer
+//   - ALERT_WEBHOOK_URL    — receives compact JSON alerts (market WEDGED, low signer
 //                            balance, repeated-failures past the wedged threshold). The
 //                            body is webhook-agnostic ({ text, … }) so it works for a
 //                            Slack/Discord incoming webhook, a Telegram-bot sendMessage
 //                            proxy, or a Healthchecks.io-style log endpoint.
-//   - ALERT_HEARTBEAT_URL  - receives a periodic liveness PING (the dead-man's-switch):
+//   - ALERT_HEARTBEAT_URL  — receives a periodic liveness PING (the dead-man's-switch):
 //                            the EXTERNAL monitor (e.g. Healthchecks.io / cron-monitor)
 //                            alerts on the ABSENCE of this ping, so a dead/hung keeper that
 //                            can't send its own WEDGED alert is still caught.
 //
 // Design (mirrors the rest of the keeper):
 //   - The dedupe/rate-limit DECISION is a PURE function (`shouldDispatch`) with an injected
-//     clock - unit-tested without a socket.
+//     clock — unit-tested without a socket.
 //   - `createAlerter` is a thin stateful shell over it with an INJECTED fetch + clock so the
 //     POST path is testable with a mock and never touches the network in tests.
 //   - NON-BLOCKING + crash-safe: a rejecting/non-ok fetch is swallowed and logged; an
@@ -23,7 +23,7 @@
 //   - DEDUPED/rate-limited: the same alert key isn't re-sent inside the dedupe window, so a
 //     persistent WEDGE doesn't spam the webhook every tick. A FAILED delivery does NOT arm
 //     the cooldown, so a transient webhook outage is retried next tick.
-//   - OFF when the URL is unset - `notify`/`heartbeat` return false and never call fetch, so
+//   - OFF when the URL is unset — `notify`/`heartbeat` return false and never call fetch, so
 //     the no-webhook path is exactly the unchanged log-only behavior.
 
 /** Severity tag carried in the payload (purely informational for the receiver). */
@@ -31,7 +31,7 @@ export type AlertSeverity = 'info' | 'warn' | 'critical';
 
 /** One alert to dispatch. `key` is the dedupe identity (e.g. "wedged:eth"). */
 export interface AlertEvent {
-  /** Dedupe key - same key inside the dedupe window is suppressed (e.g. "wedged:eth"). */
+  /** Dedupe key — same key inside the dedupe window is suppressed (e.g. "wedged:eth"). */
   key: string;
   severity: AlertSeverity;
   /** Short label (e.g. "WEDGED", "LOW BALANCE"). */
@@ -103,7 +103,7 @@ function serialize(value: unknown): string {
  */
 export function buildAlertPayload(ev: AlertEvent, nowIso: string = new Date().toISOString()): AlertPayload {
   const sev = ev.severity.toUpperCase();
-  const text = `[fee-arena keeper] ${sev} - ${ev.title}: ${ev.message}`;
+  const text = `[fee-arena keeper] ${sev} — ${ev.title}: ${ev.message}`;
   return {
     text,
     severity: ev.severity,
@@ -154,7 +154,7 @@ export function createAlerter(cfg: AlertConfig, deps: AlerterDeps = {}): Alerter
   /**
    * POST a body to a URL, bounded by an abort timeout. Resolves true on an ok response,
    * false on a non-ok status OR any thrown/rejected error (logged, never rethrown). This is
-   * the single crash-safe boundary - every alert delivery funnels through here.
+   * the single crash-safe boundary — every alert delivery funnels through here.
    */
   async function post(url: string, body: unknown, kind: string): Promise<boolean> {
     try {
@@ -165,7 +165,7 @@ export function createAlerter(cfg: AlertConfig, deps: AlerterDeps = {}): Alerter
         signal: AbortSignal.timeout(cfg.timeoutMs),
       });
       // Some endpoints (e.g. Healthchecks.io) return a plain 200 with no `ok` typing in
-      // mocks - treat a missing `ok` with a 2xx status as success, else as a failure.
+      // mocks — treat a missing `ok` with a 2xx status as success, else as a failure.
       const ok = 'ok' in res ? res.ok : (res as Response).status >= 200 && (res as Response).status < 300;
       if (!ok) {
         const status = 'status' in res ? (res as Response).status : 'unknown';
@@ -187,7 +187,7 @@ export function createAlerter(cfg: AlertConfig, deps: AlerterDeps = {}): Alerter
     if (!shouldDispatch(lastSent.get(ev.key), t, cfg.dedupeWindowMs)) return false; // deduped
     const payload = buildAlertPayload(ev, new Date(t).toISOString());
     const delivered = await post(webhookUrl, payload, `alert:${ev.key}`);
-    // Only arm the cooldown on a SUCCESSFUL delivery - a failed POST is retried next tick.
+    // Only arm the cooldown on a SUCCESSFUL delivery — a failed POST is retried next tick.
     if (delivered) lastSent.set(ev.key, t);
     return delivered;
   }

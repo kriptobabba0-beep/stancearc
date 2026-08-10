@@ -1,9 +1,9 @@
 'use client';
 
-// components/ui/StatRow.tsx - the Uniswap "Explore" stat band: a horizontal row of stat cells
+// components/ui/StatRow.tsx — the Uniswap "Explore" stat band: a horizontal row of stat cells
 // (small grey label · big bold number · optional green/red delta), separated by vertical HAIRLINE
 // dividers and wrapped in a white rounded card. On mobile it wraps to a 2-up grid (the vertical
-// dividers degrade to a hairline-grid) so the numbers never crush. Pure presentational - values are
+// dividers degrade to a hairline-grid) so the numbers never crush. Pure presentational — values are
 // formatted by the caller (mono/tabular for numerics). Mirrors uniswap-explore.png's top row.
 import { type ReactNode } from 'react';
 import { cn } from '@/lib/cn';
@@ -71,7 +71,7 @@ export function StatRow({
       <div
         data-testid={testId}
         className={cn(
-          // The Arena HUD frame (chamfered octagon; ext 0 + element clip - see ui/Card.tsx).
+          // The Arena HUD frame (chamfered octagon; ext 0 + element clip — see ui/Card.tsx).
           'hud-panel [--hud-ext:0px] [clip-path:var(--hud-clip)]',
           // Mobile: a 2-up grid split by a hairline grid. >=sm: a single flex row split by vertical
           // hairlines (the reference's top band). divide-* targets the direct StatCell children.

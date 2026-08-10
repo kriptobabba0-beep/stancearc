@@ -26,7 +26,7 @@ export function pythToPrice18(price: bigint, expo: number): bigint {
 }
 
 /**
- * Fetch the latest signed update blob AND its parsed price in ONE Hermes request - the
+ * Fetch the latest signed update blob AND its parsed price in ONE Hermes request — the
  * v3 entry-anchored stake needs both: the blob posts on-chain (the contract reads the
  * anchor from it) and the parsed price18 becomes `expectedEntryPrice18` for the slippage
  * guard, so what the user is promised and what the contract reads come from the SAME update.
@@ -60,7 +60,7 @@ export async function fetchPythUpdateWithPrice(
 /**
  * CROSS variant of {@link fetchPythUpdateWithPrice} for a two-feed market (e.g. cirBTC/EURC settles on
  * BTC/EUR = BTC/USD ÷ EUR/USD). Fetches ONE Hermes blob covering BOTH feeds (so the on-chain
- * CompositePythOracle reads both legs fresh) and returns the CROSS price18 = num18 * 1e18 / den18 -
+ * CompositePythOracle reads both legs fresh) and returns the CROSS price18 = num18 * 1e18 / den18 —
  * matching the oracle's getPrice() math exactly, so the entry-anchor slippage guard agrees on-chain.
  */
 export async function fetchPythCrossUpdateWithPrice(

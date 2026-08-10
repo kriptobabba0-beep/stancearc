@@ -1,8 +1,8 @@
-// hooks/useUserStakes.ts - the connected wallet's staked positions for "Your positions".
+// hooks/useUserStakes.ts — the connected wallet's staked positions for "Your positions".
 //
 // VERSION-AWARE:
 //   - v1: the arena exposes getUserStakes(addr) -> StakeView[] directly. Used verbatim.
-//   - v2: the arena has NO getUserStakes, and the Lens has none either - the only per-account read is
+//   - v2: the arena has NO getUserStakes, and the Lens has none either — the only per-account read is
 //     Lens.getStakesByEpoch(epochId) (ALL stakes in an epoch), filtered client-side by owner. Because
 //     claims/unstakes span SETTLED past epochs, we read a WINDOW of recent epochs
 //     [currentEpochId .. currentEpochId-(N-1)] via one multicall, flatten, and keep the caller's rows.
@@ -51,7 +51,7 @@ export function useUserStakes(address?: `0x${string}`) {
   });
 
   // ── v2 path: Lens.getStakesByEpoch over a recent-epoch window, filtered by owner ──────
-  // 1) currentEpochId() off the arena - the top of the scan window.
+  // 1) currentEpochId() off the arena — the top of the scan window.
   const epochIdQuery = useReadContract({
     ...contracts.feeArena,
     functionName: 'currentEpochId',
@@ -99,13 +99,13 @@ export function useUserStakes(address?: `0x${string}`) {
     return out;
   }, [v2, address, stakesQuery.data]);
 
-  // v3 rows arrive in the v3 StakeView shape (entryPrice18/processed/won) - normalize them
+  // v3 rows arrive in the v3 StakeView shape (entryPrice18/processed/won) — normalize them
   // onto the app-wide StakeView (+ keep the entry-anchor extras on `.v3`).
   const v3Data = useMemo<readonly StakeView[] | undefined>(() => {
     if (!v3 || !v1Query.data) return undefined;
     // getUserStakes lists a tokenId once per epoch it was EVER staked in (append-only
     // userEpochTokenIds); all copies resolve to the same current positions[tokenId], so
-    // collapse to one row per tokenId - otherwise a re-staked NFT renders multiple times.
+    // collapse to one row per tokenId — otherwise a re-staked NFT renders multiple times.
     return dedupeStakesByTokenId((v1Query.data as readonly RawStakeV3[]).map(adaptStakeV3));
   }, [v3, v1Query.data]);
 

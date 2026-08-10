@@ -1,4 +1,4 @@
-// abis/erc721.ts - minimal ERC-721/Enumerable surface (owned-position enumeration fallback).
+// abis/erc721.ts — minimal ERC-721/Enumerable surface (owned-position enumeration fallback).
 export const erc721Abi = [
   { type: 'function', name: 'ownerOf', stateMutability: 'view',
     inputs: [{ name: 'tokenId', type: 'uint256' }], outputs: [{ name: '', type: 'address' }] },

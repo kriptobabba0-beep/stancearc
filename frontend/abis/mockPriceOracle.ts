@@ -1,4 +1,4 @@
-// abis/mockPriceOracle.ts - IPriceOracle + MockPriceOracle (V0). price18 = 18dp (1e18 == $1).
+// abis/mockPriceOracle.ts — IPriceOracle + MockPriceOracle (V0). price18 = 18dp (1e18 == $1).
 // Verified against out/MockPriceOracle.sol/MockPriceOracle.json (forge build).
 export const mockPriceOracleAbi = [
   { type: 'function', name: 'getPrice', stateMutability: 'view', inputs: [],

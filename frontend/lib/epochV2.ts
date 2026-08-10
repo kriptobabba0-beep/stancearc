@@ -1,20 +1,20 @@
-// lib/epochV2.ts - RAW EpochV2 -> EpochView adapter (FeeArena **v2** read layer).
+// lib/epochV2.ts — RAW EpochV2 -> EpochView adapter (FeeArena **v2** read layer).
 //
 // The v2 arena's currentEpoch()/getEpoch() return the RAW EpochV2 struct, NOT the v1 collapsed
 // EpochView. It differs from EpochView in three load-bearing ways:
-//   1. PHASE - a RAW 6-phase enum (None=0, EntryOpen=1, Running=2, Resolved=3, Swept=4, Settled=5).
+//   1. PHASE — a RAW 6-phase enum (None=0, EntryOpen=1, Running=2, Resolved=3, Swept=4, Settled=5).
 //      The UI (EpochPanel/PhaseBadge/usePollInterval) speaks the 4-phase PhaseView, so we COLLAPSE:
 //        None -> Idle, EntryOpen -> EntryOpen, Running/Resolved/Swept -> Running, Settled -> Settled.
 //      (Mirrors IFeeArena.PhaseView + EpochViewLib in src/interfaces/IFeeArena.sol.)
-//   2. NO epochId field - the raw struct omits it; the caller reads currentEpochId() (or already knows
+//   2. NO epochId field — the raw struct omits it; the caller reads currentEpochId() (or already knows
 //      the id for getEpoch(id)) and we INJECT it here.
-//   3. REORDERED + EXTRA fields - winningSide/rolledOver/sweepCursor/stakedCount/bandBps are moved, and
+//   3. REORDERED + EXTRA fields — winningSide/rolledOver/sweepCursor/stakedCount/bandBps are moved, and
 //      v2 adds conviction-parimutuel fields (subsidyUSDC, sideConviction[4], winnerSqrtConvSum,
 //      winningConvictionSum, burnedConviction, claimed*, refunded*). The raw struct has NO rollover-IN
 //      fields (rolloverPendingIn/In*), so those EpochView fields default to false/0n.
 //
 // Output is an `EpochV2View`: a structural superset of EpochView (so every existing EpochView consumer
-// - EpochPanel, SideBars, boundaryFor, usePollInterval - works unchanged) PLUS the v2-only conviction
+// — EpochPanel, SideBars, boundaryFor, usePollInterval — works unchanged) PLUS the v2-only conviction
 // fields for any v2-specific UI. Pure + framework-free so it is unit-testable in isolation.
 import { PhaseView, Side, type EpochView } from '@/lib/types';
 
@@ -31,7 +31,7 @@ export enum RawPhase {
 /**
  * The RAW EpochV2 tuple as decoded from the v2 arena's currentEpoch()/getEpoch(). Field order + names
  * mirror abis/feeArenaV2.ts EXACTLY (the `EpochV2` struct in src/FeeArenaV2.sol). viem decodes a named
- * tuple to an object; numerics are bigint (small int32/uint32 may surface as number - both handled).
+ * tuple to an object; numerics are bigint (small int32/uint32 may surface as number — both handled).
  * NOTE: there is NO epochId field here (injected by the adapter).
  */
 export interface RawEpochV2 {
@@ -77,7 +77,7 @@ export interface EpochV2View extends EpochView {
   subsidyUSDC: bigint;
   /** Per-side staked conviction totals (USDC 6dp), indexed by Side (v2). */
   sideConviction: readonly [bigint, bigint, bigint, bigint];
-  /** Σ√conviction over the winning side - the parimutuel payout denominator base (v2). */
+  /** Σ√conviction over the winning side — the parimutuel payout denominator base (v2). */
   winnerSqrtConvSum: bigint;
   /** Σ conviction over the winning side (v2). */
   winningConvictionSum: bigint;
@@ -85,7 +85,7 @@ export interface EpochV2View extends EpochView {
   burnedConviction: bigint;
 }
 
-/** The exact field order of the RawEpochV2 tuple - used to read a positionally-decoded (array) struct. */
+/** The exact field order of the RawEpochV2 tuple — used to read a positionally-decoded (array) struct. */
 const RAW_FIELD_ORDER: readonly (keyof RawEpochV2)[] = [
   'phase', 'entryOpenTime', 'entryCloseTime', 'startTime', 'endTime', 'startTimeActual',
   'settleTimeActual', 'winningSide', 'rolledOver', 'rolloverConsumed', 'sweepCursor', 'stakedCount',

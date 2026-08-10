@@ -6,6 +6,7 @@ import { Providers } from './providers';
 import { WrongNetworkBanner } from '@/components/WrongNetworkBanner';
 import { NavBar } from '@/components/NavBar';
 import { SiteFooter } from '@/components/SiteFooter';
+import { MobileNotice } from '@/components/MobileNotice';
 import { RouteChrome } from '@/components/RouteChrome';
 import { ThemeScript } from '@/components/ThemeProvider';
 
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-[460px] bg-glow"
         />
         <Providers>
+          <MobileNotice />
           <WrongNetworkBanner />
           <RouteChrome>
             <NavBar />

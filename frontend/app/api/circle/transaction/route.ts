@@ -1,4 +1,4 @@
-// POST /api/circle/transaction { userToken, id } - poll a transaction's state. (POST keeps the token out of URLs.)
+// POST /api/circle/transaction { userToken, id } — poll a transaction's state. (POST keeps the token out of URLs.)
 import { NextResponse } from 'next/server';
 import { getTransaction } from '@/lib/server/circleServer';
 import { readJson, errorJson, badRequest, reqStr } from '../_lib';

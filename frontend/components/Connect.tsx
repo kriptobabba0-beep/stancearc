@@ -17,10 +17,10 @@ function short(addr: `0x${string}`): string {
 }
 
 /**
- * Connect - the wallet control only. Three states, all styled as the redesign's squared HUD chips:
- *   • connected   - a bordered chip (green status dot + short address); click to disconnect.
- *   • no wallet   - a red-outline "Install a wallet" link (any EVM extension works).
- *   • disconnected- a red-outline "Connect Wallet" button.
+ * Connect — the wallet control only. Three states, all styled as the redesign's squared HUD chips:
+ *   • connected   — a bordered chip (green status dot + short address); click to disconnect.
+ *   • no wallet   — a red-outline "Install a wallet" link (any EVM extension works).
+ *   • disconnected— a red-outline "Connect Wallet" button.
  *
  * The Faucet + ArcScan affordances that used to live here now sit in <NavBar/> as always-visible
  * buttons (matching the mockups), so this component is purely the wallet pill.
@@ -48,7 +48,7 @@ export function Connect() {
         type="button"
         onClick={() => disconnect()}
         title="Disconnect wallet"
-        aria-label={`${short(address)} - click to disconnect`}
+        aria-label={`${short(address)} — click to disconnect`}
         className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-[10px] border border-line-strong bg-surface px-3 font-mono text-xs text-ink transition-colors hover:border-brand focus-visible:outline-none focus-visible:shadow-focus"
       >
         <span className="h-1.5 w-1.5 rounded-full bg-side-up" aria-hidden="true" />

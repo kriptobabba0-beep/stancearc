@@ -1,7 +1,7 @@
-// hooks/useTokenApproval.ts - read an ERC-20 allowance for a spender + approve once if insufficient.
+// hooks/useTokenApproval.ts — read an ERC-20 allowance for a spender + approve once if insufficient.
 // Used by the add-liquidity surfaces (ProvideLiquidity + the Arena AddLiquidityModal) to grant the NPM
 // the base + USDC it pulls during mint. Approves MAX (uint256 max) so a SINGLE approval covers all
-// future mints - the user is not re-prompted every time (only if they manually revoke). The
+// future mints — the user is not re-prompted every time (only if they manually revoke). The
 // `needsApproval` short-circuit (allowance >= requiredAmount) then skips the approve step thereafter.
 // All reads pin chainId=Arc; the approve write uses the 20-gwei Arc gas floor with a simulate preflight.
 import { useCallback, useState } from 'react';
@@ -23,12 +23,12 @@ export interface TokenApproval {
   needsApproval: boolean;
   /**
    * True once the allowance read has resolved (allowance !== undefined) OR the read is not yet
-   * enabled (no address/token/spender) - meaning the hook won't suddenly flip needsApproval from
+   * enabled (no address/token/spender) — meaning the hook won't suddenly flip needsApproval from
    * false→true once data arrives. Callers must wait for this before enabling the "Provide" button
    * to avoid a flash where canMint passes before approvals are known.
    */
   allowanceReady: boolean;
-  /** approve(spender, MAX) - one-time unlimited approval, simulate-then-write with the gas floor. */
+  /** approve(spender, MAX) — one-time unlimited approval, simulate-then-write with the gas floor. */
   approve: () => Promise<`0x${string}` | undefined>;
   isPending: boolean;
   isSuccess: boolean;
@@ -38,7 +38,7 @@ export interface TokenApproval {
 
 /**
  * Allowance read + exact approve for (token -> spender), sized to `requiredAmount`.
- * `token`/`spender` may be undefined while addresses resolve - the read is gated off until both
+ * `token`/`spender` may be undefined while addresses resolve — the read is gated off until both
  * (and the owner) are known. `needsApproval` is false while loading (so the UI doesn't flash a
  * spurious approve step) and only true once a resolved allowance is below the requirement.
  */
@@ -46,7 +46,7 @@ export function useTokenApproval(
   token: `0x${string}` | undefined,
   spender: `0x${string}` | undefined,
   requiredAmount: bigint,
-  /** Optional human label (e.g. token symbol) used in the lifecycle toast - "Approving <label>". */
+  /** Optional human label (e.g. token symbol) used in the lifecycle toast — "Approving <label>". */
   label?: string,
 ): TokenApproval {
   const { address } = useAccount();
@@ -93,7 +93,7 @@ export function useTokenApproval(
   const needsApproval =
     requiredAmount > 0n && allowance !== undefined && (allowance as bigint) < requiredAmount;
 
-  // Ready once the read has resolved, or when the read is not enabled (no wallet/token/spender yet -
+  // Ready once the read has resolved, or when the read is not enabled (no wallet/token/spender yet —
   // in that state allowance stays undefined but won't flip to a real value, so callers are safe).
   const allowanceReady = !readEnabled || !allowanceLoading;
 
@@ -102,7 +102,7 @@ export function useTokenApproval(
     try {
       if (!address) throw new Error('Connect your wallet first.');
       if (!publicClient) throw new Error('No RPC client available.');
-      if (!token || !spender) throw new Error('Token is still loading - try again in a moment.');
+      if (!token || !spender) throw new Error('Token is still loading — try again in a moment.');
       if (requiredAmount <= 0n) throw new Error('Nothing to approve.');
 
       setIsSimulating(true);

@@ -1,7 +1,7 @@
-// lib/priceInput.ts - PURE parse/format for the editable Min/Max price fields on the deposit page.
+// lib/priceInput.ts — PURE parse/format for the editable Min/Max price fields on the deposit page.
 // parsePrice is FAIL-CLOSED: it returns NaN unless the WHOLE trimmed string is a plain decimal, so a
 // pasted grouped price ("52,515"), an exponent ("1e5"), hex ("0x1f") or a unit suffix ("70k") can NEVER
-// silently truncate the band - they're rejected outright, mirroring the amount fields' fail-closed parse.
+// silently truncate the band — they're rejected outright, mirroring the amount fields' fail-closed parse.
 // toPlainPrice renders a band price back into a plain, un-grouped, parse-safe string (round-trips through
 // parsePrice within its rounding precision), so the field the user edits is always re-readable.
 

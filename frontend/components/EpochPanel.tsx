@@ -103,7 +103,7 @@ export function EpochPanel() {
         </div>
       )}
 
-      {/* Hero: the pot - what's actually at stake this epoch, in dollars (pot tokens × oracle price). */}
+      {/* Hero: the pot — what's actually at stake this epoch, in dollars (pot tokens × oracle price). */}
       <div className="rounded-2xl border border-line bg-surface-muted px-4 py-3.5">
         <div className="kicker">Pot at stake</div>
         <div
@@ -124,7 +124,7 @@ export function EpochPanel() {
         <div className="px-4 py-3">
           <div className="kicker">Start price</div>
           <div className="mt-1 font-mono text-base font-medium tnum text-ink">
-            {hasStart ? <MoneyAmount value={epoch.startPrice18} token="price" /> : '-'}
+            {hasStart ? <MoneyAmount value={epoch.startPrice18} token="price" /> : '—'}
           </div>
           <div className="mt-0.5 text-[11px] text-ink-faint">
             {hasStart ? priceLabel : 'not started'}
@@ -133,7 +133,7 @@ export function EpochPanel() {
         <div className="px-4 py-3">
           <div className="kicker">Settle price</div>
           <div className="mt-1 font-mono text-base font-medium tnum text-ink">
-            {hasSettle ? <MoneyAmount value={epoch.settlePrice18} token="price" /> : '-'}
+            {hasSettle ? <MoneyAmount value={epoch.settlePrice18} token="price" /> : '—'}
           </div>
           <div className="mt-0.5 text-[11px] text-ink-faint">
             {hasSettle ? priceLabel : 'not ended'}
@@ -141,7 +141,7 @@ export function EpochPanel() {
         </div>
       </div>
 
-      {/* Implied move to win - a pure restatement of the band, not a probability/odds claim. */}
+      {/* Implied move to win — a pure restatement of the band, not a probability/odds claim. */}
       <p
         data-testid="implied-move"
         className="mt-3 flex items-start gap-1.5 rounded-2xl border border-line bg-surface-muted px-4 py-3 text-sm text-ink-soft"
@@ -152,7 +152,7 @@ export function EpochPanel() {
 
       <dl className="mt-4 divide-y divide-line">
         <DataRow label="Oracle price">
-          {oracle ? <MoneyAmount value={oracle.price18} token="price" /> : '-'}
+          {oracle ? <MoneyAmount value={oracle.price18} token="price" /> : '—'}
         </DataRow>
         <DataRow label="Band">{formatBps(epoch.bandBps)}</DataRow>
         <DataRow label="Delta">
@@ -167,24 +167,24 @@ export function EpochPanel() {
               {formatDeltaBps(epoch.deltaBps)}
             </span>
           ) : (
-            '-'
+            '—'
           )}
         </DataRow>
         <DataRow label="Staked positions">{epoch.stakedCount}</DataRow>
         {isSettled && (
           <DataRow label="Winning side">
             {epoch.rolledOver
-              ? 'Empty winner - pot rolled forward'
+              ? 'Empty winner — pot rolled forward'
               : epoch.winningSide !== Side.NONE
                 ? SIDE_LABELS[epoch.winningSide]
-                : '-'}
+                : '—'}
           </DataRow>
         )}
       </dl>
 
       <p className="mt-3 flex items-center gap-1.5 text-xs text-ink-faint">
         <Activity className="h-3.5 w-3.5 shrink-0" />
-        Epochs run automatically on a fixed schedule (start → settle → next) - you only stake during the
+        Epochs run automatically on a fixed schedule (start → settle → next) — you only stake during the
         entry window.
       </p>
       {!isSettled && (

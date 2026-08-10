@@ -1,6 +1,6 @@
 'use client';
 
-// components/ThemeProvider.tsx - token-based theming for the Clean Institutional system.
+// components/ThemeProvider.tsx — token-based theming for the Clean Institutional system.
 //
 // The app is DARK ONLY. The palette lives in globals.css as CSS variables; the `.dark` class on
 // <html> is always on, so the SAME utility classes (text-ink, bg-surface…) resolve to the dark theme.
@@ -11,7 +11,7 @@ import { type ReactNode } from 'react';
 export type Theme = 'dark';
 
 interface ThemeContextValue {
-  /** Always 'dark' - light mode has been removed. */
+  /** Always 'dark' — light mode has been removed. */
   theme: Theme;
   /** The currently-applied theme (always 'dark'). */
   resolved: Theme;
@@ -23,7 +23,7 @@ interface ThemeContextValue {
 
 /**
  * Inline, render-blocking script that forces the `.dark` class + color-scheme:dark on <html> before
- * paint. Dark-only, so there is no branching - this just guarantees no flash before hydration.
+ * paint. Dark-only, so there is no branching — this just guarantees no flash before hydration.
  * Kept as a string so it runs synchronously in <head> (a React component would run too late).
  */
 const THEME_BOOT = `(function(){try{var e=document.documentElement;e.classList.add('dark');e.style.colorScheme='dark';}catch(_){}})();`;

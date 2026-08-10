@@ -1,9 +1,9 @@
 'use client';
 
-// components/ui/Pagination.tsx - a reusable, accessible pager for long tables (Epoch History,
+// components/ui/Pagination.tsx — a reusable, accessible pager for long tables (Epoch History,
 // Leaderboard). Renders numbered page buttons with a windowed ellipsis when there are many pages,
 // plus Prev/Next controls that disable at the ends. The active page carries aria-current="page" and
-// the brand (pink) fill; inactive pages are hairline-bordered grey. Purely presentational - the
+// the brand (pink) fill; inactive pages are hairline-bordered grey. Purely presentational — the
 // parent owns `page` state and slices its own data.
 import { cn } from '@/lib/cn';
 

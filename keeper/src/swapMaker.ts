@@ -1,10 +1,10 @@
-// swapMaker.ts - the PURE sizing brain of the cirBTC/USDC "peg-band" market maker.
+// swapMaker.ts — the PURE sizing brain of the cirBTC/USDC "peg-band" market maker.
 //
 // This replaces the one-way arb "battery" that kept bleeding cirBTC: every tick it
 // emits the single next maker leg given a pool-vs-Pyth snapshot, and it is built around
-// ONE hard invariant - it must NEVER sell the bot's scarce cirBTC (base) inventory below
+// ONE hard invariant — it must NEVER sell the bot's scarce cirBTC (base) inventory below
 // floorBase. The caller (swapbot) reads the live pool + balances, calls decideMaker, and
-// executes the returned tagged-union decision. No I/O, no clock - every input is passed
+// executes the returned tagged-union decision. No I/O, no clock — every input is passed
 // in, so the whole state space is deterministic + unit-testable (mirrors decideArb's
 // design).
 //
@@ -14,7 +14,7 @@
 // toward the peg), negative => pool too LOW (buy base toward the peg AND refill inventory).
 //
 // SIZING: the peg-correction size is derived from the pool's OWN in-range liquidity L via
-// the V3 sqrt-price relationship (baseAmountToMovePrice) - we compute the base amount that
+// the V3 sqrt-price relationship (baseAmountToMovePrice) — we compute the base amount that
 // moves the pool from its spot to a target that UNDERSHOOTS the ref by closeFraction (so we
 // never overshoot the oracle). That raw size is then rationed by inventory: on a SELL it is
 // skewed DOWN as inventory approaches the floor (and hard-capped at the sellable surplus so
@@ -97,20 +97,20 @@ function usdcBudgetToBase(
 }
 
 /**
- * Decide the single next maker action for the peg-band MM. PURE - total over the state
+ * Decide the single next maker action for the peg-band MM. PURE — total over the state
  * space, no I/O, no clock read, no input mutation.
  */
 export function decideMaker(state: MakerState, params: MakerParams): MakerDecision {
   // 1) Guards: a non-positive ref/pool price or an inert (zero-liquidity) pool means we
-  //    can't compute a deviation or size a trade - do nothing.
+  //    can't compute a deviation or size a trade — do nothing.
   if (state.ref18 <= 0n) {
-    return { kind: 'NONE', reason: 'reference price is non-positive - cannot compute deviation' };
+    return { kind: 'NONE', reason: 'reference price is non-positive — cannot compute deviation' };
   }
   if (state.poolPrice18 <= 0n) {
-    return { kind: 'NONE', reason: 'pool price is non-positive - cannot size a trade' };
+    return { kind: 'NONE', reason: 'pool price is non-positive — cannot size a trade' };
   }
   if (state.liquidity <= 0n) {
-    return { kind: 'NONE', reason: 'pool liquidity is zero - inert pool, nothing to make against' };
+    return { kind: 'NONE', reason: 'pool liquidity is zero — inert pool, nothing to make against' };
   }
 
   // 2) Signed deviation in bps: (pool - ref) / ref. Positive => pool too high.
@@ -118,7 +118,7 @@ export function decideMaker(state: MakerState, params: MakerParams): MakerDecisi
   const devBps = Number(devBpsBig);
   const absDev = babs(devBpsBig);
 
-  // 3) Deadband: the pool is close enough to the peg that we don't want to push it - but
+  // 3) Deadband: the pool is close enough to the peg that we don't want to push it — but
   //    we still want fee VOLUME, so emit a NEUTRAL round-trip. We hand the caller a small
   //    unit leg (minTradeBase); the swapbot decides the round-trip notional separately.
   if (absDev <= BigInt(params.deadbandBps)) {
@@ -126,7 +126,7 @@ export function decideMaker(state: MakerState, params: MakerParams): MakerDecisi
       kind: 'NEUTRAL',
       sizeBase: params.minTradeBase,
       devBps,
-      reason: `within deadband: |dev| ${absDev}bps <= ${params.deadbandBps}bps - peg-neutral round-trip for volume`,
+      reason: `within deadband: |dev| ${absDev}bps <= ${params.deadbandBps}bps — peg-neutral round-trip for volume`,
     };
   }
 
@@ -165,7 +165,7 @@ export function decideMaker(state: MakerState, params: MakerParams): MakerDecisi
         reason: `peg-correct SELL_BASE: dev ${devBps}bps (pool high), size ${size} base (sellable ${sellable}, skew ${skewNum}/${denom})`,
       };
     }
-    return { kind: 'NONE', devBps, reason: 'cirBTC near floor - rationing (not selling below floor)' };
+    return { kind: 'NONE', devBps, reason: 'cirBTC near floor — rationing (not selling below floor)' };
   }
 
   // 6) Pool LOW -> BUY base toward the peg AND REFILL inventory, BOOSTED when low. The buy

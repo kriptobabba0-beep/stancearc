@@ -1,6 +1,6 @@
 'use client';
 
-// components/ShareWinButton.tsx - "Share" affordance for a win. Uses the Web Share API when available
+// components/ShareWinButton.tsx — "Share" affordance for a win. Uses the Web Share API when available
 // (mobile-first), otherwise copies the share text + URL to the clipboard and surfaces a toast. The
 // share URL points at the per-epoch route (/epoch/<id>) whose OG image renders the branded result card.
 import { useCallback, useState } from 'react';
@@ -48,14 +48,14 @@ export function ShareWinButton({
         await nav.share({ title: 'Limen Finance', text, url });
         return;
       } catch {
-        // User cancelled or share failed - fall through to the clipboard path.
+        // User cancelled or share failed — fall through to the clipboard path.
       }
     }
     try {
       if (nav && nav.clipboard && typeof nav.clipboard.writeText === 'function') {
         await nav.clipboard.writeText(`${text} ${url}`);
         setCopied(true);
-        toast.success('Link copied - share your win', { id: 'share-win' });
+        toast.success('Link copied — share your win', { id: 'share-win' });
         setTimeout(() => setCopied(false), 2000);
       } else {
         toast.error('Sharing is not available in this browser', { id: 'share-win' });

@@ -1,14 +1,14 @@
 'use client';
 
-// components/TokenGlyph.tsx - small round token avatars shared across the app (the Swap card, the Pool
+// components/TokenGlyph.tsx — small round token avatars shared across the app (the Swap card, the Pool
 // positions, the arena rails). Each token wears its REAL brand coin artwork (inline SVG from
-// components/ui/TokenArt): cirBTC's purple→blue gradient ₿-mark, and the Circle-blue USDC/EURC coins -
+// components/ui/TokenArt): cirBTC's purple→blue gradient ₿-mark, and the Circle-blue USDC/EURC coins —
 // the same marks as the wallet's token list, applied everywhere. Crisp at any size, theme-neutral, no
 // image assets, CSP-safe. TokenPairGlyph overlaps any two tokens the way Uniswap renders a pool's pair.
 import { cn } from '@/lib/cn';
 import { tokenArtFor } from '@/components/ui/TokenArt';
 
-/** A single round token glyph - the token's real coin art. Size via className. */
+/** A single round token glyph — the token's real coin art. Size via className. */
 export function TokenGlyph({ symbol, className }: { symbol: string; className?: string }) {
   const Art = tokenArtFor(symbol);
   return (
@@ -19,7 +19,7 @@ export function TokenGlyph({ symbol, className }: { symbol: string; className?: 
 }
 
 /**
- * Overlapping pair avatar (first coin in front, second behind) - the way Uniswap renders a pool's two
+ * Overlapping pair avatar (first coin in front, second behind) — the way Uniswap renders a pool's two
  * tokens on the Pool page. The back coin gets a surface ring so the overlap reads cleanly on any card.
  * `quoteSymbol` defaults to USDC for back-compat with existing single-quote call sites.
  */

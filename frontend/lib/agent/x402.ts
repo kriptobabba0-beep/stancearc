@@ -1,11 +1,11 @@
-// lib/agent/x402.ts - per-message USDC billing for the copilot over x402 nanopayments.
+// lib/agent/x402.ts — per-message USDC billing for the copilot over x402 nanopayments.
 //
 // The chat endpoint becomes an x402-metered resource: a request without an X-PAYMENT
 // header is answered 402 with the payment requirements; a paying client signs a Circle
-// Gateway batched authorization (scheme "exact", extra GatewayWalletBatched - gasless,
+// Gateway batched authorization (scheme "exact", extra GatewayWalletBatched — gasless,
 // settled in batches by Circle's facilitator) and retries with the header. We verify with
 // the facilitator before serving and settle after the reply streams. Everything here is
-// plain fetch against gateway.circle.com/v1/x402 - the shapes match Circle's
+// plain fetch against gateway.circle.com/v1/x402 — the shapes match Circle's
 // @circle-fin/x402-batching SDK, which the copilot deliberately does not import (the
 // Workers bundle stays lean and the flow stays inspectable).
 //
@@ -14,12 +14,12 @@
 
 // Circle's reference buyer (GatewayClient) defaults to protocol version 2 and reads the
 // requirements from a PAYMENT-REQUIRED response header, pays via a Payment-Signature
-// request header, and reads settlement from a PAYMENT-RESPONSE header - we speak exactly
+// request header, and reads settlement from a PAYMENT-RESPONSE header — we speak exactly
 // that dialect so third-party x402 agents can pay for the copilot too.
 const X402_VERSION = 2;
 const ARC_TESTNET_NETWORK = 'eip155:5042002';
 const ARC_USDC = '0x3600000000000000000000000000000000000000';
-// Circle Gateway's wallet contract on Arc testnet - the batching scheme's verifying contract.
+// Circle Gateway's wallet contract on Arc testnet — the batching scheme's verifying contract.
 const ARC_GATEWAY_WALLET = '0x0077777d7EBA4688BDeF3E311b846F25870A19B9';
 const BATCHING_NAME = 'GatewayWalletBatched';
 const BATCHING_VERSION = 1;
@@ -43,7 +43,7 @@ export interface PaymentPayload {
 export interface X402Config {
   enabled: boolean;
   payTo: string;
-  /** USDC (6dp) per message, as base units - "10000" = $0.01. */
+  /** USDC (6dp) per message, as base units — "10000" = $0.01. */
   amount: string;
   gatewayUrl: string;
 }
@@ -58,7 +58,7 @@ export function loadX402Config(env: Record<string, string | undefined> = process
   };
 }
 
-/** The requirements a paying client must satisfy - one price, USDC on Arc testnet. */
+/** The requirements a paying client must satisfy — one price, USDC on Arc testnet. */
 export function buildPaymentRequirements(cfg: X402Config): PaymentRequirements {
   return {
     scheme: 'exact',
@@ -81,7 +81,7 @@ export function payment402Body(cfg: X402Config, error = 'payment required', reso
   };
 }
 
-/** base64(JSON), UTF-8 safe - bare btoa rejects any character above Latin-1 (e.g. an em dash). */
+/** base64(JSON), UTF-8 safe — bare btoa rejects any character above Latin-1 (e.g. an em dash). */
 export function encodeBase64Json(value: unknown): string {
   const bytes = new TextEncoder().encode(JSON.stringify(value));
   if (typeof Buffer !== 'undefined') return Buffer.from(bytes).toString('base64');
@@ -135,7 +135,7 @@ export function verifyPayment(cfg: X402Config, paymentPayload: PaymentPayload, p
   return facilitatorPost<VerifyResponse>(cfg, 'verify', { paymentPayload, paymentRequirements });
 }
 
-/** Settle after serving - Circle batches these; failure is logged, never re-billed here. */
+/** Settle after serving — Circle batches these; failure is logged, never re-billed here. */
 export function settlePayment(cfg: X402Config, paymentPayload: PaymentPayload, paymentRequirements: PaymentRequirements): Promise<SettleResponse> {
   return facilitatorPost<SettleResponse>(cfg, 'settle', { paymentPayload, paymentRequirements });
 }

@@ -1,9 +1,9 @@
 'use client';
 
-// components/agent/ActionCard.tsx - the Limen Copilot's transaction confirmation card.
+// components/agent/ActionCard.tsx — the Limen Copilot's transaction confirmation card.
 //
 // The copilot never signs anything: it proposes, this card shows exactly what will happen,
-// and the USER confirms - the signing runs through the app's existing, battle-tested hooks
+// and the USER confirms — the signing runs through the app's existing, battle-tested hooks
 // (useStakeWithSide, the same path the Stance modals use). Every outcome (executed, failed,
 // declined) is reported back into the conversation so the copilot can acknowledge honestly.
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -56,7 +56,7 @@ export function ActionCard({
 
   const { data: positions } = useOwnedPositions();
   const stakeable = positions ?? [];
-  // The card executes against the ACTIVE market's contracts - a proposal for another
+  // The card executes against the ACTIVE market's contracts — a proposal for another
   // market must not sign here (wrong pool, wrong arena). The user switches first.
   const marketMismatch = action.marketId !== market.id;
   const canStake = action.type === 'stake' && stakeable.length > 0 && !marketMismatch;
@@ -71,8 +71,8 @@ export function ActionCard({
       const tokenOut = tokenBySymbol(market.baseSymbol);
       if (!tokenOut) throw new Error(`unknown base token ${market.baseSymbol}`);
       const price18 = oracle?.price18 ?? 0n;
-      if (price18 <= 0n) throw new Error('live price unavailable - try again in a moment');
-      // toFixed clamps the model's number to the token's own precision - parseUnits throws
+      if (price18 <= 0n) throw new Error('live price unavailable — try again in a moment');
+      // toFixed clamps the model's number to the token's own precision — parseUnits throws
       // on excess fractional digits (e.g. "100.1234567" into 6dp USDC).
       const amountIn = parseUnits(action.amountUsdc.toFixed(tokenIn.decimals), tokenIn.decimals);
       // Expected base out at the live oracle price, floored 2% for pool slippage/fees.
@@ -109,7 +109,7 @@ export function ActionCard({
     onResult('[Action result] I declined the proposed action. Acknowledge briefly and do not re-propose unless I ask.');
   };
 
-  // Auto-enter (autopilot): submit the stake as soon as the card can act - once. The
+  // Auto-enter (autopilot): submit the stake as soon as the card can act — once. The
   // user's wallet still shows its own signing prompt; only the in-app card step is skipped.
   const autoFired = useRef(false);
   useEffect(() => {
@@ -154,7 +154,7 @@ export function ActionCard({
 
       {marketMismatch && action.type !== 'claim' && (
         <p className="mt-2 font-mono text-[12.5px] text-[#d99e3b]">
-          This proposal targets {action.marketId}, but you are viewing {market.id} - switch markets (top right) and ask again.
+          This proposal targets {action.marketId}, but you are viewing {market.id} — switch markets (top right) and ask again.
         </p>
       )}
 
@@ -162,8 +162,8 @@ export function ActionCard({
         <>
           <p className="mt-2 font-mono text-[12.5px] text-ink-muted">
             {canStake
-              ? `Enters the current ${action.marketId} epoch with LP position #${tokenId!.toString()} - your wallet signs; only this epoch's fee allocation is at stake, never LP principal.`
-              : 'You have no stakeable LP position on this market yet - add liquidity first, then ask me again.'}
+              ? `Enters the current ${action.marketId} epoch with LP position #${tokenId!.toString()} — your wallet signs; only this epoch's fee allocation is at stake, never LP principal.`
+              : 'You have no stakeable LP position on this market yet — add liquidity first, then ask me again.'}
           </p>
           {failed && <p className="mt-2 font-mono text-[12.5px] text-side-down">Failed: {failed}</p>}
           <div className="mt-3 flex items-center gap-2">
@@ -193,7 +193,7 @@ export function ActionCard({
         <>
           <p className="mt-2 font-mono text-[12.5px] text-ink-muted">
             Swaps {action.amountUsdc} {quoteToken(market.quoteSymbol).symbol} → {market.baseSymbol} on the {action.marketId} pool at the live
-            oracle rate (2% slippage floor - reverts rather than fill worse). Your wallet signs.
+            oracle rate (2% slippage floor — reverts rather than fill worse). Your wallet signs.
           </p>
           {failed && <p className="mt-2 font-mono text-[12.5px] text-side-down">Failed: {failed}</p>}
           <div className="mt-3 flex items-center gap-2">
@@ -221,7 +221,7 @@ export function ActionCard({
 
 /** In-chat LP mint: the proposal's amount + optional price band become a REAL position.
  *  Both token legs are computed from the live pool price for the exact range, approvals are
- *  topped up as needed, and the user's wallet signs - no page handoff. */
+ *  topped up as needed, and the user's wallet signs — no page handoff. */
 function AddLiquidityInline({
   action,
   blocked = false,
@@ -270,8 +270,8 @@ function AddLiquidityInline({
         const slot0 = decodeSlot0(
           await publicClient.readContract({ address: market.pool, abi: uniswapV3PoolAbi, functionName: 'slot0' }),
         );
-        if (!slot0) throw new Error('pool price unavailable - try again in a moment');
-        // The size-and-split math is pure (lib/agent/lpPlan) - this component only reads
+        if (!slot0) throw new Error('pool price unavailable — try again in a moment');
+        // The size-and-split math is pure (lib/agent/lpPlan) — this component only reads
         // the pool + balances and signs.
         const sized = planLiquidity({
           amountUsdc: action.amountUsdc,
@@ -297,7 +297,7 @@ function AddLiquidityInline({
           ...sized,
           rangeLabel:
             action.priceLower !== undefined && action.priceUpper !== undefined
-              ? `${formatHumanPrice(action.priceLower)} - ${formatHumanPrice(action.priceUpper)} ${quote.symbol}`
+              ? `${formatHumanPrice(action.priceLower)} – ${formatHumanPrice(action.priceUpper)} ${quote.symbol}`
               : 'Full range',
           shortfall: missing.length > 0 ? `You are short ${missing.join(' and ')}.` : null,
         });
@@ -380,7 +380,7 @@ function AddLiquidityInline({
       )}
       {plan !== null && plan.outOfBand && (
         <p className="mt-2 font-mono text-[12.5px] text-[#d99e3b]">
-          The live price ({formatHumanPrice(plan.priceNow)} {quote.symbol}) is OUTSIDE this band - the position starts one-sided and earns no fees
+          The live price ({formatHumanPrice(plan.priceNow)} {quote.symbol}) is OUTSIDE this band — the position starts one-sided and earns no fees
           until the price enters the range.
         </p>
       )}
@@ -504,7 +504,7 @@ function ClaimInline({
         <p className="mt-2 font-mono text-[12.5px] text-ink-muted">Reading your claimable winnings…</p>
       ) : rows.length === 0 ? (
         <p className="mt-2 font-mono text-[12.5px] text-ink-muted">
-          Nothing is claimable right now - wins appear here the moment their epoch settles.
+          Nothing is claimable right now — wins appear here the moment their epoch settles.
         </p>
       ) : (
         <div className="mt-3 space-y-3">

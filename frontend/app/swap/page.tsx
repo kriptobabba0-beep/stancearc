@@ -1,9 +1,9 @@
 'use client';
 
-// app/swap/page.tsx - SWAP (moved from "/" - the root is now a dispatcher: first visit → /welcome,
+// app/swap/page.tsx — SWAP (moved from "/" — the root is now a dispatcher: first visit → /welcome,
 // returning visits → /arena). A single token-pair <SwapForm/> centered as the hero. There is NO
 // market selector here: the swap is pool-routed by the tokens you pick (cirBTC / USDC / EURC), not
-// bound to an arena market - the market selector lives on the Arena + Pool pages where it belongs.
+// bound to an arena market — the market selector lives on the Arena + Pool pages where it belongs.
 import { SwapForm } from '@/components/SwapForm';
 import { SettlementBanner } from '@/components/SettlementBanner';
 

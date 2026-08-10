@@ -1,6 +1,6 @@
 'use client';
 
-// hooks/useWalletPortfolio.ts - token balances (multicall) + USD valuation for a wallet address.
+// hooks/useWalletPortfolio.ts — token balances (multicall) + USD valuation for a wallet address.
 
 import { useReadContracts } from 'wagmi';
 import { formatUnits } from 'viem';

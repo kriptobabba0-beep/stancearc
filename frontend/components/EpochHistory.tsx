@@ -1,6 +1,6 @@
 'use client';
 
-// components/EpochHistory.tsx - "Clean Institutional" table of past epochs for the ACTIVE market,
+// components/EpochHistory.tsx — "Clean Institutional" table of past epochs for the ACTIVE market,
 // built from on-chain events via useEpochHistory(). Side badges from lib/side.ts, pots via
 // BaseAmount/MoneyAmount (per-market decimals), mono tabular numerics, Skeleton + empty states.
 import { useEffect, useState } from 'react';
@@ -34,27 +34,27 @@ function HistoryRow({ row }: { row: EpochHistoryRow }) {
       <td className="py-2.5 pr-3 font-mono text-sm tnum text-ink">#{row.epochId.toString()}</td>
       <td className="py-2.5 pr-3 font-mono text-xs tnum text-ink-soft">
         {row.perPosition ? (
-          // v3: no global start price - entries are per-position; show the settlement price only.
+          // v3: no global start price — entries are per-position; show the settlement price only.
           <>
             <span className="text-ink-faint">settle </span>
-            {row.settlePrice18 !== undefined ? formatPrice18(row.settlePrice18) : '-'}
+            {row.settlePrice18 !== undefined ? formatPrice18(row.settlePrice18) : '—'}
           </>
         ) : (
           <>
             {formatPrice18(row.startPrice18)}
             <span className="px-1 text-ink-faint">→</span>
-            {row.settlePrice18 !== undefined ? formatPrice18(row.settlePrice18) : '-'}
+            {row.settlePrice18 !== undefined ? formatPrice18(row.settlePrice18) : '—'}
           </>
         )}
       </td>
       <td className="py-2.5 pr-3 text-right font-mono text-xs tnum text-ink-soft">
-        {row.deltaBps !== undefined ? formatDeltaBps(row.deltaBps) : '-'}
+        {row.deltaBps !== undefined ? formatDeltaBps(row.deltaBps) : '—'}
       </td>
       <td className="py-2.5 pr-3">
         {row.rolledOver ? (
           <Badge tone="warning">rolled over</Badge>
         ) : row.perPosition ? (
-          // ENTRY-ANCHORED: no global winner - each position resolved vs its own entry price.
+          // ENTRY-ANCHORED: no global winner — each position resolved vs its own entry price.
           <Badge tone="neutral">per-position</Badge>
         ) : (
           <SideBadge side={row.winningSide} />
@@ -67,7 +67,7 @@ function HistoryRow({ row }: { row: EpochHistoryRow }) {
         </span>
       </td>
       <td className="py-2.5 text-right font-mono text-sm tnum text-ink-soft">
-        {row.rolledOver ? 0 : row.winnerCount ?? '-'}
+        {row.rolledOver ? 0 : row.winnerCount ?? '—'}
       </td>
     </tr>
   );

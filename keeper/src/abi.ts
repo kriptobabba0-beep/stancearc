@@ -1,4 +1,4 @@
-// abi.ts - minimal ABIs the keeper needs. Signatures mirror the real artifacts in
+// abi.ts — minimal ABIs the keeper needs. Signatures mirror the real artifacts in
 // frontend/abis/feeArena.ts and frontend/abis/pyth.ts EXACTLY (field order/types).
 // `as const` is required for viem's type inference; on-chain numerics decode to bigint.
 
@@ -58,13 +58,13 @@ export const feeArenaAbi = [
     ],
   },
   { type: 'function', name: 'paused', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'bool' }] },
-  // maxStartDelay is a plain public var, NOT part of EpochView - read separately so the
+  // maxStartDelay is a plain public var, NOT part of EpochView — read separately so the
   // keeper can detect a missed (wedged) start window instead of reverting START forever.
   { type: 'function', name: 'maxStartDelay', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint32' }] },
   // ---- v1 auto-return reads ----
   // The most recently Settled epoch (0 if none). Auto-return targets THIS epoch.
   { type: 'function', name: 'lastSettledEpochId', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint64' }] },
-  // Auto-return cursor (public mapping getter) - fully on-chain, restart-proof. The total
+  // Auto-return cursor (public mapping getter) — fully on-chain, restart-proof. The total
   // is sweepProgress(epochId).total (== stakedCount); no dedicated unstakeProgress view
   // exists on-chain (the arena sits against the EIP-170 contract-size limit).
   { type: 'function', name: 'unstakeCursor', stateMutability: 'view', inputs: [{ name: '', type: 'uint64' }], outputs: [{ name: '', type: 'uint32' }] },
@@ -80,7 +80,7 @@ export const feeArenaAbi = [
   // their owners (a reverting receiver is parked on-chain, never retried by the batch).
   { type: 'function', name: 'unstakeBatch', stateMutability: 'nonpayable', inputs: [{ name: 'epochId', type: 'uint64' }, { name: 'maxCount', type: 'uint256' }], outputs: [] },
   // ---- owner-only terminal recovery (OPTIONAL wedge auto-recovery) ----
-  // emergencySettle(epochId, Side resolution) - onlyOwner escape hatch for a wedged epoch.
+  // emergencySettle(epochId, Side resolution) — onlyOwner escape hatch for a wedged epoch.
   // The keeper invokes this ONLY with the optional owner key (KEEPER_OWNER_PRIVATE_KEY) and
   // ONLY for a genuinely-wedged epoch after endTime+GRACE. `resolution` is the Side enum
   // (uint8); the keeper passes RANGE (3). Mirrors FeeArena.emergencySettle 1:1.
@@ -98,7 +98,7 @@ export const feeArenaAbi = [
  * FeeArenaV2 surface used by the keeper. v2 differs from v1 ONLY in the SETTLE path: the
  * contract PINS the start/end price publishTime into a tight window
  * [endpointTime, endpointTime+settleWindow] via getPinnedPrice -> parsePriceFeedUpdates.
- * IMPORTANT: startEpoch/endEpoch's on-chain SIGNATURE is still `(bytes[] priceData)` - the
+ * IMPORTANT: startEpoch/endEpoch's on-chain SIGNATURE is still `(bytes[] priceData)` — the
  * min/max publishTime is computed INSIDE the contract from the epoch's startTime/endTime +
  * `settleWindow`; the keeper does NOT pass them. The keeper's job is purely TIMING: post a
  * fresh blob (publishTime ~= now) while now is inside the window (see decideV2.ts).
@@ -214,7 +214,7 @@ export const feeArenaV2Abi = [
   },
   { type: 'function', name: 'paused', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'bool' }] },
   { type: 'function', name: 'maxStartDelay', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint32' }] },
-  // USDC token of this arena - read so the keeper can approve it to the arena before fundSubsidy.
+  // USDC token of this arena — read so the keeper can approve it to the arena before fundSubsidy.
   { type: 'function', name: 'USDC', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'address' }] },
   // v2 pin width: the start/end publishTime is forced into [endpointTime, endpointTime+settleWindow].
   // Read so the keeper can compute the window (hard-capped at 60 by decideV2.effectiveSettleWindow).
@@ -224,14 +224,14 @@ export const feeArenaV2Abi = [
   // ---- lifecycle cranks (structurally identical to v1) ----
   { type: 'function', name: 'createEpoch', stateMutability: 'nonpayable', inputs: [], outputs: [{ name: 'epochId', type: 'uint64' }] },
   { type: 'function', name: 'openEntry', stateMutability: 'nonpayable', inputs: [], outputs: [] },
-  // PINNED start/end. Signature is (bytes[]) - the contract pins the publishTime window itself.
+  // PINNED start/end. Signature is (bytes[]) — the contract pins the publishTime window itself.
   { type: 'function', name: 'startEpoch', stateMutability: 'payable', inputs: [{ name: 'priceData', type: 'bytes[]' }], outputs: [] },
   { type: 'function', name: 'endEpoch', stateMutability: 'payable', inputs: [{ name: 'priceData', type: 'bytes[]' }], outputs: [] },
   // ---- settlement back-half (structurally identical to v1) ----
   { type: 'function', name: 'sweep', stateMutability: 'nonpayable', inputs: [{ name: 'maxCount', type: 'uint256' }], outputs: [] },
   { type: 'function', name: 'finalizeSettle', stateMutability: 'nonpayable', inputs: [], outputs: [] },
   // ---- owner-only OPTIONAL external-value injection (v2) ----
-  // fundSubsidy(epochId, amount) - onlyOwner, phase < Resolved, hard-capped at maxSubsidyPerEpoch.
+  // fundSubsidy(epochId, amount) — onlyOwner, phase < Resolved, hard-capped at maxSubsidyPerEpoch.
   // Needs a prior USDC approve to the arena. Called by the keeper's OWNER key when configured.
   { type: 'function', name: 'fundSubsidy', stateMutability: 'nonpayable', inputs: [{ name: 'epochId', type: 'uint64' }, { name: 'amount', type: 'uint256' }], outputs: [] },
   // ---- owner-only terminal recovery (OPTIONAL wedge auto-recovery, identical surface to v1) ----
@@ -239,18 +239,18 @@ export const feeArenaV2Abi = [
   // ---- custom errors the keeper REACTS to ----
   // Identical to v1: sweep() on an already-Swept/Settled epoch reverts SweepAlreadyDone
   // (selector 0x562d6d1b). FeeArenaV2's phase-collapse maps Swept(4)->Running too, so v2 also
-  // can't distinguish Swept-empty from Resolved-empty post-restart - declaring the error here
+  // can't distinguish Swept-empty from Resolved-empty post-restart — declaring the error here
   // lets the keeper auto-recover a v2 empty-epoch double-sweep the same benign way as v1.
   { type: 'error', name: 'SweepAlreadyDone', inputs: [] },
 ] as const;
 
 /**
- * FeeArenaV3 (ENTRY-ANCHORED) surface used by the keeper. v3 has NO startEpoch - the
+ * FeeArenaV3 (ENTRY-ANCHORED) surface used by the keeper. v3 has NO startEpoch — the
  * lifecycle is create -> open -> (entry + locked watch, pure time gating) ->
  * submitSettlementPrice (the keeper's off-chain 60s average, anchored on-chain against a
  * fresh Pyth read) -> processPositions batches (per-position outcomes) -> finalizeEpoch ->
  * unstakeBatch (auto-return). currentEpoch() returns the EpochView with the DERIVED
- * 5-phase PhaseView (Idle/EntryOpen/Locked/Settling/Settled) - no collapse needed here.
+ * 5-phase PhaseView (Idle/EntryOpen/Locked/Settling/Settled) — no collapse needed here.
  */
 export const feeArenaV3Abi = [
   // ---- reads ----
@@ -324,25 +324,25 @@ export const feeArenaV3Abi = [
   { type: 'function', name: 'processPositions', stateMutability: 'nonpayable', inputs: [{ name: 'epochId', type: 'uint64' }, { name: 'maxCount', type: 'uint256' }], outputs: [] },
   { type: 'function', name: 'finalizeEpoch', stateMutability: 'nonpayable', inputs: [{ name: 'epochId', type: 'uint64' }], outputs: [] },
   { type: 'function', name: 'unstakeBatch', stateMutability: 'nonpayable', inputs: [{ name: 'epochId', type: 'uint64' }, { name: 'maxCount', type: 'uint256' }], outputs: [] },
-  // emergencySettle(epochId) - onlyOwner escape hatch the v3 keeper auto-fires after the on-chain
-  // GRACE elapses when an epoch can't settle (dead oracle). NOTE: v3 takes ONE arg (no Side) - unlike
+  // emergencySettle(epochId) — onlyOwner escape hatch the v3 keeper auto-fires after the on-chain
+  // GRACE elapses when an epoch can't settle (dead oracle). NOTE: v3 takes ONE arg (no Side) — unlike
   // the v1/v2 two-arg version above; emergencySettle rolls all collected fees forward, no resolution.
   { type: 'function', name: 'emergencySettle', stateMutability: 'nonpayable', inputs: [{ name: 'epochId', type: 'uint64' }], outputs: [] },
-  // maxPriceAge() - the on-chain freshness bound, read by the SETTLE projected-mine gate. (Was absent
-  // here, so that read always threw and the gate was dead code - adding it revives the gate.)
+  // maxPriceAge() — the on-chain freshness bound, read by the SETTLE projected-mine gate. (Was absent
+  // here, so that read always threw and the gate was dead code — adding it revives the gate.)
   { type: 'function', name: 'maxPriceAge', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint32' }] },
 ] as const;
 
 /**
  * The PINNED oracle read surface (PythPriceOracleV2 / any IPinnedPriceOracle). NOTE: the
- * keeper does NOT call getPinnedPrice directly - FeeArenaV2.startEpoch/endEpoch call it
+ * keeper does NOT call getPinnedPrice directly — FeeArenaV2.startEpoch/endEpoch call it
  * INTERNALLY (forwarding the WHOLE msg.value as the parse fee). It is mirrored here for
  * completeness / documentation of the v2 settle boundary: getPinnedPrice runs
  * pyth.parsePriceFeedUpdates(updateData, [feedId], minPublishTime, maxPublishTime), which
- * REVERTS (PriceFeedNotFoundWithinRange) unless the blob's publishTime is in [min,max] -
+ * REVERTS (PriceFeedNotFoundWithinRange) unless the blob's publishTime is in [min,max] —
  * THIS is what pins the timestamp and what the keeper's decideV2 window logic respects so
  * the posted blob lands in-window. (The keeper still prices the fee via Pyth.getUpdateFee,
- * exactly as v1 - see pythAbi below.)
+ * exactly as v1 — see pythAbi below.)
  */
 export const pinnedOracleAbi = [
   {
@@ -395,7 +395,7 @@ export const v3PoolAbi = [
  * passed as one tuple arg. sqrtPriceLimitX96 is PINNED to the ref-target tick by the arb
  * bot so the AMM bounds the swap and can never push the pool past the oracle.
  *
- * multicall(bytes[]) is the SwapRouter's inherited Multicall - it delegatecalls each encoded
+ * multicall(bytes[]) is the SwapRouter's inherited Multicall — it delegatecalls each encoded
  * call in ONE tx, sharing the caller's approvals. The epoch-mode swap bot uses it to fire a
  * balanced [SELL, BUY] pair ATOMICALLY: if either embedded exactInputSingle reverts, the whole
  * tx reverts and the pool is provably never left pushed off the peg (no residual long can form).

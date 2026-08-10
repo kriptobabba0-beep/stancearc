@@ -1,4 +1,4 @@
-// lib/epochServer.ts - server-side (non-React) reads for the per-epoch share route + its OG image.
+// lib/epochServer.ts — server-side (non-React) reads for the per-epoch share route + its OG image.
 // The OG image and the /epoch/[id] metadata run on the server with no wallet/localStorage, so they
 // read the DEFAULT market via a plain viem client built from ENV (not the wagmi/client config).
 //
@@ -60,7 +60,7 @@ export async function readEpochShareData(epochId: bigint): Promise<EpochShareDat
       })) as readonly [bigint, bigint];
       price18 = tuple[0];
     } catch {
-      /* oracle read failed - pot USD falls back to the USDC leg only */
+      /* oracle read failed — pot USD falls back to the USDC leg only */
     }
 
     const { potUsd6 } = await import('@/lib/quant');

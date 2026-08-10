@@ -1,16 +1,16 @@
-// agent.ts - the Limen Agent's ACT layer: a policy-bounded, signal-driven epoch participant.
+// agent.ts — the Limen Agent's ACT layer: a policy-bounded, signal-driven epoch participant.
 //
 // A SEPARATE process with a SEPARATE key (LIMEN_AGENT_PRIVATE_KEY), OFF unless
 // LIMEN_AGENT_ENABLED=true. Each poll it reads the live epoch, computes the same stance
-// signal the Advise panel shows (pure quant over Pyth benchmark bars - see agentQuant.ts),
+// signal the Advise panel shows (pure quant over Pyth benchmark bars — see agentQuant.ts),
 // and asks the PURE mandate engine (decideAgent.ts) whether entering is allowed: allowed
 // views, confidence floor, mandate expiry, entry-window floor, once-per-epoch. Only a full
-// YES mints/uses its LP position and stakes the recommended side - the same entry-anchored
+// YES mints/uses its LP position and stakes the recommended side — the same entry-anchored
 // stakeWithSide flow the stakerbot exercises, so nothing here touches user funds or adds a
 // new contract surface. The once-per-epoch guard is the persisted epoch ledger (restart-safe).
 //
 // Funding model: this wallet's budget is intended to be drawn from a Circle Agent Wallet
-// (2-of-2 MPC treasury) - see docs/AGENT.md. On Arc testnet, Circle's wallet-layer spending
+// (2-of-2 MPC treasury) — see docs/AGENT.md. On Arc testnet, Circle's wallet-layer spending
 // policies are mainnet-only, so THIS process's mandate engine is the enforcement until then.
 import {
   createPublicClient,
@@ -105,7 +105,7 @@ async function discoverTokenId(client: PublicClient, cfg: AgentBotConfig, owner:
 
 async function mintLp(client: PublicClient, rt: AgentRuntime, chain: Chain, cfg: AgentBotConfig): Promise<bigint> {
   const gas = { maxFeePerGas: cfg.gasFloorWei, maxPriorityFeePerGas: cfg.gasFloorWei } as const;
-  // The QUOTE leg is the mandate's budget cap - the agent can never mint a bigger position.
+  // The QUOTE leg is the mandate's budget cap — the agent can never mint a bigger position.
   const mintUsdc = cfg.policy.maxStakeUsdc6;
   for (const [token, need] of [
     [cfg.market.base, cfg.mintBase] as const,
@@ -262,7 +262,7 @@ export async function tickAgent(client: PublicClient, chain: Chain, cfg: AgentBo
   if (bal < MIN_OPERATING_WEI) {
     // With the treasury rail on, a dry signer is a funding event, not a wait.
     if (!(await fundNativeFromTreasury(client, cfg, rt.account.address))) {
-      log({ msg: 'agent.waiting', reason: 'insufficient gas - fund the agent wallet from its Agent Wallet treasury', balanceWei: bal.toString() });
+      log({ msg: 'agent.waiting', reason: 'insufficient gas — fund the agent wallet from its Agent Wallet treasury', balanceWei: bal.toString() });
       return;
     }
   }
@@ -278,7 +278,7 @@ export async function tickAgent(client: PublicClient, chain: Chain, cfg: AgentBo
   const horizonSec = Number(ep.settlementTime) - nowSec;
   const bandBps = Number(ep.bandBps);
 
-  // The same signal the Advise panel shows - computed here so the bot is self-contained.
+  // The same signal the Advise panel shows — computed here so the bot is self-contained.
   let signal: StanceSignal | null = null;
   if (horizonSec > 0 && bandBps > 0) {
     try {
@@ -315,7 +315,7 @@ export async function tickAgent(client: PublicClient, chain: Chain, cfg: AgentBo
     if (!canAffordStake({ haveBase, haveUsdc, needBase: cfg.mintBase, needUsdc: cfg.policy.maxStakeUsdc6 })) {
       // Try the treasury before giving up: native USDC covers quote leg + gas in one
       // transfer; the base leg is a token transfer. Either landing short of the mark
-      // just means the NEXT tick affords the mint - still inside the entry window.
+      // just means the NEXT tick affords the mint — still inside the entry window.
       const [fundedNative, fundedBase] = [
         haveUsdc < cfg.policy.maxStakeUsdc6 ? await fundNativeFromTreasury(client, cfg, rt.account.address) : true,
         haveBase < cfg.mintBase ? await fundBaseFromTreasury(client, cfg, rt.account.address, haveBase) : true,
@@ -328,7 +328,7 @@ export async function tickAgent(client: PublicClient, chain: Chain, cfg: AgentBo
     rt.tokenId = await mintLp(client, rt, chain, cfg);
   } else {
     // A token staked from a PREVIOUS epoch may not be back in the wallet yet (auto-return
-    // runs right after settlement) - staking would revert, so wait for custody first.
+    // runs right after settlement) — staking would revert, so wait for custody first.
     const owner = (await client.readContract({ address: cfg.npm, abi: npmAbi, functionName: 'ownerOf', args: [rt.tokenId] })) as string;
     if (owner.toLowerCase() !== rt.account.address.toLowerCase()) {
       log({ msg: 'agent.waiting', reason: 'LP position not yet returned from the previous epoch', tokenId: rt.tokenId });
@@ -338,7 +338,7 @@ export async function tickAgent(client: PublicClient, chain: Chain, cfg: AgentBo
 
   await ensureApproval(client, rt, chain, cfg);
   // Claim-before-restake: the arena keeps ONE position record per token, overwritten by
-  // the next stake - an unclaimed win from the previous epoch would be silently lost.
+  // the next stake — an unclaimed win from the previous epoch would be silently lost.
   // Simulating claim() is the authoritative check (it reverts unless something is owed).
   try {
     const sim = await client.simulateContract({ account: rt.account, address: cfg.arena, abi: arenaAbi, functionName: 'claim', args: [rt.tokenId], gas: 900_000n });
@@ -346,7 +346,7 @@ export async function tickAgent(client: PublicClient, chain: Chain, cfg: AgentBo
     await client.waitForTransactionReceipt({ hash: tx, timeout: cfg.receiptTimeoutMs });
     log({ msg: 'agent.claim', tokenId: rt.tokenId, txHash: tx });
   } catch {
-    // nothing claimable on this token - the normal case
+    // nothing claimable on this token — the normal case
   }
   const staked = await stakeSide(client, rt, chain, cfg, rt.tokenId, verdict.side);
   if (staked) {

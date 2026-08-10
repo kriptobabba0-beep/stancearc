@@ -1,30 +1,30 @@
-// lib/rpcProxy.ts - the edge JSON-RPC cache/proxy core behind /api/rpc.
+// lib/rpcProxy.ts — the edge JSON-RPC cache/proxy core behind /api/rpc.
 //
 // Why this exists: Arc testnet has ONE public RPC and it rate-limits per client. Every
 // visitor's browser polling it directly means N visitors = N× the same global reads
-// (current epoch, pots, pool state, prices) - and any burst trips "request limit reached".
+// (current epoch, pots, pool state, prices) — and any burst trips "request limit reached".
 // Routing reads through our own Cloudflare edge changes the economics:
 //
 //   browser → /api/rpc (this code) → rpc.testnet.arc.network
 //
 //   - Identical reads are served from cache (L1 in-isolate map + L2 Cache API where TTL
-//     allows), so the origin sees roughly ONE request per unique read per TTL - not one
+//     allows), so the origin sees roughly ONE request per unique read per TTL — not one
 //     per visitor.
 //   - Concurrent identical misses are coalesced into a single upstream call.
 //   - When the upstream throttles us, fresh-enough last-good values (≤45s) are served in
-//     place of an error - visitors browse on stale-by-seconds data instead of a broken page.
+//     place of an error — visitors browse on stale-by-seconds data instead of a broken page.
 //   - When nothing can be served, the entry fails with the JSON-RPC limit code (-32005),
 //     which viem's fallback treats as retryable → the browser transparently retries on the
 //     DIRECT endpoints from the user's own IP (a separate limiter budget).
 //
 // The proxy never caches writes or state-changing/nonce-sensitive calls
-// (eth_sendRawTransaction, eth_estimateGas, eth_getTransactionCount, …) - those pass
+// (eth_sendRawTransaction, eth_estimateGas, eth_getTransactionCount, …) — those pass
 // straight through. eth_call TTL is deliberately short (1.2s) so time-critical agent
 // rechecks stay honest; the win comes from many visitors sharing it, not from it being long.
 
 import { ENV } from '@/lib/env';
 import { arcHttpEndpoints } from '@/lib/arcEndpoints';
-import { RateLimitGate, rpcGate } from '@/lib/rpcResilience';
+import { EndpointCooldowns, arcEndpointCooldowns } from '@/lib/rpcResilience';
 
 // ── JSON-RPC shapes ───────────────────────────────────────────────────────────────────
 export interface RpcEntry {
@@ -37,7 +37,7 @@ type RpcResult = { jsonrpc: '2.0'; id: unknown; result: unknown };
 type RpcError = { jsonrpc: '2.0'; id: unknown; error: { code: number; message: string } };
 export type RpcResponse = RpcResult | RpcError;
 
-const LIMIT_CODE = -32005; // viem: LimitExceededRpcError - retryable, so fallback moves on
+const LIMIT_CODE = -32005; // viem: LimitExceededRpcError — retryable, so fallback moves on
 const INTERNAL_CODE = -32603;
 
 // ── Cache policy ──────────────────────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ const NEVER_CACHE = new Set([
 /** Only plain Ethereum namespaces ride through; debug_/admin_/… are refused outright. */
 const ALLOWED_METHOD = /^(eth|net|web3)_[a-zA-Z0-9]+$/;
 
-/** Policy at WRITE time (result in hand - receipts cache differently when still pending). */
+/** Policy at WRITE time (result in hand — receipts cache differently when still pending). */
 function writePolicy(method: string, params: unknown, result: unknown): Policy | null {
   if (NEVER_CACHE.has(method)) return null;
   const fixed = STATIC_TTL[method];
@@ -124,13 +124,19 @@ type LastGood = { value: unknown; at: number };
 
 const L1_MAX_ENTRIES = 600;
 const STALE_OK_MS = 45_000;
-const UPSTREAM_TIMEOUT_MS = 5_000;
+// A healthy Arc endpoint answers in about 200ms. Anything past a second is already broken,
+// so these are failure detectors, not patience: 2.5s to give up on one endpoint, and 4s as
+// the hard ceiling on the whole request. Past the ceiling the browser is better served by a
+// retryable error — its own fallback reaches the same endpoints direct, from a different IP
+// with a separate limiter budget, and gets an answer sooner than we could.
+const UPSTREAM_TIMEOUT_MS = 2_500;
+const TOTAL_BUDGET_MS = 4_000;
 const MAX_BATCH = 200;
 
 export interface ProxyDeps {
   upstreams: string[];
   fetchFn: typeof fetch;
-  gate: RateLimitGate;
+  cooldowns: EndpointCooldowns;
   now: () => number;
   l1: Map<string, L1Entry>;
   lastGood: Map<string, LastGood>;
@@ -146,11 +152,11 @@ const moduleInflight = new Map<string, Promise<unknown>>();
 export function defaultProxyDeps(): ProxyDeps {
   const cachesGlobal = (globalThis as { caches?: { default?: ProxyDeps['cacheApi'] } }).caches;
   return {
-    // Configured endpoints first, then Circle-documented provider mirrors - four independent
+    // Configured endpoints first, then Circle-documented provider mirrors — four independent
     // infrastructures to rotate across before we ever have to serve stale or say "limited".
     upstreams: arcHttpEndpoints(ENV.RPC_HTTP_URLS),
     fetchFn: fetch.bind(globalThis),
-    gate: rpcGate,
+    cooldowns: arcEndpointCooldowns,
     now: Date.now,
     l1: moduleL1,
     lastGood: moduleLastGood,
@@ -167,7 +173,7 @@ function capped<K, V>(map: Map<K, V>, key: K, value: V, max: number): void {
   map.set(key, value);
 }
 
-// L2 keys are synthetic GET requests - the Cache API can't key on POST bodies.
+// L2 keys are synthetic GET requests — the Cache API can't key on POST bodies.
 function l2Request(key: string): Request {
   return new Request(`https://arc-rpc-cache.internal/${encodeURIComponent(key)}`);
 }
@@ -193,7 +199,7 @@ async function l2Put(deps: ProxyDeps, key: string, value: unknown, seconds: numb
       }),
     );
   } catch {
-    // best-effort cache - never let a cache write failure break the response
+    // best-effort cache — never let a cache write failure break the response
   }
 }
 
@@ -207,9 +213,16 @@ function idKey(id: unknown): string {
 }
 
 /**
- * One pass through the upstream list with the shared gate: wait out any cooldown, POST the
- * batch, and on a 429/limit answer trip the gate and move to the next upstream. No long
- * internal retries - bounded latency; the browser-side fallback is the second line.
+ * One pass through the upstream list, skipping the endpoints we already know are busy or
+ * broken, until one answers or the time budget runs out.
+ *
+ * This function NEVER sleeps. It runs inside a Worker isolate that is serving a browser
+ * request, and a sleep there stalls every visitor that isolate is handling, not just this
+ * one. When an endpoint throttles us it goes on cooldown and we ask the next endpoint in the
+ * same millisecond — that is the entire reason for keeping four mirrors on separate
+ * infrastructures. When none of them can answer, returning promptly is itself the useful
+ * answer: the caller serves last-good, or hands the browser a retryable error it can satisfy
+ * from its own connection.
  */
 async function callUpstreams(
   entries: Array<{ id: unknown; method: string; params: unknown }>,
@@ -217,25 +230,44 @@ async function callUpstreams(
 ): Promise<UpstreamOutcome> {
   let sawLimit = false;
   let lastMessage = 'no upstream configured';
+  const deadline = deps.now() + TOTAL_BUDGET_MS;
+  // Answers accumulate across upstreams: an entry a node could not execute is asked again on the
+  // next one, while entries already answered are not re-sent.
+  const answers = new Map<string, { result?: unknown; error?: { code: number; message: string } }>();
+  let pending = entries;
+  const bodyFor = (list: typeof entries) =>
+    JSON.stringify(list.map((e) => ({ jsonrpc: '2.0', id: e.id, method: e.method, params: e.params ?? [] })));
+
   for (const url of deps.upstreams) {
-    await deps.gate.waitForClear();
+    if (pending.length === 0) break;
+    const body = bodyFor(pending);
+    if (!deps.cooldowns.available(url)) {
+      // Cooling from a recent throttle or failure. Skipping is the point, so this costs nothing.
+      sawLimit = true;
+      lastMessage = 'all upstreams are cooling down';
+      continue;
+    }
+    const left = deadline - deps.now();
+    if (left <= 0) {
+      lastMessage = 'proxy time budget exhausted';
+      break;
+    }
     try {
       const res = await deps.fetchFn(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          entries.map((e) => ({ jsonrpc: '2.0', id: e.id, method: e.method, params: e.params ?? [] })),
-        ),
-        signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+        body,
+        signal: AbortSignal.timeout(Math.min(UPSTREAM_TIMEOUT_MS, left)),
       });
       if (res.status === 429) {
         sawLimit = true;
         lastMessage = 'upstream returned 429';
-        deps.gate.reportRateLimit();
+        deps.cooldowns.report(url);
         continue;
       }
       if (!res.ok) {
         lastMessage = `upstream HTTP ${res.status}`;
+        deps.cooldowns.report(url);
         continue;
       }
       const json = (await res.json()) as unknown;
@@ -254,26 +286,77 @@ async function callUpstreams(
           byId.set(idKey(r.id), { result: r.result ?? null });
         }
       }
-      // A limiter can also answer 200 with per-entry -32005s - treat a fully-limited batch
+      // A limiter can also answer 200 with per-entry -32005s — treat a fully-limited batch
       // like a 429 (trip + next upstream) so stale-serving kicks in.
       const allLimited =
         byId.size > 0 && [...byId.values()].every((v) => v.error && v.error.code === LIMIT_CODE);
       if (allLimited) {
         sawLimit = true;
         lastMessage = 'upstream rate-limited the batch';
-        deps.gate.reportRateLimit();
+        deps.cooldowns.report(url);
         continue;
       }
-      return { ok: true, byId };
+
+      // Keep what this node answered; carry forward only what it could not EXECUTE. A revert is
+      // an answer and every node gives the same one, so it is kept. "out of gas" for a view call
+      // is not an answer, it is this node declining the work, and a mirror with a higher call
+      // budget returns the real result — measured live, where Arc's primary refused a read that
+      // two mirrors served fine, and this proxy passed the refusal on as though it were the truth.
+      const stillPending: typeof entries = [];
+      for (const e of pending) {
+        const a = byId.get(idKey(e.id));
+        if (a && !(a.error && isNodeCapabilityError(a.error))) {
+          answers.set(idKey(e.id), a);
+        } else if (a) {
+          stillPending.push(e);
+          lastMessage = a.error?.message ?? 'upstream could not execute the call';
+        } else {
+          stillPending.push(e);
+          lastMessage = 'upstream returned no answer for this id';
+        }
+      }
+      if (byId.size > 0) deps.cooldowns.reportSuccess(url);
+      pending = stillPending;
+      if (pending.length === 0) return { ok: true, byId: answers };
+      continue;
     } catch (err) {
       lastMessage = err instanceof Error ? err.message : String(err);
-      if (/request limit|rate limit|429/i.test(lastMessage)) {
-        sawLimit = true;
-        deps.gate.reportRateLimit();
-      }
+      if (/request limit|rate limit|429/i.test(lastMessage)) sawLimit = true;
+      // Timeouts and refused connections cool the endpoint as well: a mirror that cannot be
+      // reached is not worth the budget on the next request either.
+      deps.cooldowns.report(url);
     }
   }
+  // Some entries may have been answered before the upstreams ran out. Returning those beats
+  // failing the whole batch over the one call nobody could execute.
+  if (answers.size > 0) return { ok: true, byId: answers };
   return { ok: false, limited: sawLimit, message: lastMessage };
+}
+
+/**
+ * Whether an error means "this node declined the work" rather than "this is the answer".
+ *
+ * The distinction decides whether asking a different node is worth anything. A revert, a bad
+ * parameter or an unknown method is a real answer: every node gives the same one, and retrying
+ * elsewhere just burns the budget to be told the same thing. A node running out of call gas, or
+ * timing out executing, is a property of THAT node's limits — a mirror with a larger budget
+ * returns the real result.
+ */
+export function isNodeCapabilityError(err: { code: number; message: string }): boolean {
+  if (err.code === LIMIT_CODE) return true; // rate limited
+  const m = err.message.toLowerCase();
+  // Deliberately narrow. "execution reverted" and "out of gas" both contain "gas" in some
+  // clients, so the revert case is excluded outright before anything else is considered.
+  if (m.includes('revert')) return false;
+  return (
+    err.code === -32003 ||
+    m.includes('out of gas') ||
+    m.includes('gas required exceeds') ||
+    m.includes('gas exhausted') ||
+    m.includes('execution timeout') ||
+    m.includes('request timed out') ||
+    m.includes('exceeds the limit')
+  );
 }
 
 // ── The handler core ──────────────────────────────────────────────────────────────────
@@ -338,7 +421,7 @@ export async function handleRpcPayload(
     const p = new Promise<unknown>((resolve, reject) => {
       localResolvers.set(key, { resolve, reject });
     });
-    // Swallow rejections on the shared handle - every consumer awaits it with try/catch,
+    // Swallow rejections on the shared handle — every consumer awaits it with try/catch,
     // but nothing else should turn it into an unhandled rejection.
     p.catch(() => {});
     deps.inflight.set(key, p);
@@ -392,9 +475,10 @@ export async function handleRpcPayload(
           resolver?.reject(e);
         }
       } else {
-        // Upstreams unreachable/limited: serve last-good if fresh enough, else a retryable error.
+        // No upstream answered. A last-good value from the past few seconds beats an error
+        // whatever the reason was, so freshness is the only test here, not the cause.
         const stale = m.key ? deps.lastGood.get(m.key) : undefined;
-        if (outcome.limited && stale && deps.now() - stale.at <= STALE_OK_MS) {
+        if (stale && deps.now() - stale.at <= STALE_OK_MS) {
           out[m.index] = okEntry(m.id, stale.value);
           resolver?.resolve(stale.value);
         } else {

@@ -1,4 +1,4 @@
-// hooks/usePollInterval.ts - refetchInterval policy: ~5s baseline, ~2s near phase boundaries / after writes.
+// hooks/usePollInterval.ts — refetchInterval policy: ~5s baseline, ~2s near phase boundaries / after writes.
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import type { EpochView } from '@/lib/types';
 import { useChainTime } from '@/hooks/useChainTime';
@@ -24,7 +24,7 @@ function getSnapshot(): number {
   return lastWriteAt;
 }
 
-// Server snapshot is a constant 0 - no writes happen during SSR (avoids a hydration mismatch).
+// Server snapshot is a constant 0 — no writes happen during SSR (avoids a hydration mismatch).
 function getServerSnapshot(): number {
   return 0;
 }

@@ -9,16 +9,16 @@ type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'subtle';
 type Size = 'sm' | 'md' | 'lg';
 
 /*
- * Button variants. primary + secondary render the peach "shooting-star" CTA - buttonClass routes them
+ * Button variants. primary + secondary render the peach "shooting-star" CTA — buttonClass routes them
  * through STAR_BASE + .star-btn (see globals.css), so the map below is read ONLY for the other three:
- *  - primary  : peach #fec195 solid CTA (.star-btn) - handled in buttonClass, not this map
- *  - secondary: peach outline that fills on hover (.star-btn--secondary) - handled in buttonClass
+ *  - primary  : peach #fec195 solid CTA (.star-btn) — handled in buttonClass, not this map
+ *  - secondary: peach outline that fills on hover (.star-btn--secondary) — handled in buttonClass
  *  - subtle   : neutral muted rect for not-yet-actionable CTAs ("Enter an amount")
  *  - ghost    : transparent, grey ink, light hover fill
  *  - danger   : red rect + white text
  */
 const VARIANTS: Record<Variant, string> = {
-  // Unused - buttonClass returns the peach STAR_BASE for these two before it ever reads VARIANTS.
+  // Unused — buttonClass returns the peach STAR_BASE for these two before it ever reads VARIANTS.
   primary: '',
   secondary: '',
   ghost: 'text-ink-soft hover:bg-surface-muted',
@@ -33,7 +33,7 @@ const SIZES: Record<Size, string> = {
 };
 
 // ghost / danger / subtle keep the original base. primary + secondary render the red shooting-star CTA
-// (they're identical - the one button): the .star-btn class (globals.css) owns their fill / border /
+// (they're identical — the one button): the .star-btn class (globals.css) owns their fill / border /
 // radius / hover-flip / glow / disabled state, so for those two we drop the rounded-xl, transition,
 // colour and disabled utilities and keep only the layout (flex + size). Add <Stars /> (components/ui/
 // Stars) as the button's last child for the six fly-out sparkles.

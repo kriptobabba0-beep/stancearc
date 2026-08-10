@@ -1,4 +1,4 @@
-// lib/agent/lpPlan.ts - size a to-be-minted LP position from a TOTAL value + optional price band.
+// lib/agent/lpPlan.ts — size a to-be-minted LP position from a TOTAL value + optional price band.
 //
 // The copilot's add_liquidity card asks for "$V across [lower, upper]"; this turns that into the
 // exact (base, quote) legs the pool will pull at the live price. Pure math over lib/rangeMath's
@@ -31,12 +31,12 @@ export interface LpPlanResult {
   usdcLeg: bigint;
   /** Live human price (quote per base) the split was computed at. */
   priceNow: number;
-  /** True when the live price sits outside the band - the position starts one-sided. */
+  /** True when the live price sits outside the band — the position starts one-sided. */
   outOfBand: boolean;
 }
 
 /**
- * Token amounts a position of `liquidity` holds at the live price - the canonical
+ * Token amounts a position of `liquidity` holds at the live price — the canonical
  * LiquidityAmounts.getAmountsForLiquidity split. Used to tell the user what an LP NFT
  * actually CONTAINS (the sweep-back note listed only loose balances, so a $100 position
  * read as "$2 returned").
@@ -74,7 +74,7 @@ export function planLiquidity(a: LpPlanArgs): LpPlanResult {
   if (priceNow <= 0) throw new Error('pool price unavailable');
   if (!Number.isFinite(a.amountUsdc) || a.amountUsdc <= 0) throw new Error('amount must be positive');
   // parseUnits throws on more fractional digits than the token carries (e.g. "5.12345678901"
-  // for 6dp USDC) - clamp the ASK to the quote token's own precision first.
+  // for 6dp USDC) — clamp the ASK to the quote token's own precision first.
   const amountStr = a.amountUsdc.toFixed(a.quoteDecimals);
 
   const usdcIsToken0 = !a.baseIsToken0;

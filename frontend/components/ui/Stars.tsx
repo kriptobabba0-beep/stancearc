@@ -1,8 +1,8 @@
-// components/ui/Stars.tsx - the six sparkles for the red shooting-star CTA. Drop <Stars /> in as the
+// components/ui/Stars.tsx — the six sparkles for the red shooting-star CTA. Drop <Stars /> in as the
 // LAST child of any .star-btn (primary/secondary) button or link. The sparkles sit behind the button at
 // rest and fly outward on hover (exact positions / timings live under .star-btn in globals.css). They
 // are aria-hidden and switched off under prefers-reduced-motion. They deliberately overflow the button
-// on hover - exactly like the original design - so a clipping ancestor may crop the furthest ones.
+// on hover — exactly like the original design — so a clipping ancestor may crop the furthest ones.
 
 // The 4-point sparkle (the exact path from the source design).
 const STAR_PATH =

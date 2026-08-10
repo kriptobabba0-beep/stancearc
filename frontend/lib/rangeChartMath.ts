@@ -1,6 +1,6 @@
-// lib/rangeChartMath.ts - PURE geometry for the draggable range chart (no React, no chain reads). The
+// lib/rangeChartMath.ts — PURE geometry for the draggable range chart (no React, no chain reads). The
 // chart's x-axis is LINEAR IN HUMAN PRICE (quote per base, e.g. USDC per cirBTC) so it matches the
-// reference's evenly-spaced price ticks. The canonical liquidity range is always TICK space - the chart
+// reference's evenly-spaced price ticks. The canonical liquidity range is always TICK space — the chart
 // converts price↔tick at the edges (via lib/rangeMath customTicks / bandPrices), so the cirBTC/USDC
 // inversion (baseIsToken0=false) is resolved there, never here.
 //
@@ -60,7 +60,7 @@ export function pctFromCurrent(price: number, current: number): number {
 /**
  * A stylised concentrated-liquidity DEPTH backdrop: `bars` heights in [0,1] forming a smooth hump that
  * peaks at the current price and tapers toward the domain edges (a gaussian in log-price). This is a
- * VISUAL aid for choosing a band - it is not a claim of exact per-tick on-chain liquidity (which would
+ * VISUAL aid for choosing a band — it is not a claim of exact per-tick on-chain liquidity (which would
  * cost hundreds of reads on a thin pool). Deterministic (no randomness) so it's stable across renders.
  */
 export function depthBars(domain: PriceDomain, current: number, bars: number): number[] {
@@ -84,7 +84,7 @@ export function depthBars(domain: PriceDomain, current: number, bars: number): n
 /**
  * Capital-efficiency boost of a band vs full range, as a rough multiple = fullTickWidth / bandTickWidth,
  * clamped to [1, cap]. A tighter band concentrates the same liquidity, so it earns a larger share of
- * fees while in range - this is the standard intuition, surfaced as an ESTIMATE (not a guarantee).
+ * fees while in range — this is the standard intuition, surfaced as an ESTIMATE (not a guarantee).
  */
 export function concentrationBoost(
   tickLower: number,

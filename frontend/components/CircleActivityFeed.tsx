@@ -1,7 +1,7 @@
 'use client';
 
-// components/CircleActivityFeed.tsx - the LIVE arena activity feed, powered by Circle's Smart Contract
-// Platform event monitors (NOT eth_getLogs - that's the separate on-chain ActivityFeed on /explore).
+// components/CircleActivityFeed.tsx — the LIVE arena activity feed, powered by Circle's Smart Contract
+// Platform event monitors (NOT eth_getLogs — that's the separate on-chain ActivityFeed on /explore).
 // Circle indexes the arena's on-chain events; we read them from /api/circle/activity (key server-side),
 // decode with our ABI, and render a human, multi-market pulse with the connected wallet's rows
 // highlighted. This is the user-facing surface of the Circle "Contracts" integration.

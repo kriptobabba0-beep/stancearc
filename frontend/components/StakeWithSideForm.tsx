@@ -20,7 +20,7 @@ import { parseConvictionInput } from '@/lib/conviction';
 import { formatUSDC } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
-// Fallback conviction bounds (USDC 6dp) when a v2 market omits them - should not happen (markets.ts
+// Fallback conviction bounds (USDC 6dp) when a v2 market omits them — should not happen (markets.ts
 // REQUIRES minConv/maxConv for v2) but keeps the input usable rather than crashing. 100 / 1000 USDC.
 const FALLBACK_MIN_CONV = 100_000000n;
 const FALLBACK_MAX_CONV = 1_000_000000n;
@@ -98,14 +98,14 @@ export function StakeWithSideForm({ selectedTokenId: externalTokenId, onTokenIdC
   const convictionValid = !isV2 || (convictionResult?.ok ?? false);
 
   // OneSidePerEpoch (mirrors the contract rule EXACTLY): the contract locks on
-  // userEpochTokenIds[user][epoch][0].side unconditionally - unstaking never pops the tokenId, so
+  // userEpochTokenIds[user][epoch][0].side unconditionally — unstaking never pops the tokenId, so
   // the first stake of the epoch fixes the side regardless of whether it was later unstaked. ANY
   // stake whose epochId matches the current epoch therefore fixes the side for any *additional*
   // position this epoch. We deliberately do NOT filter on !s.unstaked here (that would diverge from
   // the on-chain rule). Once the side is locked the user may stake more on the SAME side but the
-  // other two sides must be disabled - otherwise picking another side only fails at tx time with a
-  // raw revert. (The unstaked-only divergence is currently unreachable on-chain - unstake requires
-  // Settled, staking requires EntryOpen - but the UI rule is kept identical to the contract rule.)
+  // other two sides must be disabled — otherwise picking another side only fails at tx time with a
+  // raw revert. (The unstaked-only divergence is currently unreachable on-chain — unstake requires
+  // Settled, staking requires EntryOpen — but the UI rule is kept identical to the contract rule.)
   const lockedSide = (() => {
     if (epoch === undefined) return Side.NONE;
     for (const s of userStakes ?? []) {
@@ -148,7 +148,7 @@ export function StakeWithSideForm({ selectedTokenId: externalTokenId, onTokenIdC
   };
 
   // Read-only (legacy) markets: a deprecated arena kept reachable so pending winners can still
-  // claim/unstake. NEW staking is blocked here - show a clear message instead of the stake form.
+  // claim/unstake. NEW staking is blocked here — show a clear message instead of the stake form.
   if (readOnly) {
     return (
       <SectionCard kicker="Enter the arena" title="Stake a position" icon={<Trophy className="h-5 w-5" />}>
@@ -158,7 +158,7 @@ export function StakeWithSideForm({ selectedTokenId: externalTokenId, onTokenIdC
         >
           <Lock className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>
-            This is a <span className="font-semibold text-ink">legacy</span> arena - new staking is
+            This is a <span className="font-semibold text-ink">legacy</span> arena — new staking is
             closed. Pending winners can still claim or unstake from the{' '}
             <a href="/claim" className="rounded font-medium text-brand hover:text-brand-hover focus-visible:outline-none focus-visible:shadow-focus">
               Claim
@@ -199,7 +199,7 @@ export function StakeWithSideForm({ selectedTokenId: externalTokenId, onTokenIdC
 
         <div>
           <StepLabel n={2}>Pick a side</StepLabel>
-          {/* Segmented side control - UP green / DOWN red / RANGE blue, selected pill filled in its color. */}
+          {/* Segmented side control — UP green / DOWN red / RANGE blue, selected pill filled in its color. */}
           <div role="group" aria-label="Pick a side" className="grid grid-cols-3 gap-2">
             {STAKEABLE_SIDES.map((s) => {
               const active = effectiveSide === s;
@@ -250,7 +250,7 @@ export function StakeWithSideForm({ selectedTokenId: externalTokenId, onTokenIdC
               <span>
                 You&apos;ve staked the{' '}
                 <span className="font-semibold text-ink">{SIDE_LABELS[lockedSide]}</span> side this
-                epoch - additional positions must back the same side. You can stake more on{' '}
+                epoch — additional positions must back the same side. You can stake more on{' '}
                 {SIDE_LABELS[lockedSide]}, or unstake after settlement.
               </span>
             </p>
@@ -269,7 +269,7 @@ export function StakeWithSideForm({ selectedTokenId: externalTokenId, onTokenIdC
                 aria-invalid={convictionInput !== '' && !convictionResult?.ok}
                 value={convictionInput}
                 onChange={(e) => setConvictionInput(e.target.value)}
-                placeholder={`${formatUSDC(convBounds.minConv)} - ${formatUSDC(convBounds.maxConv)}`}
+                placeholder={`${formatUSDC(convBounds.minConv)} – ${formatUSDC(convBounds.maxConv)}`}
                 className="w-full rounded-2xl border border-line bg-surface px-4 py-3 pr-16 font-mono text-base tnum text-ink focus-visible:border-line-strong focus-visible:outline-none focus-visible:shadow-focus"
               />
               <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-ink-faint">
@@ -287,11 +287,11 @@ export function StakeWithSideForm({ selectedTokenId: externalTokenId, onTokenIdC
             <p data-testid="conviction-explainer" className="mt-2 flex items-start gap-1.5 rounded-xl border border-line bg-surface-muted px-3.5 py-2.5 text-xs text-ink-muted">
               <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>
-                Your <span className="font-semibold text-ink">at-risk conviction</span> ({formatUSDC(convBounds.minConv)}-
+                Your <span className="font-semibold text-ink">at-risk conviction</span> ({formatUSDC(convBounds.minConv)}–
                 {formatUSDC(convBounds.maxConv)} USDC) is pulled now and held by the Stance. If your side{' '}
                 <span className="font-semibold text-ink">wins</span>, you get it back 1:1 plus a share of
                 the pot. If your side <span className="font-semibold text-ink">loses</span>, the conviction
-                is forfeited (burned to the treasury) - only stake what you can afford to lose. You&apos;ll
+                is forfeited (burned to the treasury) — only stake what you can afford to lose. You&apos;ll
                 approve USDC first, then stake.
               </span>
             </p>

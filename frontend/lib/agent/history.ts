@@ -1,6 +1,6 @@
-// lib/agent/history.ts - recent price history for the Limen Agent's quant features.
+// lib/agent/history.ts — recent price history for the Limen Agent's quant features.
 //
-// Source: Pyth's public benchmarks API (TradingView shim) - 1-minute bars for the same
+// Source: Pyth's public benchmarks API (TradingView shim) — 1-minute bars for the same
 // feeds the arena settles on. A CROSS market (cirBTC/EURC = BTC/USD ÷ EUR/USD) divides
 // the two close series element-wise on their shared tail, mirroring the on-chain
 // CompositePythOracle's math, so the agent reasons in the exact price the epoch settles in.
@@ -34,7 +34,7 @@ async function fetchCloses(symbol: string, fromSec: number, toSec: number, timeo
 // Last-good bars per market: the benchmarks API rate-limits chatty clients (a 15s poll
 // running for days WILL eventually see 403/429s), and a signal that dies with the fetch
 // silently starves the autopilot through whole entry windows. Bars only change once a
-// minute, so serving a few-minutes-old series is statistically identical - the quant
+// minute, so serving a few-minutes-old series is statistically identical — the quant
 // re-scales by the remaining horizon anyway.
 const STALE_OK_MS = 5 * 60_000;
 const lastGood = new Map<string, { at: number; closes: number[]; barSec: number }>();

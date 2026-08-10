@@ -1,6 +1,6 @@
-// lib/activityText.ts - PURE decoders that turn a raw FeeArena event log into a human sentence
-// ("0xab… staked UP on epoch #42", "Epoch #7 settled - DOWN won", "0xcd… claimed 1.2 USDC …") plus
-// a relative-time helper for the activity feed. No React, no chain reads - fully unit-testable.
+// lib/activityText.ts — PURE decoders that turn a raw FeeArena event log into a human sentence
+// ("0xab… staked UP on epoch #42", "Epoch #7 settled — DOWN won", "0xcd… claimed 1.2 USDC …") plus
+// a relative-time helper for the activity feed. No React, no chain reads — fully unit-testable.
 //
 // Amounts are formatted (never math'd) via lib/format; the base leg uses the active market's
 // symbol/decimals passed in `ctx`, defaulting to the legacy WETH 18dp so a missing ctx degrades safely.
@@ -17,7 +17,7 @@ export interface ActivityDescription {
   tone: ActivityTone;
 }
 
-/** Per-market context for amount formatting (base leg symbol/decimals). Optional - defaults to WETH. */
+/** Per-market context for amount formatting (base leg symbol/decimals). Optional — defaults to WETH. */
 export interface ActivityContext {
   baseSymbol?: string;
   baseDecimals?: number;
@@ -60,7 +60,7 @@ function payoutText(log: FeedLog, ctx: ActivityContext): string {
 
 /**
  * Decode one FeeArena event log into a human sentence + tone. Unknown events degrade to their raw
- * name with a neutral tone (never throws). Pure - `ctx` only affects amount formatting.
+ * name with a neutral tone (never throws). Pure — `ctx` only affects amount formatting.
  */
 export function describeEvent(log: FeedLog, ctx: ActivityContext = {}): ActivityDescription {
   const tag = epochTag(log);
@@ -73,14 +73,14 @@ export function describeEvent(log: FeedLog, ctx: ActivityContext = {}): Activity
       return { text: `Epoch ${tag} started`, tone: 'brand' };
     case 'EpochSettled': {
       const { label, tone } = sideOf(log);
-      return { text: `Epoch ${tag} settled - ${label} won`, tone };
+      return { text: `Epoch ${tag} settled — ${label} won`, tone };
     }
     case 'EpochResolved': {
       const { label, tone } = sideOf(log);
-      return { text: `Epoch ${tag} resolved - ${label} won`, tone };
+      return { text: `Epoch ${tag} resolved — ${label} won`, tone };
     }
     case 'EmptyWinnerRollover':
-      return { text: `Epoch ${tag} had no winner - pot rolled forward`, tone: 'neutral' };
+      return { text: `Epoch ${tag} had no winner — pot rolled forward`, tone: 'neutral' };
     case 'Claimed': {
       const amount = payoutText(log, ctx);
       const who = shortAddr(arg(log, 'owner'));

@@ -4,7 +4,7 @@ import { useChainTime } from '@/hooks/useChainTime';
 import { cn } from '@/lib/cn';
 
 interface CountdownProps {
-  /** Unix timestamp (seconds, bigint) - the target the countdown counts down to. */
+  /** Unix timestamp (seconds, bigint) — the target the countdown counts down to. */
   target: bigint;
   /** Extra classes merged onto the span (e.g. text-brand for the red modal countdown). */
   className?: string;

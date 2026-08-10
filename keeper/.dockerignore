@@ -1,5 +1,5 @@
 # Keep the Docker build context lean + keep secrets out of it. The Dockerfile COPYs
-# package.json, pnpm-lock.yaml, src/, tsconfig.json and gasWatchdog.mjs - everything below is either
+# package.json, pnpm-lock.yaml, src/, tsconfig.json and gasWatchdog.mjs — everything below is either
 # a secret, a local artifact, or host-only tooling that must never enter the image or build context.
 node_modules
 .env

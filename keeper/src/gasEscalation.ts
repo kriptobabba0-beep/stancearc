@@ -1,7 +1,7 @@
-// gasEscalation.ts - PURE bounded gas-tip escalation (TASK 4b). PROBLEM: every write in
+// gasEscalation.ts — PURE bounded gas-tip escalation (TASK 4b). PROBLEM: every write in
 // keeper.ts + arb.ts pins maxFeePerGas == maxPriorityFeePerGas == a STATIC GAS_FLOOR_GWEI.
 // On Arc that floor is normally plenty, but during a congestion spike a floor-priced tx can
-// sit unmined until the receipt-wait times out - and a crank that misses its bounded window
+// sit unmined until the receipt-wait times out — and a crank that misses its bounded window
 // (startEpoch's maxStartDelay, endEpoch's settle window) WEDGES the epoch. A static price has
 // no way to bid higher.
 //
@@ -24,7 +24,7 @@ export interface GasOverrides {
 
 /** Tunable escalation policy (resolved from config; OFF when maxAttempts === 0). */
 export interface GasEscalationConfig {
-  /** Base/floor price (wei) - attempt 0 uses exactly this (unchanged behavior). */
+  /** Base/floor price (wei) — attempt 0 uses exactly this (unchanged behavior). */
   floorWei: bigint;
   /** Hard ceiling (wei) on BOTH maxFeePerGas + maxPriorityFeePerGas. Never bid above this. */
   capWei: bigint;
@@ -44,7 +44,7 @@ export interface GasEscalationConfig {
  * Gas overrides for retry `attempt` (0-based). Attempt 0 == the floor EXACTLY (no rounding
  * drift), so an unescalated path is unchanged. For attempt N>0 the price is
  * floor * (multiplierBps/1e4)^N, computed in integer bps to stay bigint-exact, then clamped to
- * `capWei`. A multiplierBps <= 10_000 (<=1.0x) yields a flat floor (no growth) - still capped.
+ * `capWei`. A multiplierBps <= 10_000 (<=1.0x) yields a flat floor (no growth) — still capped.
  * PURE.
  */
 export function escalatedGas(attempt: number, cfg: GasEscalationConfig): GasOverrides {
@@ -60,7 +60,7 @@ export function escalatedGas(attempt: number, cfg: GasEscalationConfig): GasOver
     price = (price * mult) / 10_000n;
     if (price >= cfg.capWei) {
       price = cfg.capWei;
-      break; // already at the ceiling - further multiplication can't raise it
+      break; // already at the ceiling — further multiplication can't raise it
     }
   }
   if (price > cfg.capWei) price = cfg.capWei;
@@ -74,7 +74,7 @@ export function escalationEnabled(cfg: GasEscalationConfig): boolean {
 
 /**
  * Total number of send attempts for a write: 1 (the floor send) + maxAttempts escalations.
- * PURE - used by the executor to bound its retry loop.
+ * PURE — used by the executor to bound its retry loop.
  */
 export function totalAttempts(cfg: GasEscalationConfig): number {
   return 1 + Math.max(0, cfg.maxAttempts);

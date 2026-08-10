@@ -1,9 +1,9 @@
-// keeper/src/leaderboardIndexer.ts - the single writer behind the site's leaderboard.
+// keeper/src/leaderboardIndexer.ts — the single writer behind the site's leaderboard.
 //
 // WHY THIS EXISTS. The leaderboard used to be indexed by the website itself: every Cloudflare
 // isolate advanced its own copy of the index and cached it per-colo. That gives you N different
 // leaderboards, each at a different block, and whichever one a visitor lands on is the one they
-// see - so the page appeared to jump between "current" and "a week stale", and a visitor unlucky
+// see — so the page appeared to jump between "current" and "a week stale", and a visitor unlucky
 // enough to land on a cold copy paid ten seconds of chain-scanning to read a web page.
 //
 // One writer fixes that. This process owns the index, keeps it on disk so it never re-scans what
@@ -18,11 +18,11 @@
 //   · every RPC call is spaced by THROTTLE_MS, so even the one-time backfill trickles instead of
 //     bursting;
 //   · it reads through its OWN rpc url, so it queues behind its own rate limit, not the keeper's;
-//   · the container is capped at 256 MB / 0.35 CPU in compose - it cannot crowd anyone out.
+//   · the container is capped at 256 MB / 0.35 CPU in compose — it cannot crowd anyone out.
 //
 // CRASH BEHAVIOUR. The snapshot is written atomically (tmp + rename) every PERSIST_EVERY_MS. A
 // hard kill loses at most that much progress and the cursor rewinds with it, so the lost blocks
-// are simply re-scanned. Folding is NOT idempotent - aggregates would double-count - which is
+// are simply re-scanned. Folding is NOT idempotent — aggregates would double-count — which is
 // exactly why the cursor is saved with the aggregates it belongs to and never separately.
 import { createPublicClient, http, parseEventLogs, type Abi, type Log, type PublicClient } from 'viem';
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs';
@@ -30,12 +30,14 @@ import { dirname, join } from 'node:path';
 import { feeArenaV3Abi } from './feeArenaV3Abi.js';
 import {
   applyLogs,
+  buildCampaignPayload,
   buildLeaderboardPayload,
   buildSelfIndex,
   emptySnapshot,
   snapshotFromJson,
   snapshotToJson,
   type IndexLog,
+  type CampaignConfig,
   type LeaderboardSnapshot,
   type PayloadMarketMeta,
 } from './leaderboardIndex.js';
@@ -44,7 +46,7 @@ import {
 // Only the events that move the standings. Address-only getLogs returns everything a contract
 // emitted, so anything not named here is decoded away to nothing.
 
-// The arena ABI is the REAL one, synced from the frontend - never hand-written. An event
+// The arena ABI is the REAL one, synced from the frontend — never hand-written. An event
 // fragment that differs from the contract by so much as a parameter width hashes to a different
 // topic0, and a log whose topic0 doesn't match is skipped with no error at all. The standings
 // would keep rendering, keep showing volume (that comes from the pool), and quietly report zero
@@ -84,6 +86,14 @@ const NPM_EVENTS = [
     { name: 'amount0', type: 'uint256', indexed: false },
     { name: 'amount1', type: 'uint256', indexed: false },
   ] },
+  // Netting needs the other side: liquidity provided is add MINUS withdraw, not a running total of
+  // every deposit ever made.
+  { type: 'event', name: 'DecreaseLiquidity', anonymous: false, inputs: [
+    { name: 'tokenId', type: 'uint256', indexed: true },
+    { name: 'liquidity', type: 'uint128', indexed: false },
+    { name: 'amount0', type: 'uint256', indexed: false },
+    { name: 'amount1', type: 'uint256', indexed: false },
+  ] },
 ] as const satisfies Abi;
 
 // ── config ──────────────────────────────────────────────────────────────────────────────
@@ -104,12 +114,70 @@ export interface IndexerConfig {
   ingestSecret: string | null;
   stateDir: string;
   windowBlocks: bigint;
-  /** Minimum gap between RPC calls - the whole politeness budget in one number. */
+  /** Minimum gap between RPC calls — the whole politeness budget in one number. */
   throttleMs: number;
   /** How often a fully caught-up market re-checks the head. */
   idleMs: number;
   persistEveryMs: number;
   pushEveryMs: number;
+  /** Campaigns: the same fold, each scoped to its own block range. Empty when none is configured. */
+  campaigns: LoadedCampaign[];
+}
+
+/**
+ * A campaign runs as another entry in the same loop rather than a second service: it needs exactly
+ * the throttling, disk persistence and push machinery the leaderboard already has, and duplicating
+ * those is how the two would drift apart.
+ *
+ * Parsed leniently in one respect only — an absent config disables the campaign instead of failing
+ * the boot, so the indexer that feeds the live site is never taken down by a campaign typo.
+ */
+export type LoadedCampaign = CampaignConfig & { marketId: string; ingestUrl: string | null };
+
+function oneCampaign(o: Record<string, unknown>, env: NodeJS.ProcessEnv): LoadedCampaign {
+  for (const k of ['id', 'marketId', 'startBlock']) {
+    if (o[k] === undefined) throw new Error(`CAMPAIGN_CONFIG.${k} is required`);
+  }
+  const tiers = Array.isArray(o.tiers) ? o.tiers : [];
+  return {
+    id: String(o.id),
+    ...(o.title === undefined ? {} : { title: String(o.title) }),
+    marketId: String(o.marketId),
+    startBlock: BigInt(String(o.startBlock)),
+    endBlock: BigInt(String(o.endBlock ?? '0')),
+    excluded: new Set((Array.isArray(o.excluded) ? o.excluded : []).map((a) => String(a).toLowerCase())),
+    tiers: tiers.map((t) => {
+      const x = t as Record<string, unknown>;
+      return { minVolumeUsd6: BigInt(String(x.minVolumeUsd6 ?? '0')), prizeUsd: Number(x.prizeUsd ?? 0) };
+    }),
+    topN: num(env.CAMPAIGN_TOP_N, 25),
+    ingestUrl: env.CAMPAIGN_INGEST_URL || null,
+  };
+}
+
+/**
+ * Every configured campaign, from a single object or an array of them.
+ *
+ * Both shapes are accepted because campaigns overlap in practice: one finishing while the next is
+ * already running, and a finished one still worth publishing so it stays on the site. Requiring a
+ * second indexer per campaign would mean a second copy of the same fold over the same logs.
+ *
+ * Duplicate ids are refused rather than deduped — two campaigns writing the same key would take
+ * turns overwriting each other's standings, and the result would look like one campaign whose
+ * numbers flicker.
+ */
+export function loadCampaignConfigs(env: NodeJS.ProcessEnv): LoadedCampaign[] {
+  const raw = env.CAMPAIGN_CONFIG;
+  if (!raw || raw.trim() === '') return [];
+  const parsed = JSON.parse(raw) as unknown;
+  const list = Array.isArray(parsed) ? parsed : [parsed];
+  const out = list.map((o) => oneCampaign(o as Record<string, unknown>, env));
+  const seen = new Set<string>();
+  for (const c of out) {
+    if (seen.has(c.id)) throw new Error(`CAMPAIGN_CONFIG has two campaigns with id "${c.id}"`);
+    seen.add(c.id);
+  }
+  return out;
 }
 
 const num = (v: string | undefined, d: number): number => {
@@ -162,6 +230,7 @@ export function loadIndexerConfig(env: NodeJS.ProcessEnv = process.env): Indexer
     idleMs: num(env.LEADERBOARD_IDLE_MS, 30_000),
     persistEveryMs: num(env.LEADERBOARD_PERSIST_MS, 300_000),
     pushEveryMs: num(env.LEADERBOARD_PUSH_MS, 30_000),
+    campaigns: loadCampaignConfigs(env),
   };
 }
 
@@ -183,7 +252,7 @@ export function decodeWindow(
   const take = (want: string, source: IndexLog['source'], abi: Abi) => {
     const subset = raw.filter((l) => l.address.toLowerCase() === want);
     if (subset.length === 0) return;
-    // strict:false - an address emits events we don't model; those must be skipped, not throw.
+    // strict:false — an address emits events we don't model; those must be skipped, not throw.
     for (const d of parseEventLogs({ abi, logs: subset, strict: false })) {
       if (d.blockNumber == null || d.logIndex == null) continue;
       out.push({
@@ -213,12 +282,12 @@ export function loadSnapshot(
   const fresh = () => emptySnapshot(market.arena, market.fromBlock, market.baseDecimals, market.baseIsToken0);
   try {
     const snap = snapshotFromJson(readFileSync(snapshotPath(cfg.stateDir, market), 'utf8'));
-    // A snapshot for a REPLACED arena (or an older format) must never be reused - those numbers
+    // A snapshot for a REPLACED arena (or an older format) must never be reused — those numbers
     // belong to a different contract.
     if (!snap || snap.arena !== market.arena) return fresh();
     return snap;
   } catch {
-    return fresh(); // first boot, or an unreadable file - re-index rather than serve nothing
+    return fresh(); // first boot, or an unreadable file — re-index rather than serve nothing
   }
 }
 
@@ -293,10 +362,43 @@ async function run(): Promise<void> {
     lastError: null as string | null,
     head: 0n,
     headAt: 0,
+    campaign: null as LoadedCampaign | null,
   }));
   for (const s of state) {
     log({ msg: 'leaderboard.loaded', market: s.market.id, cursor: s.snap.cursor.toString(), participants: s.snap.all.size });
   }
+
+  // A campaign is the same market re-indexed from its own start block, kept in its own file so it
+  // is never touched by the leaderboard's day-bucket pruning and can be recomputed on its own.
+  // Each one carries its own config on the entry rather than being matched by identity later: with
+  // several in flight, "which campaign is this?" must not be a question the loop has to answer.
+  const campaigns = cfg.campaigns.flatMap((c) => {
+    const base = cfg.markets.find((m) => m.id === c.marketId);
+    if (!base) {
+      log({ msg: 'leaderboard.campaign.unknown-market', id: c.id, marketId: c.marketId });
+      return [];
+    }
+    const market: IndexerMarket = { ...base, id: `campaign-${c.id}`, fromBlock: c.startBlock };
+    const entry = {
+      market,
+      snap: loadSnapshot(cfg, market, log),
+      lastPersist: 0,
+      lastPush: 0,
+      lastError: null as string | null,
+      head: 0n,
+      headAt: 0,
+      campaign: c as LoadedCampaign | null,
+    };
+    log({
+      msg: 'leaderboard.campaign.loaded',
+      id: c.id,
+      cursor: entry.snap.cursor.toString(),
+      startBlock: c.startBlock.toString(),
+      endBlock: c.endBlock.toString(),
+      excluded: c.excluded.size,
+    });
+    return [entry];
+  });
 
   let stopping = false;
   const stop = (sig: string) => {
@@ -309,7 +411,7 @@ async function run(): Promise<void> {
   process.on('SIGTERM', () => stop('SIGTERM'));
   process.on('SIGINT', () => stop('SIGINT'));
 
-  // One RPC call at a time, spaced by throttleMs - the politeness budget, enforced in one place.
+  // One RPC call at a time, spaced by throttleMs — the politeness budget, enforced in one place.
   let lastCall = 0;
   const throttled = async <T>(fn: () => Promise<T>): Promise<T> => {
     const wait = cfg.throttleMs - (Date.now() - lastCall);
@@ -321,7 +423,7 @@ async function run(): Promise<void> {
   while (!stopping) {
     let didWork = false;
 
-    for (const s of state) {
+    for (const s of [...state, ...campaigns]) {
       if (stopping) break;
       const { market } = s;
       try {
@@ -334,7 +436,10 @@ async function run(): Promise<void> {
           s.head = await throttled(() => client.getBlockNumber());
           s.headAt = now0;
         }
-        const head = s.head;
+        // A campaign stops at its end block: everything after it belongs to a different period and
+        // folding it in would change a result that has already been announced.
+        const campaignEnd = s.campaign && s.campaign.endBlock > 0n ? s.campaign.endBlock : null;
+        const head = campaignEnd !== null && campaignEnd < s.head ? campaignEnd : s.head;
         const win = nextWindow(s.snap.cursor, head, cfg.windowBlocks);
 
         if (win) {
@@ -361,9 +466,15 @@ async function run(): Promise<void> {
           // Two artifacts: the capped board everyone reads, and the per-address index the API
           // uses to answer "where do I stand?" for someone outside it. The index never reaches a
           // browser, so publishing it costs nothing the visitor pays for.
-          const payload = buildLeaderboardPayload(s.snap, market, head, now, s.lastError);
-          const index = buildSelfIndex(s.snap, now);
-          const r = await pushPayload(cfg, { payload, index });
+          let r: { ok: boolean; status: number; detail?: string };
+          if (s.campaign) {
+            const body = buildCampaignPayload(s.snap, s.campaign, now);
+            r = await pushPayload({ ...cfg, ingestUrl: s.campaign.ingestUrl }, body);
+          } else {
+            const payload = buildLeaderboardPayload(s.snap, market, head, now, s.lastError);
+            const index = buildSelfIndex(s.snap, now);
+            r = await pushPayload(cfg, { payload, index });
+          }
           s.lastPush = now;
           if (!r.ok) log({ msg: 'leaderboard.push.error', market: market.id, status: r.status, detail: r.detail });
         }
@@ -376,7 +487,7 @@ async function run(): Promise<void> {
       }
     }
 
-    // Caught up on every market - stop asking the chain so often.
+    // Caught up on every market — stop asking the chain so often.
     if (!didWork) await sleep(cfg.idleMs);
   }
 }

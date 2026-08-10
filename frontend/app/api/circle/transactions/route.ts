@@ -1,4 +1,4 @@
-// POST /api/circle/transactions { userToken } - list the user's recent transactions (history feed).
+// POST /api/circle/transactions { userToken } — list the user's recent transactions (history feed).
 import { NextResponse } from 'next/server';
 import { listTransactions } from '@/lib/server/circleServer';
 import { readJson, errorJson, badRequest, reqStr } from '../_lib';

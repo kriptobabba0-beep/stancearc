@@ -1,9 +1,9 @@
-// lib/arcEndpoints.ts - additional public Arc-testnet RPC endpoints, straight from Circle's
+// lib/arcEndpoints.ts — additional public Arc-testnet RPC endpoints, straight from Circle's
 // own docs (docs.arc.io "Connect to Arc" lists provider mirrors on *.testnet.arc.network
 // vanity subdomains, run by Blockdaemon / dRPC / QuickNode; arc-testnet.drpc.org is dRPC's
 // same service on its own domain). Each mirror is separate infrastructure with its OWN rate
 // limiter, so they are real fallback capacity when the primary answers "request limit
-// reached" - not just another name for the same box.
+// reached" — not just another name for the same box.
 //
 // These are APPENDED after whatever NEXT_PUBLIC_RPC_HTTP configures (env keeps priority and
 // can also list them explicitly; de-duping handles the overlap). Used by the /api/rpc proxy's

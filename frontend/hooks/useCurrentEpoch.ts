@@ -1,7 +1,7 @@
-// hooks/useCurrentEpoch.ts - polled FeeArena.currentEpoch() -> EpochView; primary phase/countdown source.
+// hooks/useCurrentEpoch.ts — polled FeeArena.currentEpoch() -> EpochView; primary phase/countdown source.
 //
 // VERSION-AWARE: a v1 market's currentEpoch() already returns the collapsed EpochView (epochId-first,
-// 4-phase) - used verbatim. A v2 market's currentEpoch() returns the RAW EpochV2 struct (NO epochId,
+// 4-phase) — used verbatim. A v2 market's currentEpoch() returns the RAW EpochV2 struct (NO epochId,
 // raw 6-phase, reordered + conviction fields), so we ALSO read currentEpochId() and run the
 // EpochV2 -> EpochView adapter (lib/epochV2.ts). Either way the returned `data` is an EpochView the
 // EpochPanel / SideBars / usePollInterval consume unchanged.
@@ -34,7 +34,7 @@ export function useCurrentEpoch() {
   const probeEpoch = probe.data ? adapt(probe.data, v2, v3, 0n) : undefined;
   const refetchInterval = usePollInterval(probeEpoch);
 
-  // v2 ONLY: the raw struct has no epochId - read currentEpochId() separately to inject it.
+  // v2 ONLY: the raw struct has no epochId — read currentEpochId() separately to inject it.
   const epochIdQuery = useReadContract({
     ...feeArena,
     functionName: 'currentEpochId',

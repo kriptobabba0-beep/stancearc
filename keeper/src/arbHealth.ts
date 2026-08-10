@@ -1,4 +1,4 @@
-// arbHealth.ts - arb-bot observability, mirroring keeper/src/health.ts. A PURE
+// arbHealth.ts — arb-bot observability, mirroring keeper/src/health.ts. A PURE
 // health/degraded computation + an optional lightweight node:http server that exposes
 // /health for the price-keeper ARB bot. The arb bot drives a SINGLE market (one pool, one
 // key), so unlike the lifecycle keeper's per-market array this tracks just one runtime.
@@ -13,7 +13,7 @@ export interface ArbMarketHealthInput {
   runtime: MarketRuntime;
 }
 
-/** The slice of loop state the arb health computation needs (no clock - `nowMs` is passed). */
+/** The slice of loop state the arb health computation needs (no clock — `nowMs` is passed). */
 export interface ArbHealthState {
   /** Wall-clock ms of the last completed arb tick; null if the loop hasn't ticked yet. */
   lastTickTs: number | null;
@@ -46,7 +46,7 @@ export interface ArbHealthResult {
 
 /**
  * Compute arb-bot health. PURE: no clock read (nowMs injected), no I/O. DEGRADED (503)
- * iff (a) the market is wedged, OR (b) the loop is stalled - now - lastTickTs exceeds
+ * iff (a) the market is wedged, OR (b) the loop is stalled — now - lastTickTs exceeds
  * stallFactor * pollIntervalMs (strict >). A null lastTickTs (never ticked) is stalled.
  * Mirrors keeper/src/health.ts computeHealth, collapsed to the arb bot's single market.
  */
@@ -103,7 +103,7 @@ export interface ArbMetricsSnapshot {
   lastTickTs: number;
   /** 1 if the arb market is wedged, else 0. */
   wedged: number;
-  /** Process boots (incremented once per start) - a crash-loop signal. */
+  /** Process boots (incremented once per start) — a crash-loop signal. */
   restartsTotal: number;
   /** Unix seconds of this process's start (the standard uptime gauge; resets on restart). */
   processStartTimeSec: number;
@@ -115,7 +115,7 @@ function escapeLabel(v: string): string {
 }
 
 /**
- * Render an ArbMetricsSnapshot as Prometheus text exposition (v0.0.4). PURE - no I/O.
+ * Render an ArbMetricsSnapshot as Prometheus text exposition (v0.0.4). PURE — no I/O.
  * Mirrors keeper/src/health.ts renderMetrics, namespaced `arb_*`. Counters: arb_ticks_total,
  * arb_swaps_total{purpose}, arb_failures_total, arb_reverts_total, arb_restarts_total.
  * Gauges: arb_balance_wei, arb_market_wedged, arb_last_tick_timestamp,
@@ -176,7 +176,7 @@ export interface ArbHealthServer {
  * Returns a handle with close(). Only call when port > 0. Mirrors startHealthServer in
  * keeper/src/health.ts; binds to the loopback host by default (KEEPER_ARB_HTTP_HOST).
  *
- * TASK 4a - when `getMetrics` is supplied the server also serves GET /metrics (Prometheus
+ * TASK 4a — when `getMetrics` is supplied the server also serves GET /metrics (Prometheus
  * text), mirroring the lifecycle keeper's /metrics. It's OPTIONAL so existing callers/tests
  * that only pass getArbHealthState keep working (the /metrics route 404s without it).
  */

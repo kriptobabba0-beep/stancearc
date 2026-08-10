@@ -1,4 +1,4 @@
-// hooks/useDecimals.ts - exposes cached boot decimals; throws if the gate has not passed.
+// hooks/useDecimals.ts — exposes cached boot decimals; throws if the gate has not passed.
 import { getBootDecimals } from '@/lib/decimals';
 import type { BootDecimals } from '@/lib/types';
 

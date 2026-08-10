@@ -1,8 +1,8 @@
 'use client';
 
-// components/pool/CreatePoolModal.tsx - the "Create" modal (reference image #2), trimmed to what this
+// components/pool/CreatePoolModal.tsx — the "Create" modal (reference image #2), trimmed to what this
 // app needs: pick TOKEN A + TOKEN B, then Continue → that pool's deposit page (/pool/[id]). Deliberately
-// NO fee-tier selector and NO V2/V3 selector - the app is single-version with a fixed fee tier (the
+// NO fee-tier selector and NO V2/V3 selector — the app is single-version with a fixed fee tier (the
 // reference's selectors are dropped per the brief). Token B is constrained to tokens that actually have
 // a pool with Token A, so Continue always resolves to a real registry pool.
 import { useMemo, useState } from 'react';
@@ -117,7 +117,7 @@ export function CreatePoolModal({ open, onClose }: { open: boolean; onClose: () 
   return (
     <Modal open={open} onClose={onClose} className="max-w-md">
       <h2 className="font-display text-xl font-semibold text-ink">Create position</h2>
-      <p className="mt-1 text-sm text-ink-soft">Pick a pair - you’ll set your range and deposit next.</p>
+      <p className="mt-1 text-sm text-ink-soft">Pick a pair — you’ll set your range and deposit next.</p>
 
       <div className="mt-5 space-y-2.5">
         <div>
@@ -130,7 +130,7 @@ export function CreatePoolModal({ open, onClose }: { open: boolean; onClose: () 
         </div>
       </div>
 
-      {/* Fixed-tier context (NOT a selector - the fee tier and version are fixed for the app). */}
+      {/* Fixed-tier context (NOT a selector — the fee tier and version are fixed for the app). */}
       <div className="mt-4 flex items-center justify-between rounded-xl border border-dashed border-line bg-surface-muted px-3.5 py-2.5 text-xs text-ink-muted">
         <span>Fee tier</span>
         <span className="font-mono font-medium text-ink-soft">{formatBps(ENV.FEE_TIER / 100)} · fixed</span>

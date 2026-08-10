@@ -1,4 +1,4 @@
-// POST /api/circle/initialize { userToken } - provision the EOA wallet on ARC-TESTNET; returns challengeId.
+// POST /api/circle/initialize { userToken } — provision the EOA wallet on ARC-TESTNET; returns challengeId.
 import { NextResponse } from 'next/server';
 import { initializeWallet } from '@/lib/server/circleServer';
 import { readJson, errorJson, badRequest, reqStr } from '../_lib';

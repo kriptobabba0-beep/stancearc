@@ -1,4 +1,4 @@
-# Fee Arena Keeper - systemd unit template (non-Docker alternative to Docker Compose / pm2).
+# Fee Arena Keeper — systemd unit template (non-Docker alternative to Docker Compose / pm2).
 #
 # Installation (adjust paths as needed):
 #   sudo cp fee-arena-keeper.service /etc/systemd/system/
@@ -15,7 +15,7 @@
 #     to a file containing the 0x-prefixed hex key (managed by a secret store or chmod 400).
 
 [Unit]
-Description=Fee Arena Keeper - epoch lifecycle driver
+Description=Fee Arena Keeper — epoch lifecycle driver
 After=network-online.target
 Wants=network-online.target
 

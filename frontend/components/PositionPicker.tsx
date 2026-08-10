@@ -1,9 +1,9 @@
 'use client';
 
-// components/PositionPicker.tsx - the Arena stake picker: the wallet's stakeable positions, one row
-// per position NFT with its live pending fees, its price RANGE ("Full range" or the "min - max USDC"
+// components/PositionPicker.tsx — the Arena stake picker: the wallet's stakeable positions, one row
+// per position NFT with its live pending fees, its price RANGE ("Full range" or the "min – max USDC"
 // band from its ticks) and an in/out-of-range hint. Out-of-range rows get an amber "no arena
-// contribution" note but are NOT blocked - the v1 arena accepts any range (contribution is in-range
+// contribution" note but are NOT blocked — the v1 arena accepts any range (contribution is in-range
 // gated at sweep time), so we inform rather than gate.
 import { useAccount, useReadContract, useSimulateContract } from 'wagmi';
 import { useOwnedPositions } from '@/hooks/useOwnedPositions';
@@ -22,7 +22,7 @@ import type { OwnedPosition } from '@/lib/types';
 
 const MAX_UINT128 = (1n << 128n) - 1n;
 // USDC is the global 6dp quote leg (same constant SwapForm/ProvideLiquidity use); the base leg's
-// decimals come from useActiveBaseToken - never hardcoded.
+// decimals come from useActiveBaseToken — never hardcoded.
 const USDC_DECIMALS = 6;
 
 interface PositionPickerProps {
@@ -40,7 +40,7 @@ function PositionRow({
   onSelect: (tokenId: bigint) => void;
 }) {
   const { address } = useAccount();
-  // npm.collect returns ADDRESS-SORTED (amount0, amount1) - the base leg is NOT necessarily token0
+  // npm.collect returns ADDRESS-SORTED (amount0, amount1) — the base leg is NOT necessarily token0
   // (USDC can sort first). Resolve which leg is the base for the active market and remap so the base
   // amount always renders via <BaseAmount/> (correct decimals: WETH 18 / WBTC 8) and USDC via
   // <MoneyAmount token="USDC"/>. Mirrors FeeArena.externalCollect's wethIsToken0 remap (Fix C).
@@ -80,8 +80,8 @@ function PositionRow({
   const baseLoaded = baseFee !== undefined;
 
   const id = position.tokenId.toString();
-  // The position's price band ("Full range" or "min - max USDC") + where the live tick sits. Out of
-  // range is informational only - staking stays allowed (the contract accepts any range).
+  // The position's price band ("Full range" or "min – max USDC") + where the live tick sits. Out of
+  // range is informational only — staking stays allowed (the contract accepts any range).
   const spacing = tickSpacingForFee(ENV.FEE_TIER);
   const fullRange = isFullRangeTicks(position.tickLower, position.tickUpper, spacing);
   const band =
@@ -148,7 +148,7 @@ function PositionRow({
             data-testid={`position-range-oor-${id}`}
             className="text-[11px] font-medium text-amber-700 dark:text-amber-300"
           >
-            out of range - no fees, no Stance contribution
+            out of range — no fees, no Stance contribution
           </span>
         )}
       </span>

@@ -46,10 +46,10 @@ function PositionRealized({ epochId, stake }: { epochId: bigint; stake: StakeVie
           </span>
         ) : preview.isWinner ? (
           <span className="text-xs text-amber-600">
-            Winning side, but no fees were available to this position this epoch - nothing to claim.
+            Winning side, but no fees were available to this position this epoch — nothing to claim.
           </span>
         ) : (
-          <span className="text-ink-faint">Wrong side - no reward</span>
+          <span className="text-ink-faint">Wrong side — no reward</span>
         )}
       </PositionRow>
     </div>

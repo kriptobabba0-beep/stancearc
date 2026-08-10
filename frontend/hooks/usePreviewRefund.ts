@@ -1,7 +1,7 @@
-// hooks/usePreviewRefund.ts - polled FeeArenaV2Lens.previewRefund(epochId, tokenId) -> (refundable, amount).
+// hooks/usePreviewRefund.ts — polled FeeArenaV2Lens.previewRefund(epochId, tokenId) -> (refundable, amount).
 //
 // v2-ONLY: the conviction refund (winning-side principal, 1:1 USDC) and its preview live on the
-// FeeArenaV2Lens. There is NO v1 equivalent - the v1 arena has no conviction. So this hook reads the
+// FeeArenaV2Lens. There is NO v1 equivalent — the v1 arena has no conviction. So this hook reads the
 // Lens directly and stays DISABLED unless the active market is v2 (has a Lens). Callers must treat an
 // undefined result as "not refundable / unknown" and keep the refund button disabled.
 //

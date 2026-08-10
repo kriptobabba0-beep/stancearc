@@ -1,8 +1,8 @@
-// lib/agent/copilot.ts - the Limen Copilot's brain: system prompt, tool definitions, and
+// lib/agent/copilot.ts — the Limen Copilot's brain: system prompt, tool definitions, and
 // the server-side tool executors the chat route runs between model turns.
 //
 // The copilot is a tool-driven assistant: every number it states comes from a tool that read
-// the chain / the oracle / the curated knowledge base - never from the model's imagination.
+// the chain / the oracle / the curated knowledge base — never from the model's imagination.
 // Actions are NEVER executed here: the model calls `propose_action`, the route forwards the
 // proposal to the client, and the user confirms (or declines) in the UI, where the app's
 // existing, battle-tested transaction hooks do the signing. The model is told exactly that.
@@ -19,7 +19,7 @@ import { withRateLimitResilience } from '@/lib/rpcResilience';
 import { ARC_EXTRA_HTTP_RPCS } from '@/lib/arcEndpoints';
 
 // Lazily constructed so importing this module (e.g. in tests) has no env/network side effects.
-// Primary + Circle-documented mirrors behind the shared gate - tool reads survive throttles.
+// Primary + Circle-documented mirrors behind the shared gate — tool reads survive throttles.
 let _client: ReturnType<typeof createPublicClient> | undefined;
 const client = () =>
   (_client ??= createPublicClient({
@@ -34,7 +34,7 @@ export interface CopilotCtx {
   address?: string;
   /** The LIVE unattended session signer, when one is running. */
   sessionAddress?: string;
-  /** Recent (already swept) session signer addresses - their history still belongs to the user. */
+  /** Recent (already swept) session signer addresses — their history still belongs to the user. */
   pastSessionAddresses?: string[];
   marketId: string;
 }
@@ -42,24 +42,24 @@ export interface CopilotCtx {
 export function systemPrompt(ctx: CopilotCtx): string {
   const markets = MARKETS.map((m) => `${m.id} (${m.label})`).join(', ');
   return [
-    'You are the Limen Copilot - the in-app assistant of Limen Finance, an epoch-based fee-allocation layer on Circle\'s Arc testnet.',
-    'Core mechanic (be precise, never improvise): LPs provide V3-style liquidity, then during each epoch\'s entry window they may opt their LP position into a Stance - a market view of UP, DOWN, or RANGE - anchored to a per-position entry price locked at confirmation. At settlement (Pyth oracle, never the pool price), each position resolves against ITS OWN anchor and the epoch\'s qualification band. Winners keep their own trading fees AND share the fees forfeited by non-qualifying positions. Stance reallocates FEES ONLY: the LP principal is never staked, never forfeited, and keeps its normal AMM / impermanent-loss risk. This is Arc TESTNET - test funds only.',
+    'You are the Limen Copilot — the in-app assistant of Limen Finance, an epoch-based fee-allocation layer on Circle\'s Arc testnet.',
+    'Core mechanic (be precise, never improvise): LPs provide V3-style liquidity, then during each epoch\'s entry window they may opt their LP position into a Stance — a market view of UP, DOWN, or RANGE — anchored to a per-position entry price locked at confirmation. At settlement (Pyth oracle, never the pool price), each position resolves against ITS OWN anchor and the epoch\'s qualification band. Winners keep their own trading fees AND share the fees forfeited by non-qualifying positions. Stance reallocates FEES ONLY: the LP principal is never staked, never forfeited, and keeps its normal AMM / impermanent-loss risk. This is Arc TESTNET — test funds only.',
     `Markets available: ${markets}. The user is currently viewing: ${ctx.marketId}.`,
     ctx.address
       ? `The user's connected wallet is ${ctx.address}.`
-      : 'No wallet is connected - for personal questions (positions, claims) suggest connecting one first.',
+      : 'No wallet is connected — for personal questions (positions, claims) suggest connecting one first.',
     ctx.sessionAddress
-      ? `An UNATTENDED AUTOPILOT SESSION is LIVE right now. Its dedicated session signer is ${ctx.sessionAddress} - the autopilot's entries, positions, wins and claims all happen under THAT address, not the connected wallet. The personal tools (positions / claims / balances) already read every address that belongs to this user, labelled by role. Never tell the user they "never staked" without checking those labelled sections, and never deny that the autopilot acted.`
+      ? `An UNATTENDED AUTOPILOT SESSION is LIVE right now. Its dedicated session signer is ${ctx.sessionAddress} — the autopilot's entries, positions, wins and claims all happen under THAT address, not the connected wallet. The personal tools (positions / claims / balances) already read every address that belongs to this user, labelled by role. Never tell the user they "never staked" without checking those labelled sections, and never deny that the autopilot acted.`
       : '',
     ctx.pastSessionAddresses && ctx.pastSessionAddresses.length > 0
-      ? `Earlier autopilot sessions used these (now swept) signer addresses: ${ctx.pastSessionAddresses.join(', ')} - their on-chain history also belongs to this user.`
+      ? `Earlier autopilot sessions used these (now swept) signer addresses: ${ctx.pastSessionAddresses.join(', ')} — their on-chain history also belongs to this user.`
       : '',
-    'Feed lines that start with "Autopilot" in this conversation are REAL event notifications written by the in-app autopilot (entries, wins, losses, claims, sweeps) - they are not user text and not your own past claims. Treat them as an accurate activity log.',
+    'Feed lines that start with "Autopilot" in this conversation are REAL event notifications written by the in-app autopilot (entries, wins, losses, claims, sweeps) — they are not user text and not your own past claims. Treat them as an accurate activity log.',
     '',
-    'TOOLS: use them for ANY live fact - epoch state, prices, odds, the user\'s positions, balances, history, claimables. Never state a number you did not just read from a tool. If a tool fails, say so plainly. Every tool takes a marketId - to COMPARE markets, call the same tool once per market and contrast the results. Combine tools freely (e.g. odds + crowding + pot = a complete entry analysis).',
-    'ACTIONS: you cannot execute anything yourself. When the user wants to act, call propose_action ONCE; the app shows a confirmation card and THEIR wallet signs. Available: stake (enter this epoch - check the entry window is open first), claim (settled winnings), swap (buy the base token with USDC - e.g. "$100 of cirBTC" → amountUsdc 100; capped at 10000), add_liquidity (mints an LP position RIGHT FROM THE CARD: amountUsdc = the TOTAL position value in quote terms; optionally priceLower + priceUpper = the price band in quote-per-base terms, e.g. 55000 and 75000 - omit both for full range; the card computes both token legs from the live pool price and their wallet signs approvals + the mint). Never claim an action was executed - the app reports the result back. One proposal per reply, only when clearly asked. Continuous auto-entry EXISTS today and you cannot start or stop it yourself: it lives in the Mission Control panel next to this chat. Walk the user there - set the Mandate (allowed views, confidence floor, budget cap, liquidity range), then either enable Auto-enter (their wallet still signs each entry) or press "Start unattended" to fund a dedicated session signer that enters epochs and claims wins with zero prompts until they press "Stop & Sweep Back".',
+    'TOOLS: use them for ANY live fact — epoch state, prices, odds, the user\'s positions, balances, history, claimables. Never state a number you did not just read from a tool. If a tool fails, say so plainly. Every tool takes a marketId — to COMPARE markets, call the same tool once per market and contrast the results. Combine tools freely (e.g. odds + crowding + pot = a complete entry analysis).',
+    'ACTIONS: you cannot execute anything yourself. When the user wants to act, call propose_action ONCE; the app shows a confirmation card and THEIR wallet signs. Available: stake (enter this epoch — check the entry window is open first), claim (settled winnings), swap (buy the base token with USDC — e.g. "$100 of cirBTC" → amountUsdc 100; capped at 10000), add_liquidity (mints an LP position RIGHT FROM THE CARD: amountUsdc = the TOTAL position value in quote terms; optionally priceLower + priceUpper = the price band in quote-per-base terms, e.g. 55000 and 75000 — omit both for full range; the card computes both token legs from the live pool price and their wallet signs approvals + the mint). Never claim an action was executed — the app reports the result back. One proposal per reply, only when clearly asked. Continuous auto-entry EXISTS today and you cannot start or stop it yourself: it lives in the Mission Control panel next to this chat. Walk the user there — set the Mandate (allowed views, confidence floor, budget cap, liquidity range), then either enable Auto-enter (their wallet still signs each entry) or press "Start unattended" to fund a dedicated session signer that enters epochs and claims wins with zero prompts until they press "Stop & Sweep Back".',
     'HONESTY: odds are statistical estimates and you say so; no guarantees, no financial advice framing; when giving odds always add that the estimate can be wrong. If asked something outside Limen/Arc/Circle scope, redirect briefly.',
-    'STYLE: mirror the user\'s language - detect it from their LATEST message and answer in that same language, whatever it is. Never switch languages on your own; if the language is ambiguous (e.g. only numbers or tickers), use English. Be concise and concrete - short paragraphs, no filler. Format numbers cleanly (e.g. $63,412, 2.1%, 04:32 remaining).',
+    'STYLE: mirror the user\'s language — detect it from their LATEST message and answer in that same language, whatever it is. Never switch languages on your own; if the language is ambiguous (e.g. only numbers or tickers), use English. Be concise and concrete — short paragraphs, no filler. Format numbers cleanly (e.g. $63,412, 2.1%, 04:32 remaining).',
   ].join('\n');
 }
 
@@ -119,7 +119,7 @@ export const COPILOT_TOOLS = [
   {
     name: 'get_epoch_history',
     description:
-      "How recent epochs actually settled: per epoch the final price, band, positions/winners (split by UP/DOWN/RANGE), the reallocated fee pot, and rollovers - plus aggregate win rates. Use for 'which side has been winning', 'how big are the pots', 'how often does RANGE qualify'.",
+      "How recent epochs actually settled: per epoch the final price, band, positions/winners (split by UP/DOWN/RANGE), the reallocated fee pot, and rollovers — plus aggregate win rates. Use for 'which side has been winning', 'how big are the pots', 'how often does RANGE qualify'.",
     input_schema: {
       type: 'object',
       properties: {
@@ -148,7 +148,7 @@ export const COPILOT_TOOLS = [
   {
     name: 'propose_action',
     description:
-      'Propose a transaction for the USER to confirm in the app UI (their wallet signs - you never execute). Use only when the user clearly asked to act.',
+      'Propose a transaction for the USER to confirm in the app UI (their wallet signs — you never execute). Use only when the user clearly asked to act.',
     input_schema: {
       type: 'object',
       properties: {
@@ -169,25 +169,25 @@ export const COPILOT_TOOLS = [
   },
 ] as const;
 
-// ─── Knowledge base (curated - the copilot's ground truth for product questions) ─────────
+// ─── Knowledge base (curated — the copilot's ground truth for product questions) ─────────
 
 const KNOWLEDGE: Record<string, string> = {
   mechanics:
-    'Limen flow: 1) Provide liquidity to a supported market (a V3-style LP position NFT). 2) During an epoch\'s entry window, opt the position into a Stance - UP, DOWN, or RANGE - anchored to a fresh oracle price at confirmation (your personal entry anchor). 3) The epoch locks, then settles on a Pyth oracle price. 4) Each position resolves against ITS OWN anchor: UP qualifies if settlement ≥ anchor + band, DOWN if ≤ anchor − band, RANGE if it stayed inside ±band. 5) Qualifying positions keep their own trading fees AND split the fees of non-qualifying positions, pro-rata by fee contribution. 6) The LP NFT auto-returns after settlement; claim winnings any time.',
+    'Limen flow: 1) Provide liquidity to a supported market (a V3-style LP position NFT). 2) During an epoch\'s entry window, opt the position into a Stance — UP, DOWN, or RANGE — anchored to a fresh oracle price at confirmation (your personal entry anchor). 3) The epoch locks, then settles on a Pyth oracle price. 4) Each position resolves against ITS OWN anchor: UP qualifies if settlement ≥ anchor + band, DOWN if ≤ anchor − band, RANGE if it stayed inside ±band. 5) Qualifying positions keep their own trading fees AND split the fees of non-qualifying positions, pro-rata by fee contribution. 6) The LP NFT auto-returns after settlement; claim winnings any time.',
   risk:
-    'What is at risk in Stance: ONLY that epoch\'s fee allocation. A non-qualifying view forfeits that epoch\'s collected fees into the winners\' pot - the LP principal itself is never staked, never forfeited, and cannot be taken by Limen. The LP position keeps its normal AMM risks (price movement, impermanent loss) exactly as it would outside Stance. If no position qualifies in an epoch, the pot rolls into the next epoch - never to the protocol. This is Arc TESTNET: test funds only.',
+    'What is at risk in Stance: ONLY that epoch\'s fee allocation. A non-qualifying view forfeits that epoch\'s collected fees into the winners\' pot — the LP principal itself is never staked, never forfeited, and cannot be taken by Limen. The LP position keeps its normal AMM risks (price movement, impermanent loss) exactly as it would outside Stance. If no position qualifies in an epoch, the pot rolls into the next epoch — never to the protocol. This is Arc TESTNET: test funds only.',
   settlement:
-    'Settlement is oracle-anchored, never the pool price (so pool manipulation cannot corrupt outcomes). The keeper submits the epoch\'s settlement price as an average of live Pyth prices over the final 60 seconds before the settlement moment, and the contract independently verifies it against a fresh on-chain Pyth read (must be stamped at/after settlement and within a 1% sanity bound) - the keeper cannot invent a price. Each position then resolves against its own entry anchor. Settlement completes in roughly 25 seconds and every step is on-chain.',
+    'Settlement is oracle-anchored, never the pool price (so pool manipulation cannot corrupt outcomes). The keeper submits the epoch\'s settlement price as an average of live Pyth prices over the final 60 seconds before the settlement moment, and the contract independently verifies it against a fresh on-chain Pyth read (must be stamped at/after settlement and within a 1% sanity bound) — the keeper cannot invent a price. Each position then resolves against its own entry anchor. Settlement completes in roughly 25 seconds and every step is on-chain.',
   fees:
     'Fees come from real swap volume on the market\'s pool (0.3% per swap, accruing to in-range LPs). Stance reallocates the epoch\'s collected fees: winners keep their own and split the forfeited fees of non-qualifying positions (pro-rata by fee contribution). There are no deposit, withdrawal, or claim fees, and never a fee on LP principal.',
   markets:
-    'Live markets: cirBTC/USDC - fast demo cadence (2-minute entry, 2-minute lock, ~25s settlement); cirBTC/EURC - mainnet-style cadence (12-hour entry, 12-hour lock), settling on a BTC/EUR composite oracle (BTC/USD ÷ EUR/USD). Both use Circle assets end to end (cirBTC, USDC, EURC).',
+    'Live markets: cirBTC/USDC — fast demo cadence (2-minute entry, 2-minute lock, ~25s settlement); cirBTC/EURC — mainnet-style cadence (12-hour entry, 12-hour lock), settling on a BTC/EUR composite oracle (BTC/USD ÷ EUR/USD). Both use Circle assets end to end (cirBTC, USDC, EURC).',
   bridge:
     'Bridging into Arc: the Bridge page supports Circle CCTP (e.g. from Base Sepolia) and Circle Gateway (e.g. from Avalanche Fuji) to bring USDC to Arc testnet. Gateway transfers are one-click via Circle\'s Forwarding Service. cirBTC comes from the Circle faucet (faucet.circle.com).',
   wallets:
     'Onboarding: connect an external wallet, or create an embedded Circle Wallet in-app (Google / email + PIN). Arc uses USDC natively for gas, so there is no separate gas token to acquire.',
   agent:
-    'The Limen agent stack, all under human mandates: (1) this Copilot - information + user-confirmed actions, billed per message over Circle x402 nanopayments when enabled (gasless USDC signatures from a Circle Gateway balance). (2) The in-app Autopilot: set your mandate (allowed views, confidence floor, budget cap) and it watches epochs while the page is open, proposing entries you confirm. Start an UNATTENDED SESSION and it goes zero-prompt: a dedicated session signer (funded once from your wallet, capped at your budget) enters epochs AND claims wins entirely by itself until you press Stop, which sweeps everything back to your wallet. (3) Self-hosted 24/7: the same mandate compiles to an agent you run on your own machine with YOUR OWN Circle Agent Wallet (2-of-2 MPC) as treasury - it draws mandate-capped funding over Circle\'s transfer rail, mints its own LP, and enters epochs with no approvals after setup; piloted live on cirBTC/USDC. The platform never holds user keys or budgets; nothing autonomous ever touches user funds.',
+    'The Limen agent stack, all under human mandates: (1) this Copilot — information + user-confirmed actions, billed per message over Circle x402 nanopayments when enabled (gasless USDC signatures from a Circle Gateway balance). (2) The in-app Autopilot: set your mandate (allowed views, confidence floor, budget cap) and it watches epochs while the page is open, proposing entries you confirm. Start an UNATTENDED SESSION and it goes zero-prompt: a dedicated session signer (funded once from your wallet, capped at your budget) enters epochs AND claims wins entirely by itself until you press Stop, which sweeps everything back to your wallet. (3) Self-hosted 24/7: the same mandate compiles to an agent you run on your own machine with YOUR OWN Circle Agent Wallet (2-of-2 MPC) as treasury — it draws mandate-capped funding over Circle\'s transfer rail, mints its own LP, and enters epochs with no approvals after setup; piloted live on cirBTC/USDC. The platform never holds user keys or budgets; nothing autonomous ever touches user funds.',
 };
 
 // ─── Server-side tool executors ──────────────────────────────────────────────────────────
@@ -239,7 +239,7 @@ async function execMarketOverview(marketId: string): Promise<string> {
     stakedPositions: Number(epoch.stakedCount),
     potCarriedFromPreviousEpochs:
       rollUsdc > 0n || rollBase > 0n
-        ? `${ccy}${fmtAmt(rollUsdc, 6)} + ${fmtAmt(rollBase, m.baseDecimals)} ${m.baseSymbol} (unclaimed by any winner yet - boosts this epoch's prize)`
+        ? `${ccy}${fmtAmt(rollUsdc, 6)} + ${fmtAmt(rollBase, m.baseDecimals)} ${m.baseSymbol} (unclaimed by any winner yet — boosts this epoch's prize)`
         : 'none',
     note: 'settlement uses the Pyth oracle, not the pool price; the epoch\'s own fee pot forms at settlement from forfeited fees',
   });
@@ -280,7 +280,7 @@ function ownedAddresses(ctx: CopilotCtx): Array<{ role: string; address: `0x${st
 
 async function execUserPositions(ctx: CopilotCtx, marketId: string): Promise<string> {
   const owned = ownedAddresses(ctx);
-  if (owned.length === 0) return JSON.stringify({ error: 'no wallet connected - ask the user to connect one first' });
+  if (owned.length === 0) return JSON.stringify({ error: 'no wallet connected — ask the user to connect one first' });
   const m = marketById(marketId);
   const [price18, epoch] = await Promise.all([livePrice18(marketId), readEpochSlice(m.feeArena)]);
   const band = BigInt(epoch.bandBps);
@@ -317,7 +317,7 @@ async function execUserPositions(ctx: CopilotCtx, marketId: string): Promise<str
     note:
       total === 0
         ? 'no position staked in the current epoch on this market (checked every address listed)'
-        : 'qualifyingAtLivePrice is a live check against the oracle - settlement decides the outcome. Autopilot entries sit under the session-signer address.',
+        : 'qualifyingAtLivePrice is a live check against the oracle — settlement decides the outcome. Autopilot entries sit under the session-signer address.',
   });
 }
 
@@ -361,7 +361,7 @@ async function execSideConcentration(marketId: string): Promise<string> {
     positions: totalPositions,
     distribution: { UP: { positions: counts[1], share: share(1) }, DOWN: { positions: counts[2], share: share(2) }, RANGE: { positions: counts[3], share: share(3) } },
     mostCrowded: names[crowdedIdx],
-    insight: 'a crowded side splits the reallocated pot across more winners - a correct but less-crowded view earns a larger slice',
+    insight: 'a crowded side splits the reallocated pot across more winners — a correct but less-crowded view earns a larger slice',
   });
 }
 
@@ -488,7 +488,7 @@ export function summarizeUserRecord(
         ? {
             positions: claimableTokens,
             total: `${opts.ccy}${fmtAmt(usdc, 6)} + ${fmtAmt(base, opts.baseDecimals)} ${opts.baseSymbol}`,
-            note: 'exact amounts from the contract\'s previewClaim - claim any time, no deadline',
+            note: 'exact amounts from the contract\'s previewClaim — claim any time, no deadline',
           }
         : 'nothing to claim right now',
   };
@@ -515,7 +515,7 @@ async function execEpochHistory(marketId: string, countRaw: unknown): Promise<st
 
 async function execClaimStatus(ctx: CopilotCtx, marketId: string): Promise<string> {
   const owned = ownedAddresses(ctx);
-  if (owned.length === 0) return JSON.stringify({ error: 'no wallet connected - ask the user to connect one first' });
+  if (owned.length === 0) return JSON.stringify({ error: 'no wallet connected — ask the user to connect one first' });
   const m = marketById(marketId);
   const ccy = m.quoteSymbol === 'EURC' ? '€' : '$';
   const wallets = await Promise.all(
@@ -527,7 +527,7 @@ async function execClaimStatus(ctx: CopilotCtx, marketId: string): Promise<strin
         args: [address],
       })) as readonly StakeRecord[];
       if (stakes.length === 0) return { role, address, note: 'this address has never staked on this market' };
-      // previewClaim only for settled wins not yet claimed (bounded - a wallet's recent record).
+      // previewClaim only for settled wins not yet claimed (bounded — a wallet's recent record).
       const candidates = stakes.filter((s) => s.processed && s.won && !s.claimed).slice(-20);
       const previews = await Promise.all(
         candidates.map(async (s) => ({
@@ -552,7 +552,7 @@ async function execClaimStatus(ctx: CopilotCtx, marketId: string): Promise<strin
 
 async function execWalletBalances(ctx: CopilotCtx): Promise<string> {
   const owned = ownedAddresses(ctx);
-  if (owned.length === 0) return JSON.stringify({ error: 'no wallet connected - ask the user to connect one first' });
+  if (owned.length === 0) return JSON.stringify({ error: 'no wallet connected — ask the user to connect one first' });
   const wallets = await Promise.all(
     owned.map(async ({ role, address }) => {
       const [native, ...tokenBals] = await Promise.all([
@@ -568,7 +568,7 @@ async function execWalletBalances(ctx: CopilotCtx): Promise<string> {
   );
   return JSON.stringify({
     wallets,
-    gas: 'Arc uses USDC natively for gas - each address\'s USDC covers its own transactions (native = the same USDC read at 18dp).',
+    gas: 'Arc uses USDC natively for gas — each address\'s USDC covers its own transactions (native = the same USDC read at 18dp).',
   });
 }
 
@@ -595,7 +595,7 @@ export function validateActionProposal(
 ): ActionProposal | { error: string } {
   const type = typeof input.type === 'string' ? input.type.toLowerCase() : '';
   if (type !== 'stake' && type !== 'claim' && type !== 'swap' && type !== 'add_liquidity') {
-    return { error: `unsupported action type "${String(input.type)}" - use "stake", "claim", "swap", or "add_liquidity"` };
+    return { error: `unsupported action type "${String(input.type)}" — use "stake", "claim", "swap", or "add_liquidity"` };
   }
   const marketId = typeof input.marketId === 'string' && input.marketId !== '' ? input.marketId : defaultMarketId;
   try {
@@ -627,7 +627,7 @@ export function validateActionProposal(
     const hi = input.priceUpper;
     if (lo !== undefined || hi !== undefined) {
       if (typeof lo !== 'number' || typeof hi !== 'number' || !Number.isFinite(lo) || !Number.isFinite(hi) || lo <= 0 || lo >= hi) {
-        return { error: 'add_liquidity range needs 0 < priceLower < priceUpper (quote per base) - or omit both for full range' };
+        return { error: 'add_liquidity range needs 0 < priceLower < priceUpper (quote per base) — or omit both for full range' };
       }
       priceLower = lo;
       priceUpper = hi;

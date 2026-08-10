@@ -1,11 +1,11 @@
 'use client';
 
-// hooks/useCopilotChat.ts - client state machine for the Limen Copilot conversation.
+// hooks/useCopilotChat.ts — client state machine for the Limen Copilot conversation.
 //
 // Streams /api/agent/chat (SSE), folding events into: the message thread, the live tool-
 // activity chips, and at most one pending action proposal awaiting the user's confirm/decline.
 // Action results are reported back INTO the conversation as a user turn so the model can
-// acknowledge honestly ("the app executed it - tx 0x…"), matching the route's stateless
+// acknowledge honestly ("the app executed it — tx 0x…"), matching the route's stateless
 // plain-text history contract. parseSseChunk is pure and unit-tested.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ActionProposal } from '@/lib/agent/copilot';
@@ -14,7 +14,7 @@ import type { Payment402 } from '@/lib/agent/x402Client';
 export interface CopilotMessage {
   role: 'user' | 'assistant';
   content: string;
-  /** Set for app-generated notes (autopilot log lines) - rendered as a timestamped feed. */
+  /** Set for app-generated notes (autopilot log lines) — rendered as a timestamped feed. */
   at?: number;
 }
 
@@ -38,7 +38,7 @@ export function parseSseChunk(buffer: string): { events: CopilotEvent[]; rest: s
     try {
       events.push(JSON.parse(line.slice(5).trim()) as CopilotEvent);
     } catch {
-      // malformed frame - skip rather than kill the stream
+      // malformed frame — skip rather than kill the stream
     }
   }
   return { events, rest };
@@ -107,7 +107,7 @@ function saveThread(messages: CopilotMessage[]): void {
   try {
     if (typeof window !== 'undefined') window.localStorage.setItem(THREAD_KEY, JSON.stringify(messages.slice(-THREAD_CAP)));
   } catch {
-    // storage full/blocked - persistence is best-effort
+    // storage full/blocked — persistence is best-effort
   }
 }
 
@@ -122,7 +122,7 @@ export function useCopilotChat(ctx: { address?: string; marketId: string; sessio
   const [billing, setBilling] = useState<{ enabled: boolean; priceUsdc6?: string } | null>(null);
   const [history, setHistory] = useState<ThreadArchive[]>(loadHistory);
   const inFlight = useRef(false);
-  // The history whose request got a 402 - retried verbatim once the user pays.
+  // The history whose request got a 402 — retried verbatim once the user pays.
   const unpaidHistory = useRef<CopilotMessage[] | null>(null);
 
   // The status card: configured? which model? Sets the honest offline state up front.
@@ -184,7 +184,7 @@ export function useCopilotChat(ctx: { address?: string; marketId: string; sessio
           setStatus('ready');
           setMessages((prev) => [
             ...prev,
-            { role: 'assistant', content: 'You have reached today\'s free message limit - it resets tomorrow. (Usage-based payment via Circle x402 is on the roadmap.)' },
+            { role: 'assistant', content: 'You have reached today\'s free message limit — it resets tomorrow. (Usage-based payment via Circle x402 is on the roadmap.)' },
           ]);
           return;
         }
@@ -192,7 +192,7 @@ export function useCopilotChat(ctx: { address?: string; marketId: string; sessio
           setStatus('ready');
           setMessages((prev) => [
             ...prev,
-            { role: 'assistant', content: 'Connect your wallet first - the copilot works with your positions, claims, and balances, so a connected wallet is required to chat.' },
+            { role: 'assistant', content: 'Connect your wallet first — the copilot works with your positions, claims, and balances, so a connected wallet is required to chat.' },
           ]);
           return;
         }
@@ -311,7 +311,7 @@ export function useCopilotChat(ctx: { address?: string; marketId: string; sessio
     setMessages((prev) => [...prev, { role: 'assistant', content: text, at: Date.now() }]);
   }, []);
 
-  /** Clear the conversation - the outgoing thread is archived into History first. */
+  /** Clear the conversation — the outgoing thread is archived into History first. */
   const clearThread = useCallback(() => {
     if (inFlight.current) return;
     setMessages((prev) => {
@@ -348,7 +348,7 @@ export function useCopilotChat(ctx: { address?: string; marketId: string; sessio
     setPendingAction(null);
   }, []);
 
-  // Persist after every thread change (streaming included - cheap, bounded by THREAD_CAP).
+  // Persist after every thread change (streaming included — cheap, bounded by THREAD_CAP).
   useEffect(() => {
     saveThread(messages);
   }, [messages]);

@@ -1,4 +1,4 @@
-// lib/toast.ts - centralized re-export of the toast API (sonner) so every write hook imports from a
+// lib/toast.ts — centralized re-export of the toast API (sonner) so every write hook imports from a
 // single place. Keeping this thin shim lets tests mock `@/lib/toast` (instead of `sonner` directly)
 // and gives us one spot to tweak default options / wording helpers later.
 //
@@ -6,7 +6,7 @@
 //   import { toast } from '@/lib/toast';
 //   const id = 'mint';                       // stable per-action id
 //   toast.loading('Providing liquidity…', { id, description: arcScanLink(hash) });
-//   toast.success('Liquidity added - position minted', { id });
+//   toast.success('Liquidity added — position minted', { id });
 //   toast.error(friendlyError(e), { id });
 import { toast } from 'sonner';
 import { ENV } from '@/lib/env';

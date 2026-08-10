@@ -1,10 +1,10 @@
-// lib/epochProof.ts - PURE reconstruction of a settled epoch from on-chain FeeArena events, so a
+// lib/epochProof.ts — PURE reconstruction of a settled epoch from on-chain FeeArena events, so a
 // user can VERIFY the settlement was honest end-to-end (oracle move → winning side → pot split).
 //
 // The settlement rule is a fact, not a prediction: a signed Δbps (settle vs start price) that lands
 // strictly BEYOND ±band wins UP (Δ>0) or DOWN (Δ<0); a move within ±band (inclusive) is a RANGE win.
 // deriveWinningSide() re-applies that rule from the published Δ + band, and buildEpochProof compares
-// it against the event's reported winningSide (winningSideVerified) - a mismatch is a tamper signal.
+// it against the event's reported winningSide (winningSideVerified) — a mismatch is a tamper signal.
 //
 // All money math is BigInt + FLOOR (mirrors the contract's mulDiv floor); format only at render.
 // Events used (decoded args), all keyed by epochId:
@@ -12,8 +12,8 @@
 //   EpochResolved(settlePrice18, winningSide, deltaBps, settleTimeActual)
 //   EpochSettled(winningSide, winnerDenominator, potWETH, potUSDC)
 //   EmptyWinnerRollover(winningSide, potWETH, potUSDC)
-//   Staked(owner, tokenId, side)            - per-position owner + chosen side
-//   Swept(tokenId, feeWETH, feeUSDC, contribution6) - per-position forfeited fees + contribution
+//   Staked(owner, tokenId, side)            — per-position owner + chosen side
+//   Swept(tokenId, feeWETH, feeUSDC, contribution6) — per-position forfeited fees + contribution
 import { Side } from '@/lib/types';
 import { payoutFloor } from '@/lib/money';
 
@@ -29,7 +29,7 @@ const argOf = (log: ProofLog, key: string): unknown =>
 /**
  * Re-apply the contract's settlement rule from the published Δbps + band. A move STRICTLY beyond the
  * band (|Δ| > band) is directional (UP if Δ>0, DOWN if Δ<0); within ±band (inclusive) is RANGE.
- * |band| is used so a malformed negative band still reads sanely. Pure - the heart of "provably fair".
+ * |band| is used so a malformed negative band still reads sanely. Pure — the heart of "provably fair".
  */
 export function deriveWinningSide(deltaBps: bigint, bandBps: number): Side {
   const band = BigInt(Math.abs(bandBps));
@@ -68,7 +68,7 @@ export interface EpochProof {
   winningSide: Side;
   /** The winning side RECONSTRUCTED from Δ vs band (undefined when Δ is unknown). */
   derivedWinningSide?: Side;
-  /** True iff derivedWinningSide === winningSide - the honesty check. undefined when Δ is unknown. */
+  /** True iff derivedWinningSide === winningSide — the honesty check. undefined when Δ is unknown. */
   winningSideVerified?: boolean;
   winnerDenominator: bigint;
   potBase: bigint;
@@ -105,7 +105,7 @@ function isEpoch(log: ProofLog, epochId: bigint): boolean {
 
 /**
  * Reconstruct the requested epoch from its events. Returns null only when NO event references the
- * epoch at all (nothing to show). Pure + defensive - unknown fields degrade to sane defaults.
+ * epoch at all (nothing to show). Pure + defensive — unknown fields degrade to sane defaults.
  */
 export function buildEpochProof(args: BuildArgs): EpochProof | null {
   const { epochId, bandBps } = args;
@@ -148,7 +148,7 @@ export function buildEpochProof(args: BuildArgs): EpochProof | null {
   else if (rolloverLog) winningSide = Number(argOf(rolloverLog, 'winningSide') ?? 0) as Side;
   else if (resolvedLog) winningSide = Number(argOf(resolvedLog, 'winningSide') ?? 0) as Side;
 
-  // Reconstructed winner from Δ vs band - the honesty check.
+  // Reconstructed winner from Δ vs band — the honesty check.
   const derivedWinningSide = deltaBps !== undefined ? deriveWinningSide(deltaBps, bandBps) : undefined;
   const winningSideVerified =
     derivedWinningSide !== undefined && winningSide !== Side.NONE

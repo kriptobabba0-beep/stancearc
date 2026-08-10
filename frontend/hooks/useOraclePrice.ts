@@ -1,8 +1,8 @@
-// hooks/useOraclePrice.ts - the LIVE oracle price for display + qualification math.
+// hooks/useOraclePrice.ts — the LIVE oracle price for display + qualification math.
 //
 // LIVE-FIRST: Hermes (the same Pyth feed settlement anchors to) polled every ~3s, so the price
 // and everything derived from it (sparkline, "qualifying now") keep moving during the LOCKED
-// phase - the on-chain IPriceOracle.getPrice() only advances when a tx posts a blob (stakes,
+// phase — the on-chain IPriceOracle.getPrice() only advances when a tx posts a blob (stakes,
 // keeper settles), so reading it alone froze the UI for the whole locked window. The on-chain
 // read stays as the FALLBACK (Hermes unreachable) and both sources share the same feed(s) and
 // 18-dp math (cross = BTC/USD ÷ EUR/USD for the EURC market), so the two values agree within a
@@ -20,10 +20,10 @@ export function useOraclePrice() {
   const { oracle } = useMarketContracts();
   const market = useActiveMarket();
 
-  // On-chain read - the fallback, and what the contract itself would report right now.
+  // On-chain read — the fallback, and what the contract itself would report right now.
   const q = useReadContract({ ...oracle, functionName: 'getPrice', chainId: arcTestnet.id, query: { refetchInterval: 5000 } });
 
-  // Live Hermes read - same feed(s) + the exact pythToPrice18 math the stake flow uses.
+  // Live Hermes read — same feed(s) + the exact pythToPrice18 math the stake flow uses.
   const live = useQuery({
     queryKey: ['hermes-live', market.id],
     queryFn: () =>

@@ -1,4 +1,4 @@
-// components/leaderboard/Identicon.tsx - renders lib/identicon's deterministic 5×5 mark as a
+// components/leaderboard/Identicon.tsx — renders lib/identicon's deterministic 5×5 mark as a
 // crisp SVG chip: dark inset tile, one accent hue per address. Size via className (h-/w-).
 import { identiconFor } from '@/lib/identicon';
 import { cn } from '@/lib/cn';

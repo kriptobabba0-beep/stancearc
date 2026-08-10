@@ -1,6 +1,6 @@
 'use client';
 
-// app/pool/[id]/page.tsx - the deposit page (reference image #3): a "Set price range" card with the
+// app/pool/[id]/page.tsx — the deposit page (reference image #3): a "Set price range" card with the
 // DRAGGABLE range chart + the Narrow/Balanced/Wide/Full-Range presets + EDITABLE Min/Max price fields,
 // all kept in sync (they all write the SAME tick range), beside the "Add deposit amount" module.
 // Reached by clicking a pool row OR via the Create modal's Continue. The range lives here and is fed to
@@ -54,7 +54,7 @@ function StatCard({ label, value, accent }: { label: string; value: string; acce
   );
 }
 
-/** An EDITABLE price card - click the label/value to type a Min/Max bound; drives the range (→ custom). */
+/** An EDITABLE price card — click the label/value to type a Min/Max bound; drives the range (→ custom). */
 function PriceInputCard({
   label,
   value,
@@ -129,7 +129,7 @@ export default function PoolDetailPage({ params }: { params: { id: string } }) {
   }, [range, currentTick, spacing, pool]);
 
   // Keep the Min/Max fields in sync with the band whenever the range changes from the chart or a preset
-  // (NOT from typing - fromInputRef guards that, so the user's keystrokes aren't overwritten).
+  // (NOT from typing — fromInputRef guards that, so the user's keystrokes aren't overwritten).
   useEffect(() => {
     if (fromInputRef.current) {
       fromInputRef.current = false;
@@ -178,7 +178,7 @@ export default function PoolDetailPage({ params }: { params: { id: string } }) {
     setChoice('custom');
   };
 
-  // Typing a Min/Max bound commits a CUSTOM range when the pair is a valid 0 < min < max band - and only
+  // Typing a Min/Max bound commits a CUSTOM range when the pair is a valid 0 < min < max band — and only
   // when the spacing-aligned ticks ACTUALLY change (so typing within one tick-spacing band doesn't churn
   // the deposit hook / chart every keystroke).
   const commitBand = (minS: string, maxS: string) => {
@@ -211,7 +211,7 @@ export default function PoolDetailPage({ params }: { params: { id: string } }) {
     setMinInput(toPlainPrice(b.min));
     setMaxInput(toPlainPrice(b.max));
   };
-  // Reconcile only when focus leaves the range fields ENTIRELY - never when tabbing/clicking from Min to
+  // Reconcile only when focus leaves the range fields ENTIRELY — never when tabbing/clicking from Min to
   // Max (otherwise a half-finished band, e.g. a typed Min while Max is still being entered, gets wiped).
   const onFieldBlur = (e: FocusEvent<HTMLInputElement>) => {
     const tid = (e.relatedTarget as HTMLElement | null)?.getAttribute('data-testid');
@@ -221,12 +221,12 @@ export default function PoolDetailPage({ params }: { params: { id: string } }) {
 
   const unit = `${pool.quote.symbol} per ${pool.base.symbol}`;
   // Estimated APR = the pool's REAL fee APR (consistent with the list column). We no longer multiply by a
-  // concentration boost - on these thin testnet pools the base APR is already high, so the boost produced
+  // concentration boost — on these thin testnet pools the base APR is already high, so the boost produced
   // an absurd ">9,999%". Showing the genuine pool APR is realistic and matches what the list displays.
   const poolApr = stats.rows[pool.id]?.aprPct;
   const row = stats.rows[pool.id];
 
-  // Invalid whenever both fields are filled with something that isn't a valid band - EXCEPT the untouched
+  // Invalid whenever both fields are filled with something that isn't a valid band — EXCEPT the untouched
   // full-range "0 / ∞" sentinels (a valid display state, not user-entered garbage). So a typed "∞", a
   // grouped paste or min ≥ max surfaces the hint instead of being silently swallowed.
   const isFullSentinel = choice === 'full' && minInput === '0' && maxInput === '∞';
@@ -263,7 +263,7 @@ export default function PoolDetailPage({ params }: { params: { id: string } }) {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.45fr_1fr]">
-        {/* Left - set price range */}
+        {/* Left — set price range */}
         <Card className="motion-safe:animate-fade-up">
           <div className="px-5 py-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -285,7 +285,7 @@ export default function PoolDetailPage({ params }: { params: { id: string } }) {
               onChange={onChartChange}
             />
 
-            {/* Presets - drag, click OR type Min/Max; all stay synced with the handles above. */}
+            {/* Presets — drag, click OR type Min/Max; all stay synced with the handles above. */}
             <div className="mt-4">
               <span className="kicker mb-2 block">Or pick a preset</span>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -334,17 +334,17 @@ export default function PoolDetailPage({ params }: { params: { id: string } }) {
                 invalid={customInvalid}
                 errorId={rangeErrorId}
               />
-              <StatCard label="Estimated APR" value={poolApr !== undefined ? formatPct(poolApr) : '-'} accent />
+              <StatCard label="Estimated APR" value={poolApr !== undefined ? formatPct(poolApr) : '—'} accent />
             </div>
             {customInvalid && (
               <p id={rangeErrorId} data-testid="range-invalid" role="alert" className="mt-2 text-center text-[11px] text-side-down">
-                Enter a valid range - min must be above 0 and below max.
+                Enter a valid range — min must be above 0 and below max.
               </p>
             )}
           </div>
         </Card>
 
-        {/* Right - deposit */}
+        {/* Right — deposit */}
         <Card className="motion-safe:animate-fade-up">
           <div className="px-5 py-5">
             <DepositPanel pool={pool} deposit={deposit} />

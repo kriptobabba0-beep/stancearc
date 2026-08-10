@@ -1,23 +1,23 @@
-// lib/agent/mandate.ts - the user's autopilot mandate, and the self-custody unattended config.
+// lib/agent/mandate.ts — the user's autopilot mandate, and the self-custody unattended config.
 //
 // A mandate is the human contract every autonomous layer obeys: which views are allowed, the
 // confidence floor, the budget cap, the expiry. In-app it drives the ASSISTED autopilot
 // (proposals the user confirms). For UNATTENDED 24/7 operation the same mandate compiles to
-// the env block of the open-source keeper agent (keeper/src/agent.ts) - which the USER runs
+// the env block of the open-source keeper agent (keeper/src/agent.ts) — which the USER runs
 // with their OWN Circle Agent Wallet as treasury (2-of-2 MPC, bound to their own Circle CLI
 // session). That is deliberate architecture, not a shortcut: Circle Agent Wallets cannot be
-// created or operated server-side on a user's behalf, so per-user agents are self-custody -
+// created or operated server-side on a user's behalf, so per-user agents are self-custody —
 // the platform never holds user keys, budgets, or wallets.
 import type { StanceView } from '@/lib/agent/autopilot';
 
 export interface AgentMandate {
   views: StanceView[];
-  /** 0..1 - the signal confidence required to act. */
+  /** 0..1 — the signal confidence required to act. */
   minConfidence: number;
   /** The LP quote-leg budget cap for one position, whole USDC. */
   maxStakeUsdc: number;
   /** In-app autopilot: fire the entry transaction immediately instead of showing a card
-   *  first. The connected wallet's own signing prompt still appears - browsers cannot
+   *  first. The connected wallet's own signing prompt still appears — browsers cannot
    *  sign silently; that last approval is the wallet's security model, not ours. */
   autoEnter: boolean;
   /** LP price range half-width in percent (e.g. 2 = ±2% around the live price);
@@ -29,7 +29,7 @@ export const DEFAULT_MANDATE: AgentMandate = { views: ['UP', 'DOWN', 'RANGE'], m
 
 export const MANDATE_STORAGE_KEY = 'limen-agent-mandate-v1';
 
-/** Parse a persisted mandate defensively - anything malformed falls back to the default. */
+/** Parse a persisted mandate defensively — anything malformed falls back to the default. */
 export function parseMandate(raw: string | null): AgentMandate {
   if (raw === null) return DEFAULT_MANDATE;
   try {
@@ -39,7 +39,7 @@ export function parseMandate(raw: string | null): AgentMandate {
       views: views.length > 0 ? views : DEFAULT_MANDATE.views,
       minConfidence:
         // Floor 10% (matches the slider): with three outcomes the best view always carries
-        // ≥~34%, so anything ≤33% effectively means "enter every epoch" - a legitimate,
+        // ≥~34%, so anything ≤33% effectively means "enter every epoch" — a legitimate,
         // user-chosen mode for tight bands where confidence rarely peaks high.
         typeof p.minConfidence === 'number' && p.minConfidence >= 0.1 && p.minConfidence <= 0.95
           ? p.minConfidence
@@ -77,7 +77,7 @@ export interface UnattendedConfigParams {
 
 /**
  * Compile the mandate into the keeper agent's exact environment block. The user pastes this
- * into `keeper/.env.agent`, funds their Agent Wallet, and runs `npx tsx src/agent.ts` - the
+ * into `keeper/.env.agent`, funds their Agent Wallet, and runs `npx tsx src/agent.ts` — the
  * agent then draws mandate-capped funding from THEIR MPC wallet over Circle's transfer rail
  * (the same rail the platform's M2 pilot ran live).
  */
@@ -106,7 +106,7 @@ export function buildUnattendedConfig(p: UnattendedConfigParams): string {
     feeTier: 3000,
   };
   return [
-    '# Limen unattended agent - compiled from your mandate. Runs on YOUR machine with YOUR',
+    '# Limen unattended agent — compiled from your mandate. Runs on YOUR machine with YOUR',
     '# Circle Agent Wallet as treasury; the platform holds nothing. Docs: docs/AGENT.md',
     'KEEPER_RPC_URL=https://rpc.testnet.arc.network',
     `PYTH_ADDRESS=${p.addresses.pyth}`,
@@ -115,7 +115,7 @@ export function buildUnattendedConfig(p: UnattendedConfigParams): string {
     `STAKERBOT_NPM=${p.addresses.npm}`,
     `KEEPER_ARB_MARKET='${JSON.stringify(marketJson)}'`,
     'LIMEN_AGENT_ENABLED=true',
-    'LIMEN_AGENT_PRIVATE_KEY=<generate a FRESH key: `cast wallet new` - never reuse your main wallet>',
+    'LIMEN_AGENT_PRIVATE_KEY=<generate a FRESH key: `cast wallet new` — never reuse your main wallet>',
     'LIMEN_AGENT_LEDGER_FILE=./state/agent-epoch-ledger.json',
     `LIMEN_AGENT_POLICY='${JSON.stringify(policy)}'`,
     'LIMEN_AGENT_FUNDING=agent-wallet',

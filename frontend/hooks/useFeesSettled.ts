@@ -1,9 +1,9 @@
 'use client';
 
-// hooks/useFeesSettled.ts - cumulative TOTAL trading fees the arena has collected + settled across the
+// hooks/useFeesSettled.ts — cumulative TOTAL trading fees the arena has collected + settled across the
 // ACTIVE market's history, summed from the entry-anchored (v3) PositionProcessed event (feeBase + feeUSDC
 // per processed position). This is the HONEST "fees settled to date" figure: it counts every position's
-// epoch fees - winner-KEPT fees included - not just the losers' forfeited pot (potBase/potUSDC), which is
+// epoch fees — winner-KEPT fees included — not just the losers' forfeited pot (potBase/potUSDC), which is
 // a small slice. Built purely from event logs (no indexer), cached + re-keyed per market like the
 // leaderboard/history hooks. v1/v2 arenas don't emit PositionProcessed, so the query is v3-only.
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';

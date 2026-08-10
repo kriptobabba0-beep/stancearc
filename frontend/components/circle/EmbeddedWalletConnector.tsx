@@ -1,6 +1,6 @@
 'use client';
 
-// components/circle/EmbeddedWalletConnector.tsx - bridges the embedded (Circle) wallet into wagmi so the
+// components/circle/EmbeddedWalletConnector.tsx — bridges the embedded (Circle) wallet into wagmi so the
 // whole app (Swap, Pools, Arena, balances, gating) works with it like any other wallet.
 //   • Populates embeddedBridge with the address + a sign function (executeContract → on-chain tx hash).
 //   • Connects/disconnects the wagmi 'circleEmbedded' connector as the embedded session comes and goes.
@@ -51,7 +51,7 @@ export function EmbeddedWalletConnector() {
     const embedded = connectors.find((c) => c.id === EMBEDDED_CONNECTOR_ID);
     if (!embedded) return;
     if (isReady && address) {
-      // Only auto-connect when nothing else is connected - never hijack an active MetaMask session.
+      // Only auto-connect when nothing else is connected — never hijack an active MetaMask session.
       if (account.connector?.id !== EMBEDDED_CONNECTOR_ID && account.status === 'disconnected' && !connectingRef.current) {
         connectingRef.current = true;
         connect({ connector: embedded }, { onSettled: () => (connectingRef.current = false) });

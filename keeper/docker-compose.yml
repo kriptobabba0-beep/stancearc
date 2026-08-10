@@ -1,4 +1,4 @@
-# Fee Arena Keeper - Docker Compose service definition
+# Fee Arena Keeper — Docker Compose service definition
 #
 # Usage:
 #   cp .env.example .env    # fill in KEEPER_PRIVATE_KEY (or KEEPER_PRIVATE_KEY_FILE),
@@ -51,11 +51,11 @@ services:
     #   - keeper_key
 
   arb:
-    # The price-keeper ARB bot - a SEPARATE process from the lifecycle keeper. It trades
+    # The price-keeper ARB bot — a SEPARATE process from the lifecycle keeper. It trades
     # the cirBTC/USDC pool toward the live Pyth price; the AMM's real 0.3% fee on each swap
     # funds every pot, so the arb bot is just as load-bearing and gets the same supervision.
     # Same image as the keeper (`build: .`), but runs src/arb.ts instead of the default
-    # src/index.ts. tsx is invoked directly (no pnpm/corepack at runtime - see Dockerfile CMD).
+    # src/index.ts. tsx is invoked directly (no pnpm/corepack at runtime — see Dockerfile CMD).
     # All config comes from the SAME `.env` (it uses KEEPER_ARB_*).
     build: .
     command: ["/app/node_modules/.bin/tsx", "src/arb.ts"]
@@ -69,7 +69,7 @@ services:
     # NO `ports:` mapping on purpose. The arb /health server binds to loopback
     # (KEEPER_ARB_HTTP_HOST=127.0.0.1) and is probed from INSIDE the container by the
     # healthcheck below. Publishing the port (e.g. "9465:9465") would bind it on 0.0.0.0
-    # and defeat the loopback bind - so it is deliberately omitted. The keeper container
+    # and defeat the loopback bind — so it is deliberately omitted. The keeper container
     # cannot reach this port either; each service probes only its own loopback.
     environment:
       # The arb /health server is OFF by default (KEEPER_ARB_HTTP_PORT=0). Turn it ON inside
@@ -89,11 +89,11 @@ services:
     #   - keeper_key
 
   arb-eurc:
-    # The DEDICATED cirBTC/EURC PRICE-KEEPER - completely ISOLATED from the cirBTC/USDC arb. It has its
+    # The DEDICATED cirBTC/EURC PRICE-KEEPER — completely ISOLATED from the cirBTC/USDC arb. It has its
     # OWN key (ARB_EURC_PRIVATE_KEY) => its OWN cirBTC / EURC / gas reserves, its OWN market (the
     # cirBTC/EURC pool with a quoteFeedId, so the engine pegs to the BTC/EUR CROSS = BTC/USD ÷ EUR/USD),
     # its OWN flow-ledger + metrics files, and its OWN health port. Same image/code (src/arb.ts); the
-    # cross-ref path is taken ONLY because this market carries a quoteFeedId - the USDC arb (no
+    # cross-ref path is taken ONLY because this market carries a quoteFeedId — the USDC arb (no
     # quoteFeedId) is byte-for-byte unchanged. The `environment:` block OVERRIDES the shared .env ARB_*
     # for THIS container alone, so neither pool's reserves, logic, safeguards or execution path can ever
     # touch the other's. Re-pegs the drained pool on start (sells cirBTC UP TO the peg, never past it),
@@ -111,7 +111,7 @@ services:
       # Dedicated wallet + the cirBTC/EURC market (its quoteFeedId => BTC/EUR cross reference).
       - KEEPER_ARB_PRIVATE_KEY=${ARB_EURC_PRIVATE_KEY}
       - KEEPER_ARB_MARKET=${SWAPBOT_EURC_MARKET}
-      # SEPARATE persisted state - never shares the USDC arb's flow ledger or metrics.
+      # SEPARATE persisted state — never shares the USDC arb's flow ledger or metrics.
       - ARB_FLOW_LEDGER_FILE=/app/state/arb-eurc-flow-ledger.json
       - KEEPER_ARB_METRICS_STATE_FILE=/app/state/arb-eurc-metrics.json
       # Distinct loopback health port (probed in-container) so it can't clash with the USDC arb's 9465.
@@ -129,11 +129,11 @@ services:
       - ARB_TARGET_BASE_SHARE_BPS=5000
       - ARB_POOL_DELIVERABLE_SAFETY_BPS=7000
       # LOW hard cirBTC floor so the initial re-peg isn't blocked; the 50% target-band does the soft
-      # conservation. Small EURC (quote) working-floor - EURC is NOT gas here (gas is native USDC), so
+      # conservation. Small EURC (quote) working-floor — EURC is NOT gas here (gas is native USDC), so
       # this is just a dust floor: the defending BUY can spend EURC down to ~5 but never to zero.
       - ARB_RESERVE_BASE=2000
       - ARB_RESERVE_QUOTE=5000000
-      # TWO-SIDED PEG DEFENSE - defend the DOWNSIDE too (buy cirBTC to lift a sub-peg pool, bounded by
+      # TWO-SIDED PEG DEFENSE — defend the DOWNSIDE too (buy cirBTC to lift a sub-peg pool, bounded by
       # the EURC reserve above). Enabled HERE only; the USDC arb stays on the legacy one-directional gate.
       - ARB_BUY_DEFENDS_PEG=true
       # Inventory rebalance DISABLED (floor=0). With ARB_BUY_DEFENDS_PEG the two-sided arb already
@@ -152,9 +152,9 @@ services:
       retries: 3
 
   swapbot:
-    # The VOLUME bot - a SEPARATE process + key (SWAPBOT_PRIVATE_KEY) that does small
+    # The VOLUME bot — a SEPARATE process + key (SWAPBOT_PRIVATE_KEY) that does small
     # balance-aware round-trip swaps at a fixed rate (SWAPBOT_SWAPS_PER_MIN, default 15/min)
-    # so LP positions - staked OR liquidity-only - accrue real, claimable trading fees even
+    # so LP positions — staked OR liquidity-only — accrue real, claimable trading fees even
     # in quiet rounds. Same image as the keeper/arb; runs src/swapbot.ts via tsx directly (no
     # pnpm at runtime). All config comes from the SAME .env (SWAPBOT_*; reuses KEEPER_ARB_MARKET).
     build: .
@@ -169,10 +169,10 @@ services:
       disable: true
 
   swapbot-eurc:
-    # SECOND volume bot - trades the cirBTC/EURC pool with its OWN key (SWAPBOT_EURC_PRIVATE_KEY),
+    # SECOND volume bot — trades the cirBTC/EURC pool with its OWN key (SWAPBOT_EURC_PRIVATE_KEY),
     # independent of the cirBTC/USDC swap bot. Same image/code; the `environment:` block below OVERRIDES
     # the shared .env SWAPBOT_* for THIS container only: a different key + market (SWAPBOT_EURC_MARKET),
-    # peg gate OFF (no arb on cirBTC/EURC yet - the buy-then-sell-back round-trip is price-neutral by
+    # peg gate OFF (no arb on cirBTC/EURC yet — the buy-then-sell-back round-trip is price-neutral by
     # construction). Funded with EURC (the quote leg it round-trips) + native USDC (Arc gas).
     build: .
     command: ["/app/node_modules/.bin/tsx", "src/swapbot.ts"]
@@ -190,7 +190,7 @@ services:
       disable: true
 
   stakerbot:
-    # The STAKER bots - THREE wallets (UP/DOWN/RANGE) that each add liquidity (mint a full-range LP)
+    # The STAKER bots — THREE wallets (UP/DOWN/RANGE) that each add liquidity (mint a full-range LP)
     # and auto-stake it into the v3 arena every epoch on their fixed side, so the arena always has a
     # participant on each side. Same image as the keeper/arb/swapbot; runs src/stakerbot.ts via tsx.
     # All config from the SAME .env (STAKERBOT_*; reuses KEEPER_ARB_MARKET + PYTH_ADDRESS + HERMES_URL).
@@ -199,7 +199,7 @@ services:
     env_file: .env
     restart: unless-stopped
     logging: *default-logging
-    # No HTTP server - disable the inherited :9464 healthcheck. Liveness via `docker compose logs
+    # No HTTP server — disable the inherited :9464 healthcheck. Liveness via `docker compose logs
     # stakerbot`; restart:unless-stopped supervises it. Idles until each wallet is funded.
     healthcheck:
       disable: true
@@ -207,7 +207,7 @@ services:
   gas-watchdog:
     # The keeper's ONLY automatic gas self-heal: refills the keeper signer from the owner reserve
     # when it nears the gas floor, gated on the keeper's refill-safe sentinel (never feeds a
-    # spend-cap-tripped keeper back into a drain). A FIRST-CLASS supervised service - previously it
+    # spend-cap-tripped keeper back into a drain). A FIRST-CLASS supervised service — previously it
     # lived only in a hand-made override, so a fresh `docker compose up -d` silently skipped it and
     # the signer could drain until every market wedged on gas. Same image as the keeper; the
     # gasWatchdog.mjs is baked in (see Dockerfile), so no host file / volume mount is required for it.
@@ -219,7 +219,7 @@ services:
     # Read-only view of the SAME state dir the keeper writes, so the refill-safe interlock works.
     volumes:
       - ./state:/app/state:ro
-    # No HTTP server - disable the inherited :9464 healthcheck.
+    # No HTTP server — disable the inherited :9464 healthcheck.
     healthcheck:
       disable: true
 
@@ -227,7 +227,7 @@ services:
     # The single writer behind the site's leaderboard: keeps the index on disk, pushes a
     # ready-to-serve payload to the site's KV. See src/leaderboardIndexer.ts for why.
     #
-    # `image:` NOT `build:` - deliberately. Every other service here builds from this directory,
+    # `image:` NOT `build:` — deliberately. Every other service here builds from this directory,
     # and a build on this 1-vCPU droplet drives it into swap hard enough to disturb the keeper.
     # This service needs no new dependencies (tsx + viem are already in the image), so it reuses
     # the keeper's existing image as-is and takes its two source files in through read-only
@@ -240,7 +240,7 @@ services:
     logging: *default-logging
     # Hard ceilings, because the keeper's settlement work shares this one core and must never be
     # starved by an indexer. Steady state is ~19 getLogs a day, so these are far above what it
-    # actually uses - they exist to bound the worst case, not the normal one.
+    # actually uses — they exist to bound the worst case, not the normal one.
     mem_limit: 256m
     cpus: 0.35
     volumes:
@@ -253,7 +253,7 @@ services:
       - ./src/feeArenaV3Abi.ts:/app/src/feeArenaV3Abi.ts:ro
       # Writable: this is where the snapshot lives, so a restart resumes instead of re-scanning.
       - ./state:/app/state
-    # No HTTP server - disable the inherited :9464 healthcheck.
+    # No HTTP server — disable the inherited :9464 healthcheck.
     healthcheck:
       disable: true
 

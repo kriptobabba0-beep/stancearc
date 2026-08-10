@@ -1,12 +1,12 @@
-// decideAgent.ts - the PURE policy engine at the heart of the Limen Agent's ACT layer.
+// decideAgent.ts — the PURE policy engine at the heart of the Limen Agent's ACT layer.
 //
 // The agent may enter an epoch ONLY when every clause of the human-approved mandate holds.
 // This mirrors the field set of Circle Agent Wallet spending policies (caps, allowlists,
 // time bounds) so the same mandate maps onto wallet-layer enforcement when that becomes
-// available on Arc mainnet - until then, THIS engine is the enforcement, and it fails
+// available on Arc mainnet — until then, THIS engine is the enforcement, and it fails
 // CLOSED: any missing/degenerate input is a SKIP with a reason, never an action.
 //
-// PURE - no I/O, no clock reads (nowSec injected), trivially unit-testable.
+// PURE — no I/O, no clock reads (nowSec injected), trivially unit-testable.
 
 import type { StanceView } from './agentQuant.js';
 
@@ -16,11 +16,11 @@ export interface AgentPolicy {
   allowedViews: StanceView[];
   /** Don't act below this estimated qualification probability (0..1). */
   minConfidence: number;
-  /** Hard end of the mandate (unix seconds) - after this the agent stands down. */
+  /** Hard end of the mandate (unix seconds) — after this the agent stands down. */
   expiresAtSec: number;
   /** Skip when less than this remains of the entry window (no last-second entries). */
   minEntryLeftSec: number;
-  /** The LP mint's quote-leg budget cap (raw 6dp USDC) - sized once at mint. */
+  /** The LP mint's quote-leg budget cap (raw 6dp USDC) — sized once at mint. */
   maxStakeUsdc6: bigint;
 }
 
@@ -45,7 +45,7 @@ export function decideAgentEntry(input: {
   const { policy, nowSec, phase, entryCloseTime, alreadyActedThisEpoch, signal } = input;
 
   if (nowSec >= policy.expiresAtSec) {
-    return { act: false, reason: 'mandate expired - renew LIMEN_AGENT_POLICY.expiresAtSec to continue' };
+    return { act: false, reason: 'mandate expired — renew LIMEN_AGENT_POLICY.expiresAtSec to continue' };
   }
   if (phase !== PHASE_ENTRY_OPEN) {
     return { act: false, reason: `entry is not open (phase ${phase})` };
@@ -58,7 +58,7 @@ export function decideAgentEntry(input: {
     return { act: false, reason: 'already entered this epoch (once per epoch)' };
   }
   if (signal === null) {
-    return { act: false, reason: 'no signal - not enough recent price data to estimate' };
+    return { act: false, reason: 'no signal — not enough recent price data to estimate' };
   }
   if (!policy.allowedViews.includes(signal.view)) {
     return { act: false, reason: `signal says ${signal.view} but the mandate does not allow it` };

@@ -1,4 +1,4 @@
-// decide.ts - the PURE decision function at the heart of the keeper.
+// decide.ts — the PURE decision function at the heart of the keeper.
 //
 // Given a snapshot of one market's current epoch, it returns the single next
 // lifecycle action to take. It performs NO I/O and reads NO clock: `nowSec` is an
@@ -15,7 +15,7 @@
 // (Verified against src/FeeArena.sol: startEpoch sets Phase.Running; endEpoch sets
 //  settlePrice18 + Phase.Resolved; sweep advances sweepCursor and flips Swept when
 //  cursor==stakedCount; finalizeSettle requires internal phase Swept. An empty epoch
-//  - stakedCount 0 - STILL requires one sweep() call (Resolved->Swept) before
+//  — stakedCount 0 — STILL requires one sweep() call (Resolved->Swept) before
 //  finalizeSettle() is allowed; the view collapses both Resolved-empty and Swept-empty
 //  to cursor==0==stakedCount, so we track lastSweptEpochId to distinguish them.)
 
@@ -31,7 +31,7 @@ export enum PhaseView {
  * The single next lifecycle action the keeper should take for a market this tick.
  * `STUCK` is a terminal, no-tx signal: the start window was missed (now >
  * entryCloseTime + maxStartDelay) so `startEpoch` would revert `StartDelayExceeded`
- * forever - only the owner's `emergencySettle` can clear it. The runner logs it
+ * forever — only the owner's `emergencySettle` can clear it. The runner logs it
  * loudly and sends NO transaction.
  */
 export type Action =
@@ -70,7 +70,7 @@ export interface KeeperState {
   /**
    * The contract's `maxStartDelay()` (seconds). `startEpoch` reverts
    * `StartDelayExceeded` once `now > entryCloseTime + maxStartDelay`, so the keeper
-   * must not keep trying to START past that bound. NOT part of EpochView - read
+   * must not keep trying to START past that bound. NOT part of EpochView — read
    * separately from the public `maxStartDelay()` getter.
    */
   maxStartDelay: bigint;
@@ -83,13 +83,13 @@ export interface KeeperState {
    * The epochId for which a sweep() has already been confirmed successful this
    * runtime session (sourced from MarketRuntime.lastSweptEpochId). Used to
    * distinguish Resolved-empty (needs one sweep()) from Swept-empty (ready to
-   * finalize) - the PhaseView cannot tell them apart since both collapse to Running
+   * finalize) — the PhaseView cannot tell them apart since both collapse to Running
    * with cursor==0==stakedCount.
    * Null means no sweep has been recorded yet for any epoch in this session.
    */
   lastSweptEpochId: bigint | null;
   /**
-   * v1 AUTO-RETURN (all three OPTIONAL - v2 markets and older tests omit them, which
+   * v1 AUTO-RETURN (all three OPTIONAL — v2 markets and older tests omit them, which
    * disables the UNSTAKE action entirely). `lastSettledEpochId` is the contract's
    * `lastSettledEpochId()` (the most recently Settled epoch; 0n if none yet), and
    * `unstakeDone`/`unstakeTotal` mirror `unstakeProgress(lastSettledEpochId)`. When
@@ -120,11 +120,11 @@ export function hasUnstakeBacklog(state: KeeperState): boolean {
 
 /**
  * Decide the single next lifecycle action for a market given its current state.
- * PURE - total over the state space, no I/O, no clock read.
+ * PURE — total over the state space, no I/O, no clock read.
  */
 export function decideAction(state: KeeperState): Action {
   // Paused: every payable/settlement crank reverts under `whenNotPaused`, and the
-  // permissioned cranks are pointless while halted - take no action at all.
+  // permissioned cranks are pointless while halted — take no action at all.
   if (state.paused) return 'NONE';
 
   // Never created (no epoch slot yet) -> bootstrap the first epoch.
@@ -137,20 +137,20 @@ export function decideAction(state: KeeperState): Action {
 
     // Entry window: only start once entry has closed; until then, wait. But if the
     // bounded start window has fully elapsed (now > entryCloseTime + maxStartDelay),
-    // `startEpoch` would revert `StartDelayExceeded` on every tick - the epoch is
+    // `startEpoch` would revert `StartDelayExceeded` on every tick — the epoch is
     // WEDGED and only the owner's `emergencySettle` can clear it. Signal STUCK so the
     // runner alerts and sends NO tx.
     case PhaseView.EntryOpen:
       if (state.nowSec > state.entryCloseTime + state.maxStartDelay) return 'STUCK';
       if (state.nowSec >= state.entryCloseTime) return 'START';
-      // Waiting for entry to close - a time-idle tick. Use it to drain any auto-return
+      // Waiting for entry to close — a time-idle tick. Use it to drain any auto-return
       // backlog left on the PREVIOUS settled epoch (e.g. after keeper downtime).
       return hasUnstakeBacklog(state) ? 'UNSTAKE' : 'NONE';
 
     // Collapsed Running covers internal Running / Resolved / Swept.
     case PhaseView.Running:
       if (state.settlePrice18 === 0n) {
-        // Not yet ended (internal Running): end once past endTime, else wait - and use
+        // Not yet ended (internal Running): end once past endTime, else wait — and use
         // the wait, like EntryOpen above, to drain any auto-return backlog.
         if (state.nowSec >= state.endTime) return 'END';
         return hasUnstakeBacklog(state) ? 'UNSTAKE' : 'NONE';
@@ -192,11 +192,11 @@ export function decideAction(state: KeeperState): Action {
 // window. If an OPTIONAL owner key is configured, the keeper can self-heal by
 // calling emergencySettle with a SEPARATE owner signer.
 //
-// This pure decision says WHETHER recovery should fire this tick - it never
+// This pure decision says WHETHER recovery should fire this tick — it never
 // signs or sends. The runner (keeper.ts) gates the owner wallet behind it.
 //
 // IMPORTANT (mainnet): an always-loaded hot owner key is a TESTNET convenience
-// ONLY. On mainnet, recovery should be guarded/manual/multisig - keep the
+// ONLY. On mainnet, recovery should be guarded/manual/multisig — keep the
 // owner key cold and run emergencySettle by hand. See README.
 // ===========================================================================
 
@@ -210,7 +210,7 @@ export const GRACE_SECONDS = 600n;
 
 /**
  * The `Side` resolution passed to emergencySettle for a wedged (never-started)
- * epoch. RANGE=3 is the neutral outcome - emergencySettle rolls the realized
+ * epoch. RANGE=3 is the neutral outcome — emergencySettle rolls the realized
  * pot forward into the global rollover regardless of resolution, so RANGE keeps
  * recovery outcome-neutral. Mirrors FeeArena's Side enum (RANGE == 3).
  */
@@ -218,11 +218,11 @@ export const EMERGENCY_RESOLUTION_RANGE = 3;
 
 /**
  * The recovery decision for a wedged epoch when an owner key is available:
- *   - 'RECOVER'    - genuinely wedged, grace elapsed: call emergencySettle now.
- *   - 'WAIT_GRACE' - genuinely wedged, but block.timestamp <= endTime + GRACE:
+ *   - 'RECOVER'    — genuinely wedged, grace elapsed: call emergencySettle now.
+ *   - 'WAIT_GRACE' — genuinely wedged, but block.timestamp <= endTime + GRACE:
  *                    emergencySettle would revert GraceNotElapsed; back off and
  *                    retry on a later tick (do NOT spam it every tick).
- *   - 'NONE'       - NOT a recovery situation (epoch not wedged, already
+ *   - 'NONE'       — NOT a recovery situation (epoch not wedged, already
  *                    resolved (settlePrice18 != 0), already Settled, or no owner
  *                    key): take no recovery action. The owner key path is
  *                    impossible to trigger here by construction.
@@ -231,19 +231,19 @@ export type RecoveryDecision = 'RECOVER' | 'WAIT_GRACE' | 'NONE';
 
 /**
  * Decide whether the owner key should run emergencySettle for a wedged epoch.
- * PURE - no I/O, no clock read (nowSec is in `state`).
+ * PURE — no I/O, no clock read (nowSec is in `state`).
  *
  * Recovery fires ONLY when ALL of these hold (every condition the contract's
  * emergencySettle itself enforces, checked here so we never send a doomed tx):
  *   1. An owner key is configured (`ownerKeyConfigured`). Absent => 'NONE',
  *      preserving the exact pre-existing detect→STUCK behavior.
- *   2. decideAction(state) === 'STUCK' - the SAME wedge signal already surfaced
+ *   2. decideAction(state) === 'STUCK' — the SAME wedge signal already surfaced
  *      today (EntryOpen, start window missed). This guarantees the owner path
  *      can never trigger on a healthy epoch or any normal crank.
- *   3. settlePrice18 === 0n - genuinely unresolved (endEpoch never ran). A
+ *   3. settlePrice18 === 0n — genuinely unresolved (endEpoch never ran). A
  *      resolved epoch can be driven to Settled via sweep+finalize, so we must
  *      never emergencySettle it (it would also revert WrongPhase).
- *   4. phase is EntryOpen/Running (NOT Settled/None) - implied by (2) returning
+ *   4. phase is EntryOpen/Running (NOT Settled/None) — implied by (2) returning
  *      STUCK only from EntryOpen, but checked explicitly for safety.
  * If wedged+eligible but grace has NOT elapsed (nowSec <= endTime + GRACE),
  * returns 'WAIT_GRACE' so the runner backs off instead of spamming a tx that

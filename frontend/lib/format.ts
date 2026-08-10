@@ -1,4 +1,4 @@
-// lib/format.ts - render-only formatters wrapping viem formatUnits. NEVER performs money math.
+// lib/format.ts — render-only formatters wrapping viem formatUnits. NEVER performs money math.
 import { formatUnits } from 'viem';
 
 const trim = (s: string): string => (s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s);
@@ -9,7 +9,7 @@ export function formatPrice18(raw: bigint): string { return trim(formatUnits(raw
 
 /**
  * Per-market base leg (non-USDC), formatted at the active market's decimals (WETH 18dp, cirBTC 8dp, …).
- * Renders the FULL fractional precision of `decimals` (viem formatUnits is exact - no rounding), then
+ * Renders the FULL fractional precision of `decimals` (viem formatUnits is exact — no rounding), then
  * only strips trailing zeros. So a tiny cirBTC balance like 0.0001 (10_000 raw at 8dp) stays visible as
  * "0.0001" and never collapses to "0"; a single satoshi (1 raw) renders "0.00000001". Only a genuine
  * zero raw amount yields "0".
@@ -26,7 +26,7 @@ export function formatBase(raw: bigint, decimals: number): string { return trim(
  */
 export function formatBps(bps: number): string {
   if (bps !== 0 && Math.abs(bps) < 100) {
-    // |percent| < 1 - show a fixed 2 decimals so e.g. 20 -> "0.20%", 5 -> "0.05%", 1 -> "0.01%".
+    // |percent| < 1 — show a fixed 2 decimals so e.g. 20 -> "0.20%", 5 -> "0.05%", 1 -> "0.01%".
     // Integer bps below 100 divide exactly into hundredths, so toFixed(2) is precise here.
     return `${(bps / 100).toFixed(2)}%`;
   }

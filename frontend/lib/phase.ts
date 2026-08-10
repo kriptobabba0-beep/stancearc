@@ -1,4 +1,4 @@
-// lib/phase.ts - phase gating predicates. Gate on contract PhaseView + per-position StakeView flags,
+// lib/phase.ts — phase gating predicates. Gate on contract PhaseView + per-position StakeView flags,
 // NEVER the client clock. showProjection is false until Settled (approved decision #5).
 // NOTE: EpochView's swept-progress field is `sweepCursor` (matches the artifact, not `sweepCursorDone`).
 import { PhaseView, Side, type EpochView, type StakeView, type PhaseGate } from '@/lib/types';

@@ -1,8 +1,8 @@
 'use client';
 
-// components/NetworkBusyChip.tsx - a quiet bottom-left pill shown ONLY while the shared
+// components/NetworkBusyChip.tsx — a quiet bottom-left pill shown ONLY while the shared
 // rate-limit gate is cooling down (i.e. the Arc RPC actually throttled us and requests are
-// waiting it out). With the edge proxy + provider mirrors in front, this should be rare -
+// waiting it out). With the edge proxy + provider mirrors in front, this should be rare —
 // but when it happens the user deserves to know why numbers pause for a few seconds,
 // instead of guessing the app broke.
 import { useEffect, useReducer } from 'react';
@@ -41,7 +41,7 @@ export function NetworkBusyChip({ gate = rpcGate }: { gate?: RateLimitGate }) {
     >
       <span className="h-1.5 w-1.5 rounded-full bg-side-range animate-pulse-soft" aria-hidden="true" />
       <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-soft">
-        Arc RPC busy - retrying
+        Arc RPC busy — retrying
       </span>
     </div>
   );

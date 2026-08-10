@@ -1,4 +1,4 @@
-// lib/multicall.ts - Multicall3 batching for per-position read fan-out (one eth_call).
+// lib/multicall.ts — Multicall3 batching for per-position read fan-out (one eth_call).
 // Canonical Multicall3 0xcA11bde05977b3631167028862bE2a173976CA11 (same address every chain).
 import type { PublicClient, MulticallParameters, MulticallReturnType } from 'viem';
 import { MULTICALL3_ADDRESS } from '@/lib/contracts';

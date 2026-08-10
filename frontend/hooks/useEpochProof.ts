@@ -1,6 +1,6 @@
 'use client';
 
-// hooks/useEpochProof.ts - reconstruct ONE settled epoch from on-chain events for the provably-fair
+// hooks/useEpochProof.ts — reconstruct ONE settled epoch from on-chain events for the provably-fair
 // detail page. Reads the band from getEpoch(id) (the band is not in any event), then chunked getLogs
 // for EpochStarted/Resolved/Settled + EmptyWinnerRollover + Staked + Swept, and runs the PURE
 // buildEpochProof aggregator. Cached with react-query, re-keyed by market id + chainId + epochId.
@@ -46,7 +46,7 @@ export function useEpochProof(epochId: bigint | undefined): UseQueryResult<Epoch
       if (!client) throw new Error('No RPC client configured.');
       const toBlock = await client.getBlockNumber();
 
-      // The band (bps) is part of the epoch struct, not any event - read it so deriveWinningSide can
+      // The band (bps) is part of the epoch struct, not any event — read it so deriveWinningSide can
       // re-apply the settlement rule. Best-effort: a failed read degrades the band to 0.
       let bandBps = 0;
       try {
@@ -58,7 +58,7 @@ export function useEpochProof(epochId: bigint | undefined): UseQueryResult<Epoch
         })) as EpochView;
         bandBps = Number(epoch.bandBps);
       } catch {
-        /* band unknown - deriveWinningSide falls back to a 0 band */
+        /* band unknown — deriveWinningSide falls back to a 0 band */
       }
 
       const [started, resolved, settled, rollovers, staked, swept] = await Promise.all([

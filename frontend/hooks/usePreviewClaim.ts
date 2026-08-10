@@ -1,4 +1,4 @@
-// hooks/usePreviewClaim.ts - polled previewClaim(epochId, tokenId) -> ClaimPreview.
+// hooks/usePreviewClaim.ts — polled previewClaim(epochId, tokenId) -> ClaimPreview.
 // Reads pinned to ONE blockNumber for projection consistency. FINAL numbers come from HERE, not client math.
 //
 // VERSION-AWARE READ SURFACE: v2 moved previewClaim OFF the arena onto the FeeArenaV2Lens (the v2

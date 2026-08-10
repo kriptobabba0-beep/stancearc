@@ -1,4 +1,4 @@
-// lib/activity/decode.ts - decode one raw Circle event log into a display-ready ActivityEvent.
+// lib/activity/decode.ts — decode one raw Circle event log into a display-ready ActivityEvent.
 //
 // Circle's SCP returns events with decodedData: null (our arena is UNVERIFIED on Arc's explorer), so we
 // decode the raw topics+data ourselves against the FeeArenaV3 ABI via viem. Only the events the feed
@@ -41,7 +41,7 @@ export function decodeArenaEvent(
       topics: raw.topics as [signature: `0x${string}`, ...args: `0x${string}`[]],
     }) as { eventName: string; args: Record<string, unknown> };
   } catch {
-    return null; // unknown topic0 / mismatched data - not one of ours
+    return null; // unknown topic0 / mismatched data — not one of ours
   }
 
   const kind = KIND_BY_EVENT[decoded.eventName];
