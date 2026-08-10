@@ -56,8 +56,9 @@ Uniswap V3 fork is pinned to 0.7.6 while all first-party code targets ^0.8.20, s
 `auto_detect_solc` is enabled and `evm_version` is set to `paris`, the newest target both
 families accept.
 
+Dependencies are committed under `lib/`, so there is no submodule or install step.
+
 ```bash
-git submodule update --init --recursive
 forge build
 forge test
 ```

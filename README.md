@@ -98,8 +98,10 @@ Foundry is required (https://getfoundry.sh). The workspace compiles two Solidity
 families at once: the Uniswap V3 fork is pinned to 0.7.6 and all first-party code is
 ^0.8.20, which is why `auto_detect_solc` is on in `foundry.toml`.
 
+Every dependency is committed under `lib/`, so a clone is ready to build with no
+submodule or package step.
+
 ```bash
-git submodule update --init --recursive
 forge build
 forge test
 ```
